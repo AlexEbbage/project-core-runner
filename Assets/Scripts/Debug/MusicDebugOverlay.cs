@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using TMPro;
+using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
@@ -8,7 +9,7 @@ using UnityEngine.UI;
 public class MusicDebugOverlay : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private Text overlayText;
+    [SerializeField] private TMP_Text overlayText;
     [SerializeField] private RunZoneManager zoneManager;
     [SerializeField] private AudioManager audioManager;
 
@@ -38,11 +39,11 @@ public class MusicDebugOverlay : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.F3)) // toggle visibility
-        {
-            _visible = !_visible;
-            overlayText.enabled = _visible;
-        }
+        //if (Input.GetKeyDown(KeyCode.F3)) // toggle visibility
+        //{
+        //    _visible = !_visible;
+        //    overlayText.enabled = _visible;
+        //}
 
         if (!_visible) return;
 

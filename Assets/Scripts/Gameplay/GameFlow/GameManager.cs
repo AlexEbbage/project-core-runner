@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -20,6 +21,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private RunScoreManager scoreManager;
     [SerializeField] private RunSpeedController speedController;
     [SerializeField] private RunZoneManager runZoneManager;
+    [SerializeField] private ObstacleRingGenerator obstacleRingGenerator;
 
     [Header("Player Visuals (optional)")]
     [SerializeField] private PlayerVisual playerVisual;
@@ -30,6 +32,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameOverUI gameOverUI;
     [SerializeField] private HudController hudController;
     [SerializeField] private PauseMenuUI pauseMenuUI;
+    [SerializeField] private CountdownUI countdownUI;
 
     [Header("References - Services")]
     [SerializeField] private MonoBehaviour rewardedAdServiceBehaviour;
@@ -46,6 +49,8 @@ public class GameManager : MonoBehaviour
 
     [Header("Continue VFX")]
     [SerializeField] private GameObject continueRespawnVfxPrefab;
+    [SerializeField] private int startClearRings = 5;
+    [SerializeField] private float dissolveDuration = 0.4f;
 
     [Header("Debug")]
     [SerializeField] private bool logStateChanges = false;
@@ -54,13 +59,21 @@ public class GameManager : MonoBehaviour
     private IRewardedAdService _rewardedAdService;
     private IAnalyticsService _analytics;
     private bool _adInProgress;
+    private float _elapsedTime;
+    private bool _gameTimerEnabled;
 
     private Vector3 _lastDeathPosition;
     private Vector3 _lastDeathForward;
 
     public GameState CurrentState => _currentState;
+
     public int ContinuesUsed => continuesUsed;
+
+    public float GetElapsedGameTime => _elapsedTime;
+
     public int MaxContinuesPerRun => maxContinuesPerRun;
+
+    public bool GameTimerEnabled => _gameTimerEnabled;
 
     private void Awake()
     {
@@ -137,6 +150,14 @@ public class GameManager : MonoBehaviour
         GoToMenu();
     }
 
+    private void Update()
+    {
+        if (_currentState == GameState.Playing && _gameTimerEnabled)
+        {
+            _elapsedTime += Time.deltaTime;
+        }
+    }
+
     private void SetState(GameState newState)
     {
         _currentState = newState;
@@ -165,6 +186,8 @@ public class GameManager : MonoBehaviour
     public void OnMenuButtonPressedFromGameOver()
     {
         audioManager?.PlayButtonClick();
+        audioManager?.PlayMenuMusic();
+        runZoneManager?.OnRunEnded();
         GoToMenu();
     }
 
@@ -282,6 +305,8 @@ public class GameManager : MonoBehaviour
 
         // We WANT the background to fly, so keep movement running
         playerController?.StartRun();
+        speedController?.ResetForNewRun();
+        speedController?.StartRun();
 
         // But hide and make non-collidable
         SetPlayerVisible(false);
@@ -310,6 +335,8 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1f;
         SetState(GameState.Playing);
 
+        _elapsedTime = 0;
+
         // Show and enable the player now we’re playing
         SetPlayerVisible(true);
         SetPlayerCollidable(true);
@@ -320,12 +347,54 @@ public class GameManager : MonoBehaviour
         hudController?.Show();
 
         playerHealth?.ResetHealth();
-        scoreManager?.StartNewRun();
+        scoreManager?.ResetRun();
         speedController?.ResetForNewRun();
-        playerController?.StartRun();
-        runZoneManager?.OnRunStarted();
+        runZoneManager?.OnResetRun();
 
         LogAnalyticsEvent("run_start");
+
+        StartRun();
+    }
+
+    public void StartRun()
+    {
+        StartCoroutine(StartRunRoutine());
+    }
+
+    private IEnumerator StartRunRoutine()
+    {
+        obstacleRingGenerator.DissolveNextRings(startClearRings, dissolveDuration);
+        playerController?.StartRun();
+
+        yield return countdownUI.PlayCountdown(() =>
+        {
+            _gameTimerEnabled = true;
+            scoreManager?.StartRun();
+            speedController?.StartRun();
+            runZoneManager?.StartRun();
+        });
+    }
+
+    public void ContinueRun()
+    {
+        Time.timeScale = 1f;
+        SetState(GameState.Playing);
+
+        StartCoroutine(ContinueRunRoutine());
+    }
+
+    private IEnumerator ContinueRunRoutine()
+    {
+        obstacleRingGenerator.DissolveNextRings(startClearRings, dissolveDuration);
+        playerController?.StartRun();
+
+        yield return countdownUI.PlayCountdown(() =>
+        {
+            _gameTimerEnabled = true;
+            scoreManager?.ResumeAfterContinue();
+            speedController?.ResumeAfterContinue();
+            runZoneManager?.StartRun();
+        });
     }
 
     private void PauseGame()
@@ -333,8 +402,14 @@ public class GameManager : MonoBehaviour
         SetState(GameState.Paused);
         Time.timeScale = 0f;
 
+        _gameTimerEnabled = false;
+
         pauseMenuUI?.Show();
         hudController?.Show();
+
+        scoreManager?.StopRun();
+        speedController?.StopRun();
+        playerController?.StopRun();
     }
 
     private void ResumeGame()
@@ -344,7 +419,8 @@ public class GameManager : MonoBehaviour
 
         pauseMenuUI?.Hide();
         hudController?.Show();
-        playerController?.StartRun();
+
+        ContinueRun();
     }
 
     private void HandlePlayerDeath()
@@ -360,14 +436,14 @@ public class GameManager : MonoBehaviour
             _lastDeathForward = t.forward;
         }
 
-        Time.timeScale = 1f;
+        _gameTimerEnabled = false;
+        Time.timeScale = 0.2f;
         SetState(GameState.GameOver);
         playerController?.StopRun();
 
         LogRunEndAnalytics("death");
         ShowGameOverUI();
     }
-
 
     private void ShowGameOverUI()
     {
@@ -448,18 +524,13 @@ public class GameManager : MonoBehaviour
         }
 
         playerHealth?.ResetHealth();
-        scoreManager?.ResumeAfterContinue();
-        speedController?.ResumeAfterContinue();
-
-        Time.timeScale = 1f;
-        SetState(GameState.Playing);
 
         gameOverUI?.Hide();
         pauseMenuUI?.Hide();
         hudController?.Show();
         mainMenuUI?.Hide();
 
-        playerController?.StartRun();
+        ContinueRun();
     }
 
     private void SetPlayerVisible(bool visible)

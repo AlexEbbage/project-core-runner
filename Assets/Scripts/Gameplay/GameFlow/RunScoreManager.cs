@@ -95,7 +95,6 @@ public class RunScoreManager : MonoBehaviour
         _currentScore = 0f;
         _comboValue = 0f;
         _lastPlayerZ = playerTransform.position.z;
-        _isRunActive = true;
     }
 
     private void UpdateDistanceScore()
@@ -142,6 +141,11 @@ public class RunScoreManager : MonoBehaviour
         }
     }
 
+    public void StopRun()
+    {
+        _isRunActive = false;
+    }
+
     private void HandlePlayerDeath()
     {
         if (!_isRunActive)
@@ -166,7 +170,12 @@ public class RunScoreManager : MonoBehaviour
         }
     }
 
-    public void StartNewRun()
+    public void StartRun()
+    {
+        _isRunActive = true;
+    }
+
+    public void ResetRun()
     {
         ResetRunState();
     }

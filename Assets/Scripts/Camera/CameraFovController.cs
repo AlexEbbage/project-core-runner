@@ -36,9 +36,9 @@ public class CameraFovController : MonoBehaviour
         if (_cam == null) return;
 
         // Normalise speed 0..1
-        float t = Mathf.InverseLerp(minSpeed, maxSpeed, _currentSpeed);
-        float targetFov = Mathf.Lerp(minFov, maxFov, t);
+        //float t = Mathf.InverseLerp(minSpeed, maxSpeed, _currentSpeed);
+        //float targetFov = Mathf.Lerp(minFov, maxFov, t);
 
-        _cam.fieldOfView = Mathf.Lerp(_cam.fieldOfView, targetFov, lerpSpeed * Time.deltaTime);
+        //_cam.fieldOfView = Mathf.Lerp(_cam.fieldOfView, targetFov, lerpSpeed * Time.deltaTime);
     }
 }

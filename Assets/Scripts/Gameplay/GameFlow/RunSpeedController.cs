@@ -69,7 +69,7 @@ public class RunSpeedController : MonoBehaviour
 
         _nextSpeedMilestone = startingSpeed + speedMilestoneStep;
 
-        StartRunSpeed();
+        ResetRunSpeed();
     }
 
     private void OnDisable()
@@ -104,10 +104,9 @@ public class RunSpeedController : MonoBehaviour
         }
     }
 
-    private void StartRunSpeed()
+    private void ResetRunSpeed()
     {
         _elapsedRunTime = 0f;
-        _isRunActive = true;
 
         float startSpeed = Mathf.Clamp(
             speedConfig.baseForwardSpeed,
@@ -123,6 +122,16 @@ public class RunSpeedController : MonoBehaviour
             hudController?.SetSpeed(startSpeed);
             //CheckSpeedMilestone(startSpeed);
         }
+    }
+
+    public void StartRun()
+    {
+        _isRunActive = true;
+    }
+
+    public void StopRun()
+    {
+        _isRunActive = false;
     }
 
     private void HandlePlayerDeath()
@@ -157,7 +166,7 @@ public class RunSpeedController : MonoBehaviour
 
     public void ResetForNewRun()
     {
-        StartRunSpeed();
+        ResetRunSpeed();
     }
 
     public void ResumeAfterContinue()

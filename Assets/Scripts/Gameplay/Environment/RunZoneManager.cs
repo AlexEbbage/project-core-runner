@@ -126,10 +126,14 @@ public class RunZoneManager : MonoBehaviour
         Debug.Log($"Zone changed to: {zone.name}");
     }
 
-    // Called by GameManager when a new run starts
-    public void OnRunStarted()
+    public void StartRun()
     {
         _runActive = true;
+    }
+
+    // Called by GameManager when a new run starts
+    public void OnResetRun()
+    {
         _runTime = 0f;
         _currentZoneIndex = -1;
 

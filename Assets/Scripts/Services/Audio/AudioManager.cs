@@ -99,8 +99,15 @@ public class AudioManager : MonoBehaviour
     public void PlayMenuMusic()
     {
         _isInMenu = true;
+
         if (menuMusic == null) return;
+
         CrossfadeToClip(menuMusic, true);
+
+        if (mainMixer == null) return;
+
+        float db = -6f;
+        mainMixer.SetFloat("MusicVolume", db);
     }
 
     public void PlayGameplayMusic()

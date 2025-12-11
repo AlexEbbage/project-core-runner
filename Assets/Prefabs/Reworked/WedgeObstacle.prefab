@@ -44,11 +44,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 889c0f2575008324fafd024c6a5b673e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  wedge25Prefab: {fileID: 494586113425143617, guid: dc7e8da06346294408c0524d9b67d6d7, type: 3}
-  wedge50Prefab: {fileID: 6874917363457315736, guid: d64d6452d1ddc01449748fd8d1c8d293, type: 3}
-  wedge75Prefab: {fileID: 5683639186427618709, guid: 4a044530b60cf624f970f3aea49a8080, type: 3}
-  wedge100Prefab: {fileID: 2572400640602100569, guid: 7e30ad3a13f465146a4c19517cc6bcd4, type: 3}
-  patternMode: 0
-  baseWedgeSize: 0
-  gapSize: 0
   sideCount: 6
+  wedgeSegmentPrefabs:
+  - {fileID: 494586113425143617, guid: dc7e8da06346294408c0524d9b67d6d7, type: 3}
+  - {fileID: 6874917363457315736, guid: d64d6452d1ddc01449748fd8d1c8d293, type: 3}
+  - {fileID: 5683639186427618709, guid: 4a044530b60cf624f970f3aea49a8080, type: 3}
+  - {fileID: 2572400640602100569, guid: 7e30ad3a13f465146a4c19517cc6bcd4, type: 3}
+  patternType: 0
