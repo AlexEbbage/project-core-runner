@@ -1229,7 +1229,7 @@ MonoBehaviour:
   gameOverUI: {fileID: 1912275854}
   hudController: {fileID: 338262364}
   pauseMenuUI: {fileID: 211400081}
-  countdownUI: {fileID: 338262365}
+  countdownUIController: {fileID: 338262365}
   rewardedAdServiceBehaviour: {fileID: 1563094311}
   analyticsServiceBehaviour: {fileID: 1563094311}
   audioManager: {fileID: 2038007867}
@@ -1884,9 +1884,59 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18200c9f53f93704489dd753e56fa320, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  countdownText: {fileID: 1200121537}
   root: {fileID: 1200121535}
-  label: {fileID: 1200121537}
-  countdownSeconds: 3
+  stepDuration: 1
+  goText: GO!
+  scaleCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  alphaCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 2.3773584
+      outSlope: 2.3773584
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.083333336
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  audioManager: {fileID: 2038007867}
 --- !u!1 &346338178
 GameObject:
   m_ObjectHideFlags: 0
@@ -7595,6 +7645,8 @@ MonoBehaviour:
   hitSfx: {fileID: 8300000, guid: 9d0ed529cfc642d45928429adf022854, type: 3}
   buttonClickSfx: {fileID: 8300000, guid: ac064f6f58feac84eba0b6b5af9dd26f, type: 3}
   speedUpSfx: {fileID: 8300000, guid: 4be8b5d9483df2e448c1c31741110e83, type: 3}
+  countdownTimerSfx: {fileID: 0}
+  countdownGoSfx: {fileID: 0}
   lowpassNormalCutoff: 22000
   lowpassMuffledCutoff: 800
   lowpassTransitionTime: 0.12

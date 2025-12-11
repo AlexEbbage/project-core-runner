@@ -28,6 +28,8 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioClip hitSfx;
     [SerializeField] private AudioClip buttonClickSfx;
     [SerializeField] private AudioClip speedUpSfx;
+    [SerializeField] private AudioClip countdownTimerSfx;
+    [SerializeField] private AudioClip countdownGoSfx;
 
     // State
     private bool _isInMenu = true;
@@ -212,6 +214,8 @@ public class AudioManager : MonoBehaviour
     public void PlayHit()      => PlaySfx(hitSfx);
     public void PlayButtonClick() => PlaySfx(buttonClickSfx);
     public void PlaySpeedUp()  => PlaySfx(speedUpSfx);
+    public void PlayCountdownTimer() => PlaySfx(countdownTimerSfx);
+    public void PlayCountdownGo() => PlaySfx(countdownGoSfx);
 
     public void PlaySfx(AudioClip clip)
     {

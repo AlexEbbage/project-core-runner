@@ -32,7 +32,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameOverUI gameOverUI;
     [SerializeField] private HudController hudController;
     [SerializeField] private PauseMenuUI pauseMenuUI;
-    [SerializeField] private CountdownUI countdownUI;
+    [SerializeField] private CountdownUIController countdownUIController;
 
     [Header("References - Services")]
     [SerializeField] private MonoBehaviour rewardedAdServiceBehaviour;
@@ -358,21 +358,18 @@ public class GameManager : MonoBehaviour
 
     public void StartRun()
     {
-        StartCoroutine(StartRunRoutine());
-    }
-
-    private IEnumerator StartRunRoutine()
-    {
         obstacleRingGenerator.DissolveNextRings(startClearRings, dissolveDuration);
         playerController?.StartRun();
 
-        yield return countdownUI.PlayCountdown(() =>
-        {
-            _gameTimerEnabled = true;
-            scoreManager?.StartRun();
-            speedController?.StartRun();
-            runZoneManager?.StartRun();
-        });
+        countdownUIController.BeginCountdown(3, OnStartCountdownComplete);
+    }
+
+    private void OnStartCountdownComplete()
+    {
+        _gameTimerEnabled = true;
+        scoreManager?.StartRun();
+        speedController?.StartRun();
+        runZoneManager?.StartRun();
     }
 
     public void ContinueRun()
@@ -380,21 +377,18 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1f;
         SetState(GameState.Playing);
 
-        StartCoroutine(ContinueRunRoutine());
-    }
-
-    private IEnumerator ContinueRunRoutine()
-    {
         obstacleRingGenerator.DissolveNextRings(startClearRings, dissolveDuration);
         playerController?.StartRun();
 
-        yield return countdownUI.PlayCountdown(() =>
-        {
-            _gameTimerEnabled = true;
-            scoreManager?.ResumeAfterContinue();
-            speedController?.ResumeAfterContinue();
-            runZoneManager?.StartRun();
-        });
+        countdownUIController.BeginCountdown(3, OnContinueCountdownComplete);
+    }
+
+    private void OnContinueCountdownComplete()
+    {
+        _gameTimerEnabled = true;
+        scoreManager?.ResumeAfterContinue();
+        speedController?.ResumeAfterContinue();
+        runZoneManager?.StartRun();
     }
 
     private void PauseGame()
