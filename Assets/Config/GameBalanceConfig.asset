@@ -30,6 +30,6 @@ MonoBehaviour:
   pickupSegmentProbability: 0.7
   pickupMinPerSegment: 1
   pickupMaxPerSegment: 2
-  maxContinuesPerRun: 1
-  continueRespawnBackDistance: -2
+  maxContinuesPerRun: 3
+  continueRespawnBackDistance: 0
   continueRespawnHeightOffset: 0.5

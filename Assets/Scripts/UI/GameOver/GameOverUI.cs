@@ -16,7 +16,6 @@ public class GameOverUI : MonoBehaviour
     [Header("Text Fields")]
     [SerializeField] private TMP_Text finalScoreText;
     [SerializeField] private TMP_Text bestScoreText;
-    [SerializeField] private TMP_Text continuesText;
 
     [Header("Buttons")]
     [SerializeField] private Button continueButton;
@@ -60,17 +59,12 @@ public class GameOverUI : MonoBehaviour
             finalScoreText.text = $"Score: {finalScore:0}";
 
         if (bestScoreText != null)
-            bestScoreText.text = $"Best: {bestScore:0}";
-
-        if (continuesText != null)
-        {
-            continuesText.text = $"Continues: {continuesUsed}/{maxContinues}";
-        }
+            bestScoreText.text = $"Highscore: {bestScore:0}";
 
         bool canContinue = continuesRemaining > 0;
         if (continueButton != null)
         {
-            continueButton.interactable = canContinue;
+            continueButton.gameObject.SetActive(canContinue);
         }
     }
 

@@ -134,7 +134,7 @@ public class MainMenuUI : MonoBehaviour
         if (scoreManager != null)
         {
             float best = scoreManager.BestScore;
-            bestScoreText.text = $"Best:\n{best:0}";
+            bestScoreText.text = $"Highscore:\n{best:0}";
         }
     }
 

@@ -601,7 +601,7 @@ public class ObstacleRingGenerator : MonoBehaviour
         _rings.Clear();
 
         _patternRingsRemaining = 0;
-        _nextSpawnZ = player.position.z + ringSpacing * 4;
+        _nextSpawnZ = player.position.z + ringSpacing * 4.2f;
 
         _inWedgeRun = false;
         _currentWedgeSet = null;
