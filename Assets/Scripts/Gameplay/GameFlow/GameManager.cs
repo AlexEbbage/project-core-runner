@@ -75,6 +75,17 @@ public class GameManager : MonoBehaviour
 
     public bool GameTimerEnabled => _gameTimerEnabled;
 
+    public bool IsContinueAdReady()
+    {
+        if (_adInProgress)
+            return false;
+
+        if (_rewardedAdService == null)
+            return false;
+
+        return _rewardedAdService.IsRewardedAdReady();
+    }
+
     private void Awake()
     {
         if (balanceConfig != null)
@@ -242,22 +253,15 @@ public class GameManager : MonoBehaviour
         {
             if (logStateChanges)
             {
-                Debug.LogWarning("GameManager: No IRewardedAdService assigned. Continuing instantly (no ad).");
+                Debug.LogWarning("GameManager: No IRewardedAdService assigned. Cannot show rewarded ad.");
             }
 
-            LogAnalyticsEvent("ad_shown", new Dictionary<string, object>
+            LogAnalyticsEvent("ad_not_ready", new Dictionary<string, object>
             {
                 { "source", "continue" },
-                { "mock_service", true }
+                { "reason", "service_missing" }
             });
 
-            LogAnalyticsEvent("ad_completed", new Dictionary<string, object>
-            {
-                { "source", "continue" },
-                { "mock_service", true }
-            });
-
-            HandleContinueAdResult(success: true);
             return;
         }
 
@@ -337,7 +341,7 @@ public class GameManager : MonoBehaviour
 
         _elapsedTime = 0;
 
-        // Show and enable the player now we’re playing
+        // Show and enable the player now weï¿½re playing
         SetPlayerVisible(true);
         SetPlayerCollidable(true);
 
