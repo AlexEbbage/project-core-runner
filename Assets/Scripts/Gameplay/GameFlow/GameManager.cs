@@ -238,6 +238,24 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        if (AdsConfig.RemoveAds)
+        {
+            if (logStateChanges)
+            {
+                Debug.Log("GameManager: Remove Ads active, skipping continue ad.");
+            }
+
+            LogAnalyticsEvent("ad_bypassed", new Dictionary<string, object>
+            {
+                { "source", "continue" },
+                { "reason", "remove_ads" }
+            });
+
+            Time.timeScale = 1f;
+            HandleContinueAdResult(success: true);
+            return;
+        }
+
         if (_rewardedAdService == null)
         {
             if (logStateChanges)
@@ -337,7 +355,7 @@ public class GameManager : MonoBehaviour
 
         _elapsedTime = 0;
 
-        // Show and enable the player now we’re playing
+        // Show and enable the player now weÂ’re playing
         SetPlayerVisible(true);
         SetPlayerCollidable(true);
 
