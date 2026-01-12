@@ -86,7 +86,7 @@ public class GameOverUI : MonoBehaviour
     {
         if (gameManager != null)
         {
-            gameManager.OnRestartButtonPressed();
+            gameManager.OnPlayButtonPressed();
         }
     }
 

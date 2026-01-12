@@ -216,7 +216,6 @@ public class ObstacleRingGenerator : MonoBehaviour
             if (ring == null || ring.root == null) continue;
 
             float z = ring.root.position.z;
-
             if (playerZ - z > recycleBehindDistance)
             {
                 ring.root.position = new Vector3(0f, 0f, _nextSpawnZ);

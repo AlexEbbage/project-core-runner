@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -29,6 +30,24 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioClip buttonClickSfx;
     [SerializeField] private AudioClip speedUpSfx;
     [SerializeField] private AudioClip countdownTimerSfx;
+
+    internal void SetMusicVolume(float musicVolume)
+    {
+        if (_useA)
+        {
+            musicSourceA.volume = musicVolume; 
+        }
+        else
+        {
+            musicSourceB.volume = musicVolume;
+        }
+    }
+
+    internal void SetSfxVolume(float sfxVolume)
+    {
+        sfxSource.volume = sfxVolume;
+    }
+
     [SerializeField] private AudioClip countdownGoSfx;
 
     // State
@@ -83,13 +102,18 @@ public class AudioManager : MonoBehaviour
         if (musicSourceA != null)
         {
             musicSourceA.loop = false;
-            musicSourceA.volume = 1f;
+            musicSourceA.volume = SettingsData.MusicVolume;
         }
 
         if (musicSourceB != null)
         {
             musicSourceB.loop = false;
             musicSourceB.volume = 0f;
+        }
+
+        if(sfxSource != null)
+        {
+            sfxSource.volume = SettingsData.SfxVolume;
         }
     }
 
@@ -203,17 +227,17 @@ public class AudioManager : MonoBehaviour
         from.volume = 0f;
         from.Stop();
 
-        to.volume = 1f;
+        to.volume = SettingsData.MusicVolume;
         _useA = !_useA; // swap active source
         _crossfadeRoutine = null;
     }
 
     // ---------------- SFX PUBLIC API ----------------
 
-    public void PlayPickup()   => PlaySfx(pickupSfx);
-    public void PlayHit()      => PlaySfx(hitSfx);
+    public void PlayPickup() => PlaySfx(pickupSfx);
+    public void PlayHit() => PlaySfx(hitSfx);
     public void PlayButtonClick() => PlaySfx(buttonClickSfx);
-    public void PlaySpeedUp()  => PlaySfx(speedUpSfx);
+    public void PlaySpeedUp() => PlaySfx(speedUpSfx);
     public void PlayCountdownTimer() => PlaySfx(countdownTimerSfx);
     public void PlayCountdownGo() => PlaySfx(countdownGoSfx);
 

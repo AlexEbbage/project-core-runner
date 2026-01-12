@@ -347,17 +347,13 @@ public class GameManager : MonoBehaviour
         hudController?.Show();
 
         playerHealth?.ResetHealth();
+        playerVisual.SetVisible(true);
         scoreManager?.ResetRun();
         speedController?.ResetForNewRun();
         runZoneManager?.OnResetRun();
 
         LogAnalyticsEvent("run_start");
 
-        StartRun();
-    }
-
-    public void StartRun()
-    {
         obstacleRingGenerator.DissolveNextRings(startClearRings, dissolveDuration);
         playerController?.StartRun();
 
@@ -379,6 +375,7 @@ public class GameManager : MonoBehaviour
 
         obstacleRingGenerator.DissolveNextRings(startClearRings, dissolveDuration);
         playerController?.StartRun();
+        playerVisual.SetVisible(true);
 
         countdownUIController.BeginCountdown(3, OnContinueCountdownComplete);
     }
@@ -434,8 +431,15 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 0.2f;
         SetState(GameState.GameOver);
         playerController?.StopRun();
+        playerVisual.SetVisible(false);
 
-        LogRunEndAnalytics("death");
+        LogAnalyticsEvent("run_ended", new Dictionary<string, object>
+        {
+            { "score", scoreManager != null ? scoreManager.CurrentScore : 0 },
+            { "time", _elapsedTime },
+            { "continues_used", continuesUsed }
+        });
+
         ShowGameOverUI();
     }
 
@@ -561,13 +565,18 @@ public class GameManager : MonoBehaviour
         _analytics.LogEvent("run_end", data);
     }
 
-    private void LogAnalyticsEvent(string eventName)
+    private void LogAnalyticsEvent(string eventName, Dictionary<string, object> parameters = null)
     {
-        _analytics?.LogEvent(eventName);
-    }
+        if (_analytics == null)
+            return;
 
-    private void LogAnalyticsEvent(string eventName, Dictionary<string, object> parameters)
-    {
-        _analytics?.LogEvent(eventName, parameters);
+        if (parameters == null)
+        {
+            _analytics.LogEvent(eventName);
+        }
+        else
+        {
+            _analytics.LogEvent(eventName, parameters);
+        }
     }
 }
