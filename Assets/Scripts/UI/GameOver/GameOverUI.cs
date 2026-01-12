@@ -22,6 +22,8 @@ public class GameOverUI : MonoBehaviour
     [SerializeField] private Button restartButton;
     [SerializeField] private Button menuButton;
 
+    private bool _hasContinueRemaining;
+
     private void Awake()
     {
         if (gameManager == null)
@@ -50,6 +52,15 @@ public class GameOverUI : MonoBehaviour
         }
     }
 
+
+    private void Update()
+    {
+        if (rootPanel != null && rootPanel.activeInHierarchy)
+        {
+            UpdateContinueButtonState();
+        }
+    }
+
     public void Show(float finalScore, float bestScore, int continuesUsed, int continuesRemaining, int maxContinues)
     {
         if (rootPanel != null)
@@ -61,11 +72,22 @@ public class GameOverUI : MonoBehaviour
         if (bestScoreText != null)
             bestScoreText.text = $"Highscore: {bestScore:0}";
 
-        bool canContinue = continuesRemaining > 0;
+        _hasContinueRemaining = continuesRemaining > 0;
         if (continueButton != null)
         {
-            continueButton.gameObject.SetActive(canContinue);
+            continueButton.gameObject.SetActive(_hasContinueRemaining);
+            UpdateContinueButtonState();
         }
+    }
+
+
+    private void UpdateContinueButtonState()
+    {
+        if (continueButton == null)
+            return;
+
+        bool adReady = gameManager != null && gameManager.IsContinueAdReady();
+        continueButton.interactable = _hasContinueRemaining && adReady;
     }
 
     public void Hide()
