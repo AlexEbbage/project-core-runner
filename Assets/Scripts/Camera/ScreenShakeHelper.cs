@@ -30,4 +30,13 @@ public static class ScreenShakeHelper
         if (ActiveCameraShake == null) return;
         ActiveCameraShake.PlayShake(strength, duration);
     }
+
+    /// <summary>
+    /// Shake with custom strength/duration/frequency.
+    /// </summary>
+    public static void Shake(float strength, float duration, float frequency)
+    {
+        if (ActiveCameraShake == null) return;
+        ActiveCameraShake.PlayShake(strength, duration, frequency);
+    }
 }
