@@ -13,6 +13,8 @@ using UnityEngine;
 public class FirebaseAnalyticsService : MonoBehaviour, IAnalyticsService
 {
     [SerializeField] private bool logToConsoleWhenFirebaseMissing = true;
+    [SerializeField] private int maxQueuedEvents = 50;
+    [SerializeField] private int maxParametersPerEvent = 25;
 
     private bool _firebaseReady;
     private bool _firebaseMissing;
@@ -48,15 +50,28 @@ public class FirebaseAnalyticsService : MonoBehaviour, IAnalyticsService
         if (string.IsNullOrEmpty(eventName))
             return;
 
+        eventName = SanitizeName(eventName, fallbackPrefix: "event_");
+        parameters = SanitizeParameters(parameters);
+
         if (_firebaseMissing)
         {
             if (logToConsoleWhenFirebaseMissing)
-                Debug.Log($"[Analytics/Firebase Missing] {eventName}");
+                Debug.Log($"[Analytics/Firebase Missing] {eventName} ({parameters?.Count ?? 0} params)");
             return;
         }
 
         if (!_firebaseReady)
         {
+            var queueLimit = Math.Max(0, maxQueuedEvents);
+            if (_queuedEvents.Count >= queueLimit)
+            {
+                if (_queuedEvents.Count > 0)
+                    _queuedEvents.Dequeue();
+
+                if (logToConsoleWhenFirebaseMissing)
+                    Debug.LogWarning($"Firebase not ready. Dropping oldest event to queue '{eventName}'. Queue limit reached.");
+            }
+
             _queuedEvents.Enqueue((eventName, parameters));
             return;
         }
@@ -255,7 +270,7 @@ public class FirebaseAnalyticsService : MonoBehaviour, IAnalyticsService
                 var valueType = ps[1].ParameterType;
 
                 if (valueType == typeof(string))
-                    return ctor.Invoke(new object[] { key, value.ToString() });
+                    return ctor.Invoke(new object[] { key, CoerceToString(value) });
 
                 if (valueType == typeof(long))
                 {
@@ -271,7 +286,7 @@ public class FirebaseAnalyticsService : MonoBehaviour, IAnalyticsService
             }
 
             // Fallback: try string
-            return Activator.CreateInstance(_firebaseParameterType, new object[] { key, value.ToString() });
+            return Activator.CreateInstance(_firebaseParameterType, new object[] { key, CoerceToString(value) });
         }
         catch
         {
@@ -307,6 +322,99 @@ public class FirebaseAnalyticsService : MonoBehaviour, IAnalyticsService
             case string str when double.TryParse(str, out var parsed): result = parsed; return true;
             default: result = 0.0; return false;
         }
+    }
+
+    private Dictionary<string, object> SanitizeParameters(Dictionary<string, object> parameters)
+    {
+        if (parameters == null || parameters.Count == 0)
+            return parameters;
+
+        var sanitized = new Dictionary<string, object>(parameters.Count);
+        int count = 0;
+        foreach (var kvp in parameters)
+        {
+            if (count >= Math.Max(0, maxParametersPerEvent))
+                break;
+
+            var key = SanitizeName(kvp.Key, fallbackPrefix: "param_");
+            if (string.IsNullOrEmpty(key))
+                continue;
+
+            var value = CoerceParameterValue(kvp.Value);
+            if (value == null)
+                continue;
+
+            sanitized[key] = value;
+            count++;
+        }
+
+        return sanitized;
+    }
+
+    private static string SanitizeName(string name, string fallbackPrefix)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return fallbackPrefix + "unnamed";
+
+        const int maxLength = 40;
+        var trimmed = name.Trim();
+
+        var sb = new System.Text.StringBuilder(trimmed.Length);
+        for (int i = 0; i < trimmed.Length; i++)
+        {
+            char c = trimmed[i];
+            if ((c >= 'a' && c <= 'z') ||
+                (c >= 'A' && c <= 'Z') ||
+                (c >= '0' && c <= '9') ||
+                c == '_')
+            {
+                sb.Append(c);
+            }
+            else
+            {
+                sb.Append('_');
+            }
+        }
+
+        var sanitized = sb.ToString();
+        if (sanitized.Length == 0 || !(sanitized[0] >= 'a' && sanitized[0] <= 'z'))
+            sanitized = fallbackPrefix + sanitized;
+
+        if (sanitized.StartsWith("firebase_", StringComparison.OrdinalIgnoreCase) ||
+            sanitized.StartsWith("google_", StringComparison.OrdinalIgnoreCase))
+            sanitized = "app_" + sanitized;
+
+        if (sanitized.Length > maxLength)
+            sanitized = sanitized.Substring(0, maxLength);
+
+        return sanitized;
+    }
+
+    private static object CoerceParameterValue(object value)
+    {
+        if (value == null)
+            return null;
+
+        if (value is DateTime dt)
+            return dt.ToString("o");
+
+        if (value is string)
+            return CoerceToString(value);
+
+        return value;
+    }
+
+    private static string CoerceToString(object value)
+    {
+        if (value == null)
+            return string.Empty;
+
+        if (value is DateTime dt)
+            return dt.ToString("o");
+
+        var str = value.ToString();
+        const int maxLength = 100;
+        return str != null && str.Length > maxLength ? str.Substring(0, maxLength) : str;
     }
 
     private static Type FindType(string fullName)
