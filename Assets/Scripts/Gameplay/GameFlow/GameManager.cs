@@ -38,6 +38,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private MonoBehaviour rewardedAdServiceBehaviour;
     [SerializeField] private MonoBehaviour analyticsServiceBehaviour;
     [SerializeField] private AudioManager audioManager;
+    [SerializeField] private VfxManager vfxManager;
 
     [Header("Continues")]
     [SerializeField] private int maxContinuesPerRun = 3;
@@ -118,6 +119,7 @@ public class GameManager : MonoBehaviour
         if (pauseMenuUI == null) pauseMenuUI = FindFirstObjectByType<PauseMenuUI>();
 
         if (audioManager == null) audioManager = FindFirstObjectByType<AudioManager>();
+        if (vfxManager == null) vfxManager = VfxManager.Instance;
 
         if (rewardedAdServiceBehaviour != null)
         {
@@ -341,7 +343,7 @@ public class GameManager : MonoBehaviour
 
         _elapsedTime = 0;
 
-        // Show and enable the player now we�re playing
+        // Show and enable the player now we're playing
         SetPlayerVisible(true);
         SetPlayerCollidable(true);
 
@@ -521,7 +523,14 @@ public class GameManager : MonoBehaviour
 
             if (continueRespawnVfxPrefab != null)
             {
-                Object.Instantiate(continueRespawnVfxPrefab, pt.position, Quaternion.identity);
+                if (vfxManager != null)
+                {
+                    vfxManager.Spawn(continueRespawnVfxPrefab, pt.position, Quaternion.identity);
+                }
+                else
+                {
+                    Object.Instantiate(continueRespawnVfxPrefab, pt.position, Quaternion.identity);
+                }
             }
         }
 
