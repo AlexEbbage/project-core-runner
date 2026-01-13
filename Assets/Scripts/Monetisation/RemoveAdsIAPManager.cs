@@ -106,7 +106,8 @@ public class RemoveAdsIAPManager : MonoBehaviour, IStoreListener
         apple.RestoreTransactions(result => Debug.Log("RestoreTransactions: " + result));
 #elif UNITY_ANDROID
         var google = storeExtensionProvider.GetExtension<IGooglePlayStoreExtensions>();
-        google.RestoreTransactions(result => Debug.Log("RestoreTransactions: " + result));
+        google.RestoreTransactions((result, message) =>
+            Debug.Log($"RestoreTransactions: {result}, {message}"));
 #else
         Debug.Log("IAP: Restore not supported on this platform.");
 #endif
