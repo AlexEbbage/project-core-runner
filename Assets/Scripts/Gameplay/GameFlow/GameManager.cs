@@ -251,6 +251,24 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        if (AdsConfig.RemoveAds)
+        {
+            if (logStateChanges)
+            {
+                Debug.Log("GameManager: Remove Ads active, skipping continue ad.");
+            }
+
+            LogAnalyticsEvent("ad_bypassed", new Dictionary<string, object>
+            {
+                { "source", "continue" },
+                { "reason", "remove_ads" }
+            });
+
+            Time.timeScale = 1f;
+            HandleContinueAdResult(success: true);
+            return;
+        }
+
         if (_rewardedAdService == null)
         {
             if (logStateChanges)

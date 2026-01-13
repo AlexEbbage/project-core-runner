@@ -1,60 +1,93 @@
-﻿using UnityEngine;
-//using UnityEngine.Purchasing;
+using UnityEngine;
+using UnityEngine.Purchasing;
 
 /// <summary>
 /// Handles the "Remove Ads" non-consumable IAP.
 /// Product ID: "remove_ads" (must match your store config).
 /// Notifies listeners via OnRemoveAdsUnlocked when purchased/restored.
 /// </summary>
-public class RemoveAdsIAPManager : MonoBehaviour
+public class RemoveAdsIAPManager : MonoBehaviour, IStoreListener
 {
     public const string Product_RemoveAds = "remove_ads";
 
     public static System.Action OnRemoveAdsUnlocked;
+    public static System.Action<string> OnProductPurchased;
 
-    //private static IStoreController storeController;
-    //private static IExtensionProvider storeExtensionProvider;
+    private static IStoreController storeController;
+    private static IExtensionProvider storeExtensionProvider;
 
-    //[Header("Debug")]
-    //[SerializeField] private bool autoInitializeOnStart = true;
+    [System.Serializable]
+    public class ProductConfig
+    {
+        public string id;
+        public ProductType type = ProductType.NonConsumable;
+        public bool grantOnPurchase = true;
+    }
 
-    //private void Start()
-    //{
-    //    if (autoInitializeOnStart && storeController == null)
-    //    {
-    //        InitializePurchasing();
-    //    }
+    [Header("Config")]
+    [SerializeField] private bool autoInitializeOnStart = true;
+    [SerializeField] private ProductConfig[] products;
 
-    //    // If cached RemoveAds flag is already true, make sure UI knows
-    //    if (AdsConfig.RemoveAds)
-    //    {
-    //        OnRemoveAdsUnlocked?.Invoke();
-    //    }
-    //}
+    private void Start()
+    {
+        if (autoInitializeOnStart && storeController == null)
+        {
+            InitializePurchasing();
+        }
 
-    //public void InitializePurchasing()
-    //{
-    //    if (storeController != null) return;
+        if (AdsConfig.RemoveAds)
+        {
+            OnRemoveAdsUnlocked?.Invoke();
+        }
+    }
 
-    //    var builder = ConfigurationBuilder.Instance(StandardPurchasingModule.Instance());
+    public void InitializePurchasing()
+    {
+        if (storeController != null) return;
 
-    //    // Non-consumable product
-    //    builder.AddProduct(Product_RemoveAds, ProductType.NonConsumable);
+        var builder = ConfigurationBuilder.Instance(StandardPurchasingModule.Instance());
+        bool hasRemoveAds = false;
 
-    //    UnityPurchasing.Initialize(this, builder);
-    //}
+        if (products != null)
+        {
+            foreach (var product in products)
+            {
+                if (product == null || string.IsNullOrWhiteSpace(product.id))
+                {
+                    continue;
+                }
 
-    //// ---- Public API for UI ----
+                if (product.id == Product_RemoveAds)
+                {
+                    hasRemoveAds = true;
+                }
+
+                builder.AddProduct(product.id, product.type);
+            }
+        }
+
+        if (!hasRemoveAds)
+        {
+            builder.AddProduct(Product_RemoveAds, ProductType.NonConsumable);
+        }
+
+        UnityPurchasing.Initialize(this, builder);
+    }
 
     public void BuyRemoveAds()
     {
-        //if (storeController == null)
-        //{
-        //    Debug.LogWarning("IAP: Not initialized yet.");
-        //    return;
-        //}
+        BuyProduct(Product_RemoveAds);
+    }
 
-        //storeController.InitiatePurchase(Product_RemoveAds);
+    public void BuyProduct(string productId)
+    {
+        if (storeController == null)
+        {
+            Debug.LogWarning("IAP: Not initialized yet.");
+            return;
+        }
+
+        storeController.InitiatePurchase(productId);
     }
 
     /// <summary>
@@ -62,68 +95,105 @@ public class RemoveAdsIAPManager : MonoBehaviour
     /// </summary>
     public void RestorePurchases()
     {
-//        if (storeExtensionProvider == null)
-//        {
-//            Debug.LogWarning("IAP: Cannot restore, not initialized.");
-//            return;
-//        }
+        if (storeExtensionProvider == null)
+        {
+            Debug.LogWarning("IAP: Cannot restore, not initialized.");
+            return;
+        }
 
-//#if UNITY_IOS
-//                var apple = storeExtensionProvider.GetExtension<IAppleExtensions>();
-//                apple.RestoreTransactions(result => Debug.Log("RestoreTransactions: " + result));
-//#else
-//        var google = storeExtensionProvider.GetExtension<IGooglePlayStoreExtensions>();
-//        google.RestoreTransactions(result => Debug.Log("RestoreTransactions: " + result));
-//#endif
+#if UNITY_IOS
+        var apple = storeExtensionProvider.GetExtension<IAppleExtensions>();
+        apple.RestoreTransactions(result => Debug.Log("RestoreTransactions: " + result));
+#elif UNITY_ANDROID
+        var google = storeExtensionProvider.GetExtension<IGooglePlayStoreExtensions>();
+        google.RestoreTransactions(result => Debug.Log("RestoreTransactions: " + result));
+#else
+        Debug.Log("IAP: Restore not supported on this platform.");
+#endif
     }
 
-    //// ---- IStoreListener ----
+    public void OnInitialized(IStoreController controller, IExtensionProvider extensions)
+    {
+        storeController = controller;
+        storeExtensionProvider = extensions;
 
-    //public void OnInitialized(IStoreController controller, IExtensionProvider extensions)
-    //{
-    //    storeController = controller;
-    //    storeExtensionProvider = extensions;
+        foreach (var product in storeController.products.all)
+        {
+            if (product != null && product.hasReceipt)
+            {
+                GrantProduct(product.definition.id);
+            }
+        }
+    }
 
-    //    // Check ownership at startup
-    //    Product product = storeController.products.WithID(Product_RemoveAds);
-    //    if (product != null && product.hasReceipt)
-    //    {
-    //        UnlockRemoveAds();
-    //    }
-    //}
+    public void OnInitializeFailed(InitializationFailureReason error)
+    {
+        Debug.LogError("IAP init failed: " + error);
+    }
 
-    //public void OnInitializeFailed(InitializationFailureReason error)
-    //{
-    //    Debug.LogError("IAP init failed: " + error);
-    //}
+#if UNITY_2022_1_OR_NEWER
+    public void OnInitializeFailed(InitializationFailureReason error, string message)
+    {
+        Debug.LogError("IAP init failed: " + error + ", " + message);
+    }
+#endif
 
-    //public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs args)
-    //{
-    //    if (args.purchasedProduct.definition.id == Product_RemoveAds)
-    //    {
-    //        UnlockRemoveAds();
-    //    }
+    public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs args)
+    {
+        GrantProduct(args.purchasedProduct.definition.id);
+        return PurchaseProcessingResult.Complete;
+    }
 
-    //    return PurchaseProcessingResult.Complete;
-    //}
+#if UNITY_2022_1_OR_NEWER
+    public void OnPurchaseFailed(Product product, PurchaseFailureReason reason, string message)
+    {
+        Debug.LogError($"Purchase failed: {reason}, {message}");
+    }
+#else
+    public void OnPurchaseFailed(Product product, PurchaseFailureReason reason)
+    {
+        Debug.LogError($"Purchase failed: {reason}");
+    }
+#endif
 
-//#if UNITY_2022_1_OR_NEWER
-//    public void OnPurchaseFailed(Product product, PurchaseFailureReason reason, string message)
-//    {
-//        Debug.LogError($"Purchase failed: {reason}, {message}");
-//    }
-//#else
-//            public void OnPurchaseFailed(Product product, PurchaseFailureReason reason)
-//            {
-//                Debug.LogError($"Purchase failed: {reason}");
-//            }
-//#endif
+    private void GrantProduct(string productId)
+    {
+        if (!ShouldGrantProduct(productId))
+        {
+            return;
+        }
+
+        if (productId == Product_RemoveAds)
+        {
+            UnlockRemoveAds();
+            return;
+        }
+
+        OnProductPurchased?.Invoke(productId);
+    }
+
+    private bool ShouldGrantProduct(string productId)
+    {
+        if (products == null || products.Length == 0)
+        {
+            return true;
+        }
+
+        foreach (var product in products)
+        {
+            if (product != null && product.id == productId)
+            {
+                return product.grantOnPurchase;
+            }
+        }
+
+        return true;
+    }
 
     private void UnlockRemoveAds()
     {
         if (AdsConfig.RemoveAds)
         {
-            // Already unlocked
             OnRemoveAdsUnlocked?.Invoke();
             return;
         }
