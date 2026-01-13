@@ -23,6 +23,9 @@ public class PlayerHealth : MonoBehaviour
     [Header("VFX")]
     [SerializeField] private GameObject sideScrapeVfxPrefab;
     [SerializeField] private GameObject deathImpactVfxPrefab;
+    [SerializeField] private GameObject glancingSmokeVfxPrefab;
+    [SerializeField] private GameObject glancingSparksVfxPrefab;
+    [SerializeField] private float glancingEffectDuration = 3f;
 
     [Header("Audio")]
     [SerializeField] private AudioManager audioManager;
@@ -32,10 +35,16 @@ public class PlayerHealth : MonoBehaviour
 
     public event Action OnDeath;
     public event Action<float, float> OnHealthChanged;
+    public event Action OnShieldBroken;
 
     private float _currentHealth;
     private bool _isDead;
     private float _lastScrapeTime = -999f;
+    private bool _shieldActive;
+    private bool _glancingActive;
+    private Coroutine _glancingRoutine;
+    private GameObject _glancingSmokeInstance;
+    private GameObject _glancingSparksInstance;
 
     private PlayerController _playerController;
 
@@ -68,6 +77,19 @@ public class PlayerHealth : MonoBehaviour
         if (_isDead)
             return;
 
+        if (_shieldActive)
+        {
+            _shieldActive = false;
+            OnShieldBroken?.Invoke();
+            return;
+        }
+
+        if (_glancingActive)
+        {
+            Kill();
+            return;
+        }
+
         if (Time.time < _lastScrapeTime + sideScrapeCooldown)
             return;
 
@@ -81,6 +103,7 @@ public class PlayerHealth : MonoBehaviour
         SpawnVfx(sideScrapeVfxPrefab, hitPoint, hitNormal);
         audioManager?.PlayHit();
 
+        StartGlancingState();
         ApplyDamage(sideScrapeDamage);
     }
 
@@ -88,6 +111,13 @@ public class PlayerHealth : MonoBehaviour
     {
         if (_isDead)
             return;
+
+        if (_shieldActive)
+        {
+            _shieldActive = false;
+            OnShieldBroken?.Invoke();
+            return;
+        }
 
         if (logEvents)
         {
@@ -160,5 +190,47 @@ public class PlayerHealth : MonoBehaviour
         _isDead = false;
         _currentHealth = maxHealth;
         RaiseHealthChanged();
+    }
+
+    public void SetShieldActive(bool active)
+    {
+        _shieldActive = active;
+    }
+
+    private void StartGlancingState()
+    {
+        _glancingActive = true;
+
+        if (_glancingRoutine != null)
+            StopCoroutine(_glancingRoutine);
+
+        if (glancingSmokeVfxPrefab != null)
+        {
+            _glancingSmokeInstance = Instantiate(glancingSmokeVfxPrefab, transform);
+        }
+
+        if (glancingSparksVfxPrefab != null)
+        {
+            _glancingSparksInstance = Instantiate(glancingSparksVfxPrefab, transform);
+        }
+
+        _glancingRoutine = StartCoroutine(GlancingCooldownRoutine());
+    }
+
+    private System.Collections.IEnumerator GlancingCooldownRoutine()
+    {
+        float duration = Mathf.Max(0.1f, glancingEffectDuration);
+        yield return new WaitForSeconds(duration);
+
+        _glancingActive = false;
+
+        if (_glancingSmokeInstance != null)
+            Destroy(_glancingSmokeInstance);
+        if (_glancingSparksInstance != null)
+            Destroy(_glancingSparksInstance);
+
+        _glancingSmokeInstance = null;
+        _glancingSparksInstance = null;
+        _glancingRoutine = null;
     }
 }

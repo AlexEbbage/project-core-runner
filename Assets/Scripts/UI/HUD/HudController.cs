@@ -9,10 +9,20 @@ using UnityEngine.UI;
 /// </summary>
 public class HudController : MonoBehaviour
 {
+    [System.Serializable]
+    public class PowerupIndicator
+    {
+        public PowerupType powerupType;
+        public GameObject root;
+        public Image icon;
+        public TMP_Text timerText;
+    }
+
     [Header("References")]
     [SerializeField] private GameManager gameManager;
     [SerializeField] private RunScoreManager scoreManager;
     [SerializeField] private PlayerHealth playerHealth;
+    [SerializeField] private PlayerPowerupController powerupController;
 
     [Header("Root")]
     [SerializeField] private GameObject rootPanel;
@@ -29,11 +39,15 @@ public class HudController : MonoBehaviour
     [Header("Speed")]
     [SerializeField] private TMP_Text speedText;
 
+    [Header("Powerups")]
+    [SerializeField] private PowerupIndicator[] powerupIndicators;
+
     private void Awake()
     {
         if (gameManager == null) gameManager = FindFirstObjectByType<GameManager>();
         if (scoreManager == null) scoreManager = FindFirstObjectByType<RunScoreManager>();
         if (playerHealth == null) playerHealth = FindFirstObjectByType<PlayerHealth>();
+        if (powerupController == null) powerupController = FindFirstObjectByType<PlayerPowerupController>();
 
         if (rootPanel == null) rootPanel = gameObject;
     }
@@ -96,6 +110,7 @@ public class HudController : MonoBehaviour
         }
 
         UpdateBestScoreDisplay();
+        UpdatePowerupIndicators();
     }
 
     private void HandleHealthChanged(float current, float max)
@@ -146,6 +161,50 @@ public class HudController : MonoBehaviour
     {
         if (speedText == null) return;
         speedText.text = $"{speed:0}"; // plain number, or $"{speed:0} u/s"
+    }
+
+    private void UpdatePowerupIndicators()
+    {
+        if (powerupIndicators == null || powerupIndicators.Length == 0 || powerupController == null)
+            return;
+
+        var active = powerupController.GetActivePowerups();
+        for (int i = 0; i < powerupIndicators.Length; i++)
+        {
+            var indicator = powerupIndicators[i];
+            if (indicator == null)
+                continue;
+
+            bool isActive = false;
+            float remaining = 0f;
+            bool timed = false;
+
+            foreach (var status in active)
+            {
+                if (status.Type == indicator.powerupType)
+                {
+                    isActive = true;
+                    remaining = status.RemainingTime;
+                    timed = status.IsTimed;
+                    break;
+                }
+            }
+
+            if (indicator.root != null)
+                indicator.root.SetActive(isActive);
+
+            if (indicator.timerText != null)
+            {
+                indicator.timerText.gameObject.SetActive(isActive && timed);
+                if (isActive && timed)
+                {
+                    indicator.timerText.text = $"{Mathf.CeilToInt(remaining)}";
+                }
+            }
+
+            if (indicator.icon != null)
+                indicator.icon.enabled = isActive;
+        }
     }
 
 }

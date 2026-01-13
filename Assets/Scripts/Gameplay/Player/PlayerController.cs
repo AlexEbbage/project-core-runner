@@ -33,6 +33,8 @@ public class PlayerController : MonoBehaviour
     private float _currentForwardSpeed;
     private float _moveInput;
     private bool _isRunning;
+    private bool _autoPilotActive;
+    private float _autoPilotInput;
 
     // Angular position around the tube, in degrees.
     private float _angleDegrees;
@@ -78,7 +80,8 @@ public class PlayerController : MonoBehaviour
 
         float dt = Time.deltaTime;
         //float horizontalInput = GetHorizontalInput();
-        UpdateMovementAndRotation(_moveInput, dt);
+        float input = _autoPilotActive ? _autoPilotInput : _moveInput;
+        UpdateMovementAndRotation(input, dt);
     }
 
     // ---- Public API ----
@@ -101,6 +104,20 @@ public class PlayerController : MonoBehaviour
     public float GetCurrentForwardSpeed() => _currentForwardSpeed;
 
     public float CurrentAngleDegrees => _angleDegrees;
+    public float TubeRadius => tubeRadius;
+
+    public void SetAutoPilotActive(bool active, float inputValue = 0f)
+    {
+        _autoPilotActive = active;
+        _autoPilotInput = Mathf.Clamp(inputValue, -1f, 1f);
+    }
+
+    public void SetAutoPilotInput(float inputValue)
+    {
+        _autoPilotInput = Mathf.Clamp(inputValue, -1f, 1f);
+    }
+
+    public float AngularSpeedDegrees => angularSpeedDegrees;
 
     // ---- Core movement ----
 

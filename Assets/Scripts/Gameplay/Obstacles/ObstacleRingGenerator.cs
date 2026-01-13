@@ -33,6 +33,16 @@ public class ObstacleRingGenerator : MonoBehaviour
     {
         public ObstacleRingType type;
         public GameObject prefab;
+        [Min(0)] public int weight = 1;
+        [Tooltip("Extra weight added when difficulty ramps to 1.")]
+        [Min(0f)] public float weightBonusAtMaxDifficulty = 0f;
+    }
+
+    [System.Serializable]
+    public class PowerupEntry
+    {
+        public PowerupType type;
+        [Min(0)] public int weight = 1;
     }
 
     private class RingInstance
@@ -40,6 +50,7 @@ public class ObstacleRingGenerator : MonoBehaviour
         public Transform root;
         public ObstacleRingType type;
         public GameObject obstacleInstance;
+        public readonly List<GameObject> pickups = new List<GameObject>();
     }
 
     private enum PatternMode
@@ -74,6 +85,7 @@ public class ObstacleRingGenerator : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private Transform player;
+    [SerializeField] private PlayerController playerController;
 
     [Header("Shape")]
     [Tooltip("Number of sides for the tunnel polygon.")]
@@ -91,12 +103,52 @@ public class ObstacleRingGenerator : MonoBehaviour
     [Header("Obstacle Types")]
     [SerializeField] private ObstacleRingPrefab[] obstaclePrefabs;
 
+    [Header("Pickups")]
+    [SerializeField] private Pickup pickupPrefab;
+    [SerializeField] private int pickupSlotsPerRing = 6;
+    [SerializeField] private float pickupSlotRadiusOverride = 0f;
+    [SerializeField] private int pickupSlotsToFillMin = 1;
+    [SerializeField] private int pickupSlotsToFillMax = 2;
+    [Range(0f, 1f)]
+    [SerializeField] private float pickupSlotSpawnChance = 0.8f;
+    [Range(0f, 1f)]
+    [SerializeField] private float obstacleRingPickupChance = 0.35f;
+    [Range(0f, 1f)]
+    [SerializeField] private float powerupSpawnChance = 0.15f;
+    [SerializeField] private PowerupEntry[] powerupEntries;
+    [SerializeField] private float pickupClearanceRadius = 0.35f;
+    [SerializeField] private int pickupPlacementAttempts = 3;
+    [SerializeField] private LayerMask obstacleOverlapMask = ~0;
+
+    [Header("Pickup Chains")]
+    [Range(0f, 1f)]
+    [SerializeField] private float pickupChainStartChance = 0.6f;
+    [SerializeField] private int pickupChainMinRings = 3;
+    [SerializeField] private int pickupChainMaxRings = 6;
+    [SerializeField] private int pickupChainGapMin = 1;
+    [SerializeField] private int pickupChainGapMax = 3;
+
+    [Header("Ring Sequence")]
+    [SerializeField] private int obstacleRingIntervalStart = 4;
+    [SerializeField] private int obstacleRingIntervalAtMaxDifficulty = 2;
+
     [Header("Global Pattern Settings (All Types)")]
     [Tooltip("Minimum rings in a type run (Laser/Fan/WedgeX).")]
     [SerializeField] private int minPatternRunLength = 3;
 
     [Tooltip("Maximum rings in a type run.")]
     [SerializeField] private int maxPatternRunLength = 7;
+
+    [Header("Difficulty Scaling")]
+    [SerializeField] private bool enableDifficultyScaling = true;
+    [Tooltip("Distance (in Z) over which difficulty ramps from 0 to 1.")]
+    [SerializeField] private float difficultyRampDistance = 600f;
+    [SerializeField] private int minPatternRunLengthAtMaxDifficulty = 2;
+    [SerializeField] private int maxPatternRunLengthAtMaxDifficulty = 5;
+    [Range(0f, 1f)]
+    [SerializeField] private float shiftedPatternChanceAtMaxDifficulty = 0.8f;
+    [Tooltip("Multiplier applied to wedge rotation steps at max difficulty.")]
+    [SerializeField] private float wedgeRotationStepMultiplierAtMaxDifficulty = 1.5f;
 
     [Tooltip("Chance to use shifted orientation vs random orientation for non-wedge types.")]
     [Range(0f, 1f)]
@@ -119,6 +171,12 @@ public class ObstacleRingGenerator : MonoBehaviour
     private System.Random _rng;
     private float _nextSpawnZ;
     private float _colorTime;
+    private float _startZ;
+    private int _ringSequenceIndex;
+    private int _pickupChainRemaining;
+    private int _pickupChainLength;
+    private int _pickupChainGapRemaining;
+    private float _pickupSpawnChanceMultiplier = 1f;
 
     // Global type-run pattern state (applies to all types)
     private ObstacleRingType _currentPatternType;
@@ -150,7 +208,14 @@ public class ObstacleRingGenerator : MonoBehaviour
         {
             var pc = FindFirstObjectByType<PlayerController>();
             if (pc != null)
+            {
                 player = pc.transform;
+                playerController = pc;
+            }
+        }
+        else if (playerController == null)
+        {
+            playerController = player.GetComponent<PlayerController>();
         }
 
         if (player == null)
@@ -168,6 +233,8 @@ public class ObstacleRingGenerator : MonoBehaviour
         _rng = (randomSeed != 0)
             ? new System.Random(randomSeed)
             : new System.Random(Random.Range(int.MinValue, int.MaxValue));
+
+        _startZ = player != null ? player.position.z : 0f;
     }
 
     private void Start()
@@ -231,8 +298,15 @@ public class ObstacleRingGenerator : MonoBehaviour
 
     private void ConfigureRing(RingInstance ring, int ringIndex)
     {
-        EnsurePatternState();
+        ClearPickups(ring);
+        bool isObstacleRing = ShouldSpawnObstacleRing();
+        if (!isObstacleRing)
+        {
+            ConfigurePickupRing(ring);
+            return;
+        }
 
+        EnsurePatternState();
         ObstacleRingType type = _currentPatternType;
 
         bool isWedgeType = type == ObstacleRingType.Wedge;
@@ -248,6 +322,7 @@ public class ObstacleRingGenerator : MonoBehaviour
 
         // Decrement type-run counter (how long we keep this obstacle type)
         _patternRingsRemaining--;
+        ConfigureObstacleRingPickups(ring);
     }
 
     #region Type-run state
@@ -257,15 +332,21 @@ public class ObstacleRingGenerator : MonoBehaviour
         if (_patternRingsRemaining > 0 || _wedgeRunRingsRemaining > 0)
             return;
 
+        float difficulty = GetDifficulty01();
+        int minRun = Mathf.RoundToInt(Mathf.Lerp(minPatternRunLength, minPatternRunLengthAtMaxDifficulty, difficulty));
+        int maxRun = Mathf.RoundToInt(Mathf.Lerp(maxPatternRunLength, maxPatternRunLengthAtMaxDifficulty, difficulty));
+        maxRun = Mathf.Max(maxRun, minRun);
+        float shiftedChance = Mathf.Lerp(shiftedPatternChance, shiftedPatternChanceAtMaxDifficulty, difficulty);
+
         // Choose new obstacle type
-        _currentPatternType = ChooseRandomObstacleType();
+        _currentPatternType = ChooseRandomObstacleType(difficulty);
 
         // Choose pattern mode for non-wedge types
-        _currentPatternMode = (RandomValue() < shiftedPatternChance)
+        _currentPatternMode = (RandomValue() < shiftedChance)
             ? PatternMode.ShiftedOrientation
             : PatternMode.RandomOrientationEachRing;
 
-        _patternRingsRemaining = RandomRange(minPatternRunLength, maxPatternRunLength + 1);
+        _patternRingsRemaining = RandomRange(minRun, maxRun + 1);
 
         _currentRotationStep = RandomRange(0, Mathf.Max(1, sideCount));
         _rotationStepDelta = RandomRange(-2, 3);
@@ -273,24 +354,45 @@ public class ObstacleRingGenerator : MonoBehaviour
             _rotationStepDelta = 1;
     }
 
-    private ObstacleRingType ChooseRandomObstacleType()
+    private ObstacleRingType ChooseRandomObstacleType(float difficulty)
     {
-        var available = new List<ObstacleRingType>();
+        var available = new List<ObstacleRingPrefab>();
         if (obstaclePrefabs != null)
         {
             foreach (var e in obstaclePrefabs)
             {
                 if (e != null && e.prefab != null)
-                    available.Add(e.type);
+                    available.Add(e);
             }
         }
 
         if (available.Count == 0)
             return ObstacleRingType.Wedge; // fallback
 
-        //int idx = RandomRange(0, available.Count);
-        int idx = RandomRange(0, 100) <= 40 ? 0 : 1;
-        return available[idx];
+        int totalWeight = 0;
+        foreach (var entry in available)
+        {
+            int baseWeight = Mathf.Max(0, entry.weight);
+            int bonus = Mathf.RoundToInt(Mathf.Max(0f, entry.weightBonusAtMaxDifficulty) * difficulty);
+            totalWeight += Mathf.Max(0, baseWeight + bonus);
+        }
+
+        if (totalWeight <= 0)
+            return available[0].type;
+
+        int roll = RandomRange(0, totalWeight);
+        int cumulative = 0;
+        foreach (var entry in available)
+        {
+            int baseWeight = Mathf.Max(0, entry.weight);
+            int bonus = Mathf.RoundToInt(Mathf.Max(0f, entry.weightBonusAtMaxDifficulty) * difficulty);
+            int w = Mathf.Max(0, baseWeight + bonus);
+            cumulative += w;
+            if (roll < cumulative)
+                return entry.type;
+        }
+
+        return available[0].type;
     }
 
     private GameObject GetPrefabForType(ObstacleRingType type)
@@ -452,6 +554,12 @@ public class ObstacleRingGenerator : MonoBehaviour
         if (_wedgeRunRingsRemaining > 0)
         {
             int maxStep = Mathf.Max(0, _currentWedgeSet.maxRotationStepPerRing);
+            if (enableDifficultyScaling)
+            {
+                float difficulty = GetDifficulty01();
+                float multiplier = Mathf.Lerp(1f, wedgeRotationStepMultiplierAtMaxDifficulty, difficulty);
+                maxStep = Mathf.RoundToInt(maxStep * multiplier);
+            }
             int delta = 0;
 
             if (maxStep > 0)
@@ -516,6 +624,199 @@ public class ObstacleRingGenerator : MonoBehaviour
 
     #endregion
 
+    #region Pickups
+
+    private void ConfigurePickupRing(RingInstance ring)
+    {
+        if (ring == null || ring.root == null || pickupPrefab == null)
+            return;
+
+        if (!EnsurePickupChain())
+            return;
+
+        int slotCount = Mathf.Max(1, pickupSlotsPerRing);
+        int slotsToFill = RandomRange(pickupSlotsToFillMin, pickupSlotsToFillMax + 1);
+        slotsToFill = Mathf.Clamp(slotsToFill, 0, slotCount);
+
+        var usedSlots = new HashSet<int>();
+        for (int i = 0; i < slotsToFill; i++)
+        {
+            float spawnChance = Mathf.Clamp01(pickupSlotSpawnChance * _pickupSpawnChanceMultiplier);
+            if (RandomValue() > spawnChance)
+                continue;
+
+            bool spawned = TrySpawnPickup(ring, slotCount, usedSlots, ShouldSpawnPowerupInChain());
+            if (!spawned)
+                break;
+        }
+
+        AdvancePickupChain();
+    }
+
+    private void ConfigureObstacleRingPickups(RingInstance ring)
+    {
+        if (ring == null || ring.root == null || pickupPrefab == null)
+            return;
+
+        float obstacleChance = Mathf.Clamp01(obstacleRingPickupChance * _pickupSpawnChanceMultiplier);
+        if (RandomValue() > obstacleChance)
+            return;
+
+        int slotCount = Mathf.Max(1, pickupSlotsPerRing);
+        var usedSlots = new HashSet<int>();
+        TrySpawnPickup(ring, slotCount, usedSlots, ShouldSpawnPowerupInChain());
+    }
+
+    private bool TrySpawnPickup(RingInstance ring, int slotCount, HashSet<int> usedSlots, bool allowPowerup)
+    {
+        int attempts = Mathf.Max(1, pickupPlacementAttempts);
+        for (int attempt = 0; attempt < attempts; attempt++)
+        {
+            int slotIndex = RandomRange(0, slotCount);
+            if (!usedSlots.Add(slotIndex))
+                continue;
+
+            float angleStep = 360f / slotCount;
+            float angleDeg = slotIndex * angleStep;
+            float radius = pickupSlotRadiusOverride > 0f ? pickupSlotRadiusOverride : GetDefaultPickupRadius();
+
+            float angleRad = angleDeg * Mathf.Deg2Rad;
+            Vector3 localPos = new Vector3(Mathf.Cos(angleRad) * radius, Mathf.Sin(angleRad) * radius, 0f);
+            Vector3 worldPos = ring.root.TransformPoint(localPos);
+            if (IsPickupBlocked(worldPos))
+                continue;
+
+            var pickup = Instantiate(pickupPrefab, ring.root);
+            pickup.transform.localPosition = localPos;
+            pickup.transform.localRotation = Quaternion.LookRotation(Vector3.forward, -localPos.normalized);
+
+            bool spawnPowerup = allowPowerup && RandomValue() <= powerupSpawnChance;
+            if (spawnPowerup)
+            {
+                pickup.Configure(PickupType.Powerup, ChooseRandomPowerup());
+            }
+            else
+            {
+                pickup.Configure(PickupType.Coin, PowerupType.CoinMultiplier);
+            }
+
+            ring.pickups.Add(pickup.gameObject);
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool EnsurePickupChain()
+    {
+        if (_pickupChainRemaining > 0)
+            return true;
+
+        if (_pickupChainGapRemaining > 0)
+        {
+            _pickupChainGapRemaining--;
+            return false;
+        }
+
+        if (RandomValue() > pickupChainStartChance)
+            return false;
+
+        _pickupChainLength = RandomRange(pickupChainMinRings, pickupChainMaxRings + 1);
+        _pickupChainRemaining = _pickupChainLength;
+        return true;
+    }
+
+    private void AdvancePickupChain()
+    {
+        if (_pickupChainRemaining <= 0)
+            return;
+
+        _pickupChainRemaining--;
+        if (_pickupChainRemaining <= 0)
+        {
+            _pickupChainGapRemaining = RandomRange(pickupChainGapMin, pickupChainGapMax + 1);
+        }
+    }
+
+    private bool ShouldSpawnPowerupInChain()
+    {
+        if (_pickupChainRemaining <= 0)
+            return false;
+
+        int chainIndex = _pickupChainLength - _pickupChainRemaining;
+        int midIndex = _pickupChainLength / 2;
+        return chainIndex == 0 || chainIndex == midIndex || _pickupChainRemaining == 1;
+    }
+
+    private PowerupType ChooseRandomPowerup()
+    {
+        if (powerupEntries == null || powerupEntries.Length == 0)
+            return PowerupType.CoinMultiplier;
+
+        int totalWeight = 0;
+        foreach (var entry in powerupEntries)
+        {
+            if (entry == null)
+                continue;
+            totalWeight += Mathf.Max(0, entry.weight);
+        }
+
+        if (totalWeight <= 0)
+            return powerupEntries[0].type;
+
+        int roll = RandomRange(0, totalWeight);
+        int cumulative = 0;
+        foreach (var entry in powerupEntries)
+        {
+            if (entry == null)
+                continue;
+            int w = Mathf.Max(0, entry.weight);
+            cumulative += w;
+            if (roll < cumulative)
+                return entry.type;
+        }
+
+        return powerupEntries[0].type;
+    }
+
+    private float GetDefaultPickupRadius()
+    {
+        return playerController != null ? playerController.TubeRadius : 5f;
+    }
+
+    private void ClearPickups(RingInstance ring)
+    {
+        if (ring == null)
+            return;
+
+        foreach (var pickup in ring.pickups)
+        {
+            if (pickup != null)
+                Destroy(pickup);
+        }
+        ring.pickups.Clear();
+    }
+
+    private bool ShouldSpawnObstacleRing()
+    {
+        int interval = Mathf.RoundToInt(Mathf.Lerp(obstacleRingIntervalStart, obstacleRingIntervalAtMaxDifficulty, GetDifficulty01()));
+        interval = Mathf.Max(1, interval);
+        _ringSequenceIndex++;
+        return _ringSequenceIndex % interval == 0;
+    }
+
+    public void SetPickupSpawnChanceMultiplier(float multiplier)
+    {
+        _pickupSpawnChanceMultiplier = Mathf.Max(0f, multiplier);
+    }
+
+    private bool IsPickupBlocked(Vector3 worldPosition)
+    {
+        return Physics.CheckSphere(worldPosition, pickupClearanceRadius, obstacleOverlapMask);
+    }
+
+    #endregion
+
     #region Color / random / utility
 
     private void ApplyColor(RingInstance ring, int index, float time)
@@ -553,6 +854,15 @@ public class ObstacleRingGenerator : MonoBehaviour
         return r < 0 ? r + m : r;
     }
 
+    private float GetDifficulty01()
+    {
+        if (!enableDifficultyScaling || player == null || difficultyRampDistance <= 0f)
+            return 0f;
+
+        float distance = Mathf.Max(0f, player.position.z - _startZ);
+        return Mathf.Clamp01(distance / difficultyRampDistance);
+    }
+
     public void RebuildAll(int sides)
     {
         sideCount = Mathf.Max(3, sides);
@@ -568,6 +878,12 @@ public class ObstacleRingGenerator : MonoBehaviour
 
         _patternRingsRemaining = 0;
         _nextSpawnZ = player.position.z + ringSpacing;
+        _startZ = player.position.z;
+        _ringSequenceIndex = 0;
+        _pickupChainRemaining = 0;
+        _pickupChainLength = 0;
+        _pickupChainGapRemaining = 0;
+        _pickupSpawnChanceMultiplier = 1f;
 
         _inWedgeRun = false;
         _currentWedgeSet = null;
@@ -602,6 +918,11 @@ public class ObstacleRingGenerator : MonoBehaviour
 
         _patternRingsRemaining = 0;
         _nextSpawnZ = player.position.z + ringSpacing * 4.2f;
+        _ringSequenceIndex = 0;
+        _pickupChainRemaining = 0;
+        _pickupChainLength = 0;
+        _pickupChainGapRemaining = 0;
+        _pickupSpawnChanceMultiplier = 1f;
 
         _inWedgeRun = false;
         _currentWedgeSet = null;
