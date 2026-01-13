@@ -49,11 +49,6 @@ public class SettingsMenuUI : MonoBehaviour
 
     public static void Vibrate()
     {
-        if (!SettingsData.VibrateEnabled)
-            return;
-
-#if UNITY_ANDROID && !UNITY_EDITOR
-        Handheld.Vibrate();
-#endif
+        VibrationController.Vibrate();
     }
 }
