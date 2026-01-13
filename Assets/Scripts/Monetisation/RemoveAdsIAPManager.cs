@@ -144,17 +144,28 @@ public class RemoveAdsIAPManager : MonoBehaviour, IStoreListener
         return PurchaseProcessingResult.Complete;
     }
 
+    public void OnPurchaseFailed(Product product, PurchaseFailureReason reason)
+    {
+        LogPurchaseFailed(reason.ToString(), null);
+    }
+
 #if UNITY_2022_1_OR_NEWER
     public void OnPurchaseFailed(Product product, PurchaseFailureReason reason, string message)
     {
-        Debug.LogError($"Purchase failed: {reason}, {message}");
-    }
-#else
-    public void OnPurchaseFailed(Product product, PurchaseFailureReason reason)
-    {
-        Debug.LogError($"Purchase failed: {reason}");
+        LogPurchaseFailed(reason.ToString(), message);
     }
 #endif
+
+    private void LogPurchaseFailed(string reason, string message)
+    {
+        if (string.IsNullOrEmpty(message))
+        {
+            Debug.LogError($"Purchase failed: {reason}");
+            return;
+        }
+
+        Debug.LogError($"Purchase failed: {reason}, {message}");
+    }
 
     private void GrantProduct(string productId)
     {
