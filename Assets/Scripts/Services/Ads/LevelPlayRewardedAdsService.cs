@@ -255,8 +255,10 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
 
         private bool TryBindNewLevelPlay()
         {
-            _lpSdkType = FindType("Unity.Services.LevelPlay.LevelPlaySDK");
-            _lpRewardedType = FindType("Unity.Services.LevelPlay.LevelPlayRewardedAd");
+            _lpSdkType = FindType("Unity.Services.LevelPlay.LevelPlaySDK")
+                ?? FindTypeByName("LevelPlaySDK");
+            _lpRewardedType = FindType("Unity.Services.LevelPlay.LevelPlayRewardedAd")
+                ?? FindTypeByName("LevelPlayRewardedAd");
 
             if (_lpSdkType == null || _lpRewardedType == null)
                 return false;
@@ -666,6 +668,37 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
                 // ignore
             }
         }
+        return null;
+    }
+
+    private static Type FindTypeByName(string typeName)
+    {
+        foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            Type[] types;
+            try
+            {
+                types = asm.GetTypes();
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                types = ex.Types;
+            }
+            catch
+            {
+                continue;
+            }
+
+            if (types == null) continue;
+
+            foreach (var type in types)
+            {
+                if (type == null) continue;
+                if (string.Equals(type.Name, typeName, StringComparison.Ordinal))
+                    return type;
+            }
+        }
+
         return null;
     }
 }

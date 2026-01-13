@@ -1,0 +1,10 @@
+<linker>
+  <assembly fullname="Unity.Services.LevelPlay">
+    <type fullname="Unity.Services.LevelPlay.LevelPlaySDK" preserve="all" />
+    <type fullname="Unity.Services.LevelPlay.LevelPlayRewardedAd" preserve="all" />
+  </assembly>
+  <assembly fullname="IronSource">
+    <type fullname="IronSource.Agent" preserve="all" />
+    <type fullname="IronSourceEvents" preserve="all" />
+  </assembly>
+</linker>
