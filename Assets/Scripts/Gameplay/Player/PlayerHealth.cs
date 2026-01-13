@@ -26,6 +26,7 @@ public class PlayerHealth : MonoBehaviour
     [SerializeField] private GameObject glancingSmokeVfxPrefab;
     [SerializeField] private GameObject glancingSparksVfxPrefab;
     [SerializeField] private float glancingEffectDuration = 3f;
+    [SerializeField] private VfxManager vfxManager;
 
     [Header("Audio")]
     [SerializeField] private AudioManager audioManager;
@@ -63,6 +64,11 @@ public class PlayerHealth : MonoBehaviour
         if (audioManager == null)
         {
             audioManager = FindFirstObjectByType<AudioManager>();
+        }
+
+        if (vfxManager == null)
+        {
+            vfxManager = VfxManager.Instance;
         }
 
         RaiseHealthChanged();
@@ -177,7 +183,14 @@ public class PlayerHealth : MonoBehaviour
             return;
 
         Quaternion rotation = Quaternion.LookRotation(normal, Vector3.up);
-        Instantiate(prefab, position, rotation);
+        if (vfxManager != null)
+        {
+            vfxManager.Spawn(prefab, position, rotation);
+        }
+        else
+        {
+            Instantiate(prefab, position, rotation);
+        }
     }
 
     private void RaiseHealthChanged()
