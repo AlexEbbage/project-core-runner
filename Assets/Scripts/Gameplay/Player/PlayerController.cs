@@ -25,6 +25,8 @@ public class PlayerController : MonoBehaviour
     [Header("Input")]
     [Tooltip("If true AND legacy input is enabled, Horizontal axis (A/D, arrows) is used in editor.")]
     [SerializeField] private bool allowKeyboardInputInEditor = true;
+    [Tooltip("Scales touch drag input after normalizing by screen width.")]
+    [SerializeField] private float touchInputSensitivity = 1f;
 
     [Header("Run Control")]
     [Tooltip("If true, movement is enabled immediately at Start. Otherwise, call StartRun() from GameManager.")]
@@ -68,7 +70,15 @@ public class PlayerController : MonoBehaviour
 
     public void OnMove(InputAction.CallbackContext context)
     {
-        _moveInput = context.ReadValue<Vector2>().x;
+        Vector2 input = context.ReadValue<Vector2>();
+        if (context.control?.device is Touchscreen)
+        {
+            float normalized = input.x / Mathf.Max(Screen.width, 1f);
+            _moveInput = Mathf.Clamp(normalized * touchInputSensitivity, -1f, 1f);
+            return;
+        }
+
+        _moveInput = Mathf.Clamp(input.x, -1f, 1f);
     }
 
     private void Update()
