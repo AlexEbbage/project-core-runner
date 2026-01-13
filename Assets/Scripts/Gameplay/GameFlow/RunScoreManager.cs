@@ -35,11 +35,15 @@ public class RunScoreManager : MonoBehaviour
     private float _lastPlayerZ;
 
     private bool _isRunActive = true;
+    private float _powerupScoreMultiplier = 1f;
+    private float _powerupPickupMultiplier = 1f;
 
     public float CurrentScore => _currentScore;
     public float BestScore => _bestScore;
     public float ComboValue => _comboValue;
     public float CurrentMultiplier => 1f + _comboValue * comboToMultiplierFactor;
+    public float PowerupScoreMultiplier => _powerupScoreMultiplier;
+    public float PowerupPickupMultiplier => _powerupPickupMultiplier;
 
     private void Awake()
     {
@@ -105,7 +109,7 @@ public class RunScoreManager : MonoBehaviour
         if (deltaZ > 0f)
         {
             float baseScore = deltaZ * distanceScoreMultiplier;
-            float added = baseScore * CurrentMultiplier;
+            float added = baseScore * CurrentMultiplier * _powerupScoreMultiplier;
             _currentScore += added;
 
             if (logScoreEvents)
@@ -132,7 +136,7 @@ public class RunScoreManager : MonoBehaviour
             return;
 
         _comboValue = Mathf.Min(maxComboValue, _comboValue + comboIncreasePerPickup);
-        float added = pickupBaseScore * CurrentMultiplier;
+        float added = pickupBaseScore * CurrentMultiplier * _powerupScoreMultiplier * _powerupPickupMultiplier;
         _currentScore += added;
 
         if (logScoreEvents)
@@ -189,5 +193,15 @@ public class RunScoreManager : MonoBehaviour
         {
             Debug.Log($"RunScoreManager: ResumeAfterContinue. Score={_currentScore:F1}, Combo={_comboValue:F2}");
         }
+    }
+
+    public void SetPowerupScoreMultiplier(float multiplier)
+    {
+        _powerupScoreMultiplier = Mathf.Max(1f, multiplier);
+    }
+
+    public void SetPowerupPickupMultiplier(float multiplier)
+    {
+        _powerupPickupMultiplier = Mathf.Max(1f, multiplier);
     }
 }

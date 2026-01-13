@@ -30,11 +30,23 @@ public class GameBalanceConfig : ScriptableObject
     public int obstacleSpawnEveryNthSegment = 2;
 
     [Header("Pickups")]
+    public int coinValue = 1;
     public int pickupLaneCount = 3;
     public float pickupLaneSpacing = 3f;
     [Range(0f, 1f)] public float pickupSegmentProbability = 0.7f;
     public int pickupMinPerSegment = 1;
     public int pickupMaxPerSegment = 2;
+
+    [Header("Powerups")]
+    [Range(0f, 1f)] public float powerupSpawnChance = 0.15f;
+    public float autoPilotDuration = 4f;
+    public float coinMultiplierValue = 2f;
+    public float coinMultiplierDuration = 6f;
+    public float scoreMultiplierValue = 2f;
+    public float scoreMultiplierDuration = 6f;
+    public float shieldDuration = 5f;
+    public float coinBonanzaSpawnMultiplier = 2.5f;
+    public float coinBonanzaDuration = 6f;
 
     [Header("Continues")]
     public int maxContinuesPerRun = 3;
