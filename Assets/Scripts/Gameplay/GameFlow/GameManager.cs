@@ -76,6 +76,17 @@ public class GameManager : MonoBehaviour
 
     public bool GameTimerEnabled => _gameTimerEnabled;
 
+    public bool IsContinueAdReady()
+    {
+        if (_adInProgress)
+            return false;
+
+        if (_rewardedAdService == null)
+            return false;
+
+        return _rewardedAdService.IsRewardedAdReady();
+    }
+
     private void Awake()
     {
         if (balanceConfig != null)
@@ -244,22 +255,15 @@ public class GameManager : MonoBehaviour
         {
             if (logStateChanges)
             {
-                Debug.LogWarning("GameManager: No IRewardedAdService assigned. Continuing instantly (no ad).");
+                Debug.LogWarning("GameManager: No IRewardedAdService assigned. Cannot show rewarded ad.");
             }
 
-            LogAnalyticsEvent("ad_shown", new Dictionary<string, object>
+            LogAnalyticsEvent("ad_not_ready", new Dictionary<string, object>
             {
                 { "source", "continue" },
-                { "mock_service", true }
+                { "reason", "service_missing" }
             });
 
-            LogAnalyticsEvent("ad_completed", new Dictionary<string, object>
-            {
-                { "source", "continue" },
-                { "mock_service", true }
-            });
-
-            HandleContinueAdResult(success: true);
             return;
         }
 
@@ -339,7 +343,7 @@ public class GameManager : MonoBehaviour
 
         _elapsedTime = 0;
 
-        // Show and enable the player now were playing
+        // Show and enable the player now we're playing
         SetPlayerVisible(true);
         SetPlayerCollidable(true);
 
@@ -349,17 +353,13 @@ public class GameManager : MonoBehaviour
         hudController?.Show();
 
         playerHealth?.ResetHealth();
+        playerVisual.SetVisible(true);
         scoreManager?.ResetRun();
         speedController?.ResetForNewRun();
         runZoneManager?.OnResetRun();
 
         LogAnalyticsEvent("run_start");
 
-        StartRun();
-    }
-
-    public void StartRun()
-    {
         obstacleRingGenerator.DissolveNextRings(startClearRings, dissolveDuration);
         playerController?.StartRun();
 
@@ -381,6 +381,7 @@ public class GameManager : MonoBehaviour
 
         obstacleRingGenerator.DissolveNextRings(startClearRings, dissolveDuration);
         playerController?.StartRun();
+        playerVisual.SetVisible(true);
 
         countdownUIController.BeginCountdown(3, OnContinueCountdownComplete);
     }
@@ -436,8 +437,15 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 0.2f;
         SetState(GameState.GameOver);
         playerController?.StopRun();
+        playerVisual.SetVisible(false);
 
-        LogRunEndAnalytics("death");
+        LogAnalyticsEvent("run_ended", new Dictionary<string, object>
+        {
+            { "score", scoreManager != null ? scoreManager.CurrentScore : 0 },
+            { "time", _elapsedTime },
+            { "continues_used", continuesUsed }
+        });
+
         ShowGameOverUI();
     }
 
@@ -570,13 +578,18 @@ public class GameManager : MonoBehaviour
         _analytics.LogEvent("run_end", data);
     }
 
-    private void LogAnalyticsEvent(string eventName)
+    private void LogAnalyticsEvent(string eventName, Dictionary<string, object> parameters = null)
     {
-        _analytics?.LogEvent(eventName);
-    }
+        if (_analytics == null)
+            return;
 
-    private void LogAnalyticsEvent(string eventName, Dictionary<string, object> parameters)
-    {
-        _analytics?.LogEvent(eventName, parameters);
+        if (parameters == null)
+        {
+            _analytics.LogEvent(eventName);
+        }
+        else
+        {
+            _analytics.LogEvent(eventName, parameters);
+        }
     }
 }

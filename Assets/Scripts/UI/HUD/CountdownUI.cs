@@ -23,6 +23,7 @@ public class CountdownUIController : MonoBehaviour
     [Header("Timing")]
     [Tooltip("Seconds each number stays on screen.")]
     [SerializeField] private float stepDuration = 1.0f;
+    [SerializeField] private float audioOffset = 0.5f;
 
     [Tooltip("Countdown string for GO step.")]
     [SerializeField] private string goText = "GO!";
@@ -159,14 +160,7 @@ public class CountdownUIController : MonoBehaviour
         // Sound
         if (audioManager != null)
         {
-            if (isGoStep)
-            {
-                audioManager.PlayCountdownGo();
-            }
-            else
-            {
-                audioManager.PlayCountdownTimer();
-            }
+            StartCoroutine(PlayBeepDelayed(audioOffset, isGoStep));
         }
 
         //// Screen shake
@@ -200,5 +194,19 @@ public class CountdownUIController : MonoBehaviour
 
         // ensure visible at end of step (except alpha for next fade)
         countdownText.transform.localScale = Vector3.one * scaleCurve.Evaluate(1f);
+    }
+
+    IEnumerator PlayBeepDelayed(float delay, bool isGoStep)
+    {
+        yield return new WaitForSeconds(delay);
+
+        if (isGoStep)
+        {
+            audioManager.PlayCountdownGo();
+        }
+        else
+        {
+            audioManager.PlayCountdownTimer();
+        }
     }
 }

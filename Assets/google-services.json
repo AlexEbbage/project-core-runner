@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "671557953008",
+    "project_id": "core-runner",
+    "storage_bucket": "core-runner.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:671557953008:android:79c15b2a5d97280f69e935",
+        "android_client_info": {
+          "package_name": "com.RidgebackGames.CoreRunner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBusOskIvNAScKG5p9ksWeV-9K6KIxqur4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
