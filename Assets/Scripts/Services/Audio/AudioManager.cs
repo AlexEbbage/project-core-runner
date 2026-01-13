@@ -14,12 +14,16 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private string musicVolumeParam = "MusicVolume";
     [SerializeField] private string musicLowpassParam = "MusicLowpass";
 
+    [Serializable]
+    private struct GameplayTrack
+    {
+        public AudioClip clip;
+        public int bpm;
+    }
+
     [Header("Music Clips")]
     [SerializeField] private AudioClip menuMusic;
-    [SerializeField] private AudioClip[] gameplayMusicTracks;
-
-    [Header("Gameplay Track BPMs (for debug)")]
-    [SerializeField] private int[] gameplayTrackBPMs = { 118, 128, 142 };
+    [SerializeField] private GameplayTrack[] gameplayTracks;
 
     [Header("Crossfade")]
     [SerializeField] private float musicCrossfadeTime = 1.0f;
@@ -66,10 +70,10 @@ public class AudioManager : MonoBehaviour
         {
             if (_isInMenu)
                 return menuMusic != null ? $"Menu: {menuMusic.name}" : "Menu: None";
-            if (gameplayMusicTracks == null || gameplayMusicTracks.Length == 0)
+            if (gameplayTracks == null || gameplayTracks.Length == 0)
                 return "Gameplay: None";
-            var clip = gameplayMusicTracks[Mathf.Clamp(_currentGameplayIndex, 0, gameplayMusicTracks.Length - 1)];
-            return clip != null ? clip.name : "Gameplay: None";
+            var track = gameplayTracks[Mathf.Clamp(_currentGameplayIndex, 0, gameplayTracks.Length - 1)];
+            return track.clip != null ? track.clip.name : "Gameplay: None";
         }
     }
 
@@ -78,10 +82,10 @@ public class AudioManager : MonoBehaviour
         get
         {
             if (_isInMenu) return 95; // menu BPM from design
-            if (gameplayTrackBPMs == null || gameplayTrackBPMs.Length == 0)
+            if (gameplayTracks == null || gameplayTracks.Length == 0)
                 return 0;
-            int idx = Mathf.Clamp(_currentGameplayIndex, 0, gameplayTrackBPMs.Length - 1);
-            return gameplayTrackBPMs[idx];
+            int idx = Mathf.Clamp(_currentGameplayIndex, 0, gameplayTracks.Length - 1);
+            return gameplayTracks[idx].bpm;
         }
     }
 
@@ -109,10 +113,15 @@ public class AudioManager : MonoBehaviour
             Debug.LogWarning($"{nameof(AudioManager)} is missing an SFX source.", this);
         }
 
-        if (gameplayMusicTracks != null && gameplayTrackBPMs != null &&
-            gameplayMusicTracks.Length != gameplayTrackBPMs.Length)
+        if (gameplayTracks != null)
         {
-            Debug.LogWarning($"{nameof(AudioManager)} gameplay track count does not match BPM count.", this);
+            for (int i = 0; i < gameplayTracks.Length; i++)
+            {
+                if (gameplayTracks[i].clip == null)
+                {
+                    Debug.LogWarning($"{nameof(AudioManager)} gameplay track at index {i} is missing a clip.", this);
+                }
+            }
         }
 
         if (musicSourceA != null)
@@ -155,23 +164,42 @@ public class AudioManager : MonoBehaviour
     public void PlayGameplayMusic()
     {
         _isInMenu = false;
-        if (gameplayMusicTracks == null || gameplayMusicTracks.Length == 0) return;
+        if (gameplayTracks == null || gameplayTracks.Length == 0) return;
 
         _currentGameplayIndex = 0;
-        AudioClip clip = gameplayMusicTracks[0];
+        AudioClip clip = GetGameplayClip(_currentGameplayIndex);
+        if (clip == null)
+        {
+            Debug.LogWarning($"{nameof(AudioManager)} gameplay track at index {_currentGameplayIndex} is missing a clip.", this);
+            return;
+        }
         CrossfadeToClip(clip, true);
     }
 
     public void PlayGameplayTrackIndex(int index)
     {
         _isInMenu = false;
-        if (gameplayMusicTracks == null || gameplayMusicTracks.Length == 0) return;
+        if (gameplayTracks == null || gameplayTracks.Length == 0) return;
 
-        index = Mathf.Clamp(index, 0, gameplayMusicTracks.Length - 1);
+        index = Mathf.Clamp(index, 0, gameplayTracks.Length - 1);
         _currentGameplayIndex = index;
 
-        AudioClip clip = gameplayMusicTracks[index];
+        AudioClip clip = GetGameplayClip(_currentGameplayIndex);
+        if (clip == null)
+        {
+            Debug.LogWarning($"{nameof(AudioManager)} gameplay track at index {_currentGameplayIndex} is missing a clip.", this);
+            return;
+        }
         CrossfadeToClip(clip, true);
+    }
+
+    private AudioClip GetGameplayClip(int index)
+    {
+        if (gameplayTracks == null || gameplayTracks.Length == 0)
+            return null;
+
+        int clampedIndex = Mathf.Clamp(index, 0, gameplayTracks.Length - 1);
+        return gameplayTracks[clampedIndex].clip;
     }
 
     public void StopMusic()

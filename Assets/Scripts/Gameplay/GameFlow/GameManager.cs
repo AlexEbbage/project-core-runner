@@ -56,17 +56,18 @@ public class GameManager : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private bool logStateChanges = false;
 
-    private GameState _currentState;
     private IRewardedAdService _rewardedAdService;
     private IAnalyticsService _analytics;
     private bool _adInProgress;
     private float _elapsedTime;
     private bool _gameTimerEnabled;
+    private GameStateMachine _stateMachine;
+    private GameServicesFacade _services;
 
     private Vector3 _lastDeathPosition;
     private Vector3 _lastDeathForward;
 
-    public GameState CurrentState => _currentState;
+    public GameState CurrentState => _stateMachine != null ? _stateMachine.CurrentState : GameState.Menu;
 
     public int ContinuesUsed => continuesUsed;
 
@@ -81,14 +82,16 @@ public class GameManager : MonoBehaviour
         if (_adInProgress)
             return false;
 
-        if (_rewardedAdService == null)
+        if (_services?.RewardedAds == null)
             return false;
 
-        return _rewardedAdService.IsRewardedAdReady();
+        return _services.RewardedAds.IsRewardedAdReady();
     }
 
     private void Awake()
     {
+        _stateMachine = new GameStateMachine(logStateChanges);
+
         if (balanceConfig != null)
         {
             maxContinuesPerRun = balanceConfig.maxContinuesPerRun;
@@ -138,6 +141,8 @@ public class GameManager : MonoBehaviour
                 Debug.LogWarning("GameManager: analyticsServiceBehaviour does not implement IAnalyticsService.");
             }
         }
+
+        _services = new GameServicesFacade(audioManager, vfxManager, _rewardedAdService, _analytics);
     }
 
     private void OnEnable()
@@ -159,13 +164,13 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         Time.timeScale = 1f;
-        audioManager?.PlayMenuMusic();
+        _services?.Audio?.PlayMenuMusic();
         GoToMenu();
     }
 
     private void Update()
     {
-        if (_currentState == GameState.Playing && _gameTimerEnabled)
+        if (_stateMachine.CurrentState == GameState.Playing && _gameTimerEnabled)
         {
             _elapsedTime += Time.deltaTime;
         }
@@ -173,69 +178,64 @@ public class GameManager : MonoBehaviour
 
     private void SetState(GameState newState)
     {
-        _currentState = newState;
-
-        if (logStateChanges)
-        {
-            Debug.Log($"GameManager: State -> {_currentState}");
-        }
+        _stateMachine.SetState(newState);
     }
 
     // --- UI hooks ---
 
     public void OnPlayButtonPressed()
     {
-        audioManager?.PlayButtonClick();
-        audioManager?.PlayGameplayMusic();
+        _services?.Audio?.PlayButtonClick();
+        _services?.Audio?.PlayGameplayMusic();
         StartNewRunFromMenu();
     }
 
     public void OnRestartButtonPressed()
     {
-        audioManager?.PlayButtonClick();
+        _services?.Audio?.PlayButtonClick();
         StartNewRunFromGameOver();
     }
 
     public void OnMenuButtonPressedFromGameOver()
     {
-        audioManager?.PlayButtonClick();
-        audioManager?.PlayMenuMusic();
+        _services?.Audio?.PlayButtonClick();
+        _services?.Audio?.PlayMenuMusic();
         runZoneManager?.OnRunEnded();
         GoToMenu();
     }
 
     public void OnPauseButtonPressed()
     {
-        if (_currentState != GameState.Playing)
+        if (_stateMachine.CurrentState != GameState.Playing)
             return;
 
-        audioManager?.PlayButtonClick();
+        _services?.Audio?.PlayButtonClick();
         PauseGame();
     }
 
     public void OnResumeButtonPressedFromPause()
     {
-        if (_currentState != GameState.Paused)
+        if (_stateMachine.CurrentState != GameState.Paused)
             return;
 
-        audioManager?.PlayButtonClick();
+        _services?.Audio?.PlayButtonClick();
         ResumeGame();
     }
 
     public void OnMenuButtonPressedFromPause()
     {
-        audioManager?.PlayButtonClick();
-        audioManager?.PlayMenuMusic();
+        _services?.Audio?.PlayButtonClick();
+        _services?.Audio?.PlayMenuMusic();
         runZoneManager?.OnRunEnded();
         GoToMenu();
     }
 
     public void OnContinueButtonPressed()
     {
-        if (_currentState != GameState.GameOver)
+        if (_stateMachine.CurrentState != GameState.GameOver)
             return;
 
-        audioManager?.PlayButtonClick();
+        _services?.Audio?.PlayButtonClick();
 
         if (continuesUsed >= maxContinuesPerRun)
         {
@@ -269,7 +269,7 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        if (_rewardedAdService == null)
+        if (_services?.RewardedAds == null)
         {
             if (logStateChanges)
             {
@@ -285,7 +285,7 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        if (!_rewardedAdService.IsRewardedAdReady())
+        if (!_services.RewardedAds.IsRewardedAdReady())
         {
             if (logStateChanges)
             {
@@ -314,7 +314,7 @@ public class GameManager : MonoBehaviour
             { "continue_index", continuesUsed + 1 }
         });
 
-        _rewardedAdService.ShowRewardedAd(HandleContinueAdResult);
+        _services.RewardedAds.ShowRewardedAd(HandleContinueAdResult);
     }
 
     // --- flow ---
@@ -441,7 +441,7 @@ public class GameManager : MonoBehaviour
     private void HandlePlayerDeath()
     {
         // Ignore deaths unless we're actually playing
-        if (_currentState != GameState.Playing)
+        if (_stateMachine.CurrentState != GameState.Playing)
             return;
 
         if (playerController != null)
@@ -541,9 +541,10 @@ public class GameManager : MonoBehaviour
 
             if (continueRespawnVfxPrefab != null)
             {
-                if (vfxManager != null)
+                var vfx = _services?.Vfx;
+                if (vfx != null)
                 {
-                    vfxManager.Spawn(continueRespawnVfxPrefab, pt.position, Quaternion.identity);
+                    vfx.Spawn(continueRespawnVfxPrefab, pt.position, Quaternion.identity);
                 }
                 else
                 {
@@ -578,11 +579,48 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private sealed class GameStateMachine
+    {
+        public GameState CurrentState { get; private set; }
+        private readonly bool _logStateChanges;
+
+        public GameStateMachine(bool logStateChanges)
+        {
+            _logStateChanges = logStateChanges;
+        }
+
+        public void SetState(GameState newState)
+        {
+            CurrentState = newState;
+
+            if (_logStateChanges)
+            {
+                Debug.Log($"GameManager: State -> {CurrentState}");
+            }
+        }
+    }
+
+    private sealed class GameServicesFacade
+    {
+        public AudioManager Audio { get; }
+        public VfxManager Vfx { get; }
+        public IRewardedAdService RewardedAds { get; }
+        public IAnalyticsService Analytics { get; }
+
+        public GameServicesFacade(AudioManager audio, VfxManager vfx, IRewardedAdService rewardedAds, IAnalyticsService analytics)
+        {
+            Audio = audio;
+            Vfx = vfx;
+            RewardedAds = rewardedAds;
+            Analytics = analytics;
+        }
+    }
+
     // --- Analytics ---
 
     private void LogRunEndAnalytics(string reason)
     {
-        if (_analytics == null || scoreManager == null)
+        if (_services?.Analytics == null || scoreManager == null)
             return;
 
         var data = new Dictionary<string, object>
@@ -593,21 +631,21 @@ public class GameManager : MonoBehaviour
             { "continues_used", continuesUsed }
         };
 
-        _analytics.LogEvent("run_end", data);
+        _services.Analytics.LogEvent("run_end", data);
     }
 
     private void LogAnalyticsEvent(string eventName, Dictionary<string, object> parameters = null)
     {
-        if (_analytics == null)
+        if (_services?.Analytics == null)
             return;
 
         if (parameters == null)
         {
-            _analytics.LogEvent(eventName);
+            _services.Analytics.LogEvent(eventName);
         }
         else
         {
-            _analytics.LogEvent(eventName, parameters);
+            _services.Analytics.LogEvent(eventName, parameters);
         }
     }
 }

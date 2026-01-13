@@ -24,7 +24,7 @@ public class RunZone
     public float fogDensity = 0.008f;
 
     [Header("Music")]
-    [Tooltip("Index into AudioManager.gameplayMusicTracks.")]
+    [Tooltip("Index into AudioManager gameplay tracks.")]
     public int musicTrackIndex = 0;
 }
 
