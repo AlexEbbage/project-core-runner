@@ -17,6 +17,8 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
 {
     [Header("LevelPlay")]
     [SerializeField] private string androidAppKey = "YOUR_LEVELPLAY_ANDROID_APP_KEY";
+    [Tooltip("Rewarded ad unit id (required for the new LevelPlay instance-based API).")]
+    [SerializeField] private string rewardedAdUnitId = "YOUR_LEVELPLAY_REWARDED_UNIT_ID";
     [SerializeField] private bool initializeOnStart = true;
     [SerializeField] private bool logEvents = true;
     [Tooltip("Fail-safe timeout (seconds) in case the SDK never calls back.")]
@@ -26,8 +28,15 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
     private bool _isShowing;
     private Coroutine _showTimeoutRoutine;
 
+    private struct NewEventSubscription
+    {
+        public EventInfo EventInfo;
+        public object Target;
+        public Delegate Handler;
+    }
+
     // Keep NEW LevelPlay event delegates alive so we can unsubscribe cleanly.
-    private readonly Dictionary<string, Delegate> _newEventDelegates = new Dictionary<string, Delegate>();
+    private readonly List<NewEventSubscription> _newEventSubscriptions = new List<NewEventSubscription>();
 
     // Which backend did we detect?
     private enum Backend { None, NewLevelPlay, LegacyIronSource }
@@ -39,6 +48,9 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
     private MethodInfo _lpInitializeMethod;
     private MethodInfo _lpIsAvailableMethod;
     private MethodInfo _lpShowMethod;
+    private MethodInfo _lpLoadMethod;
+    private object _lpRewardedInstance;
+    private bool _lpUsesInstance;
 
     // Reflection caches (legacy IronSource)
     private Type _isAgentType;
@@ -199,7 +211,7 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
     {
         // Types we look for:
         // Unity.Services.LevelPlay.LevelPlaySDK (Initialize)
-        // Unity.Services.LevelPlay.LevelPlayRewardedAd (IsAdAvailable, ShowAd)
+        // Unity.Services.LevelPlay.LevelPlayRewardedAd (IsAdAvailable, ShowAd, LoadAd)
         _lpSdkType = FindType("Unity.Services.LevelPlay.LevelPlaySDK");
         _lpRewardedType = FindType("Unity.Services.LevelPlay.LevelPlayRewardedAd");
 
@@ -207,10 +219,21 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
             return false;
 
         _lpInitializeMethod = _lpSdkType.GetMethod("Initialize", BindingFlags.Public | BindingFlags.Static);
-        _lpIsAvailableMethod = _lpRewardedType.GetMethod("IsAdAvailable", BindingFlags.Public | BindingFlags.Static);
-        _lpShowMethod = _lpRewardedType.GetMethod("ShowAd", BindingFlags.Public | BindingFlags.Static);
+        if (_lpInitializeMethod == null)
+            return false;
 
-        return _lpInitializeMethod != null && _lpIsAvailableMethod != null && _lpShowMethod != null;
+        _lpIsAvailableMethod = _lpRewardedType.GetMethod("IsAdAvailable", BindingFlags.Public | BindingFlags.Static)
+            ?? _lpRewardedType.GetMethod("IsAdAvailable", BindingFlags.Public | BindingFlags.Instance);
+        _lpShowMethod = _lpRewardedType.GetMethod("ShowAd", BindingFlags.Public | BindingFlags.Static)
+            ?? _lpRewardedType.GetMethod("ShowAd", BindingFlags.Public | BindingFlags.Instance);
+        _lpLoadMethod = _lpRewardedType.GetMethod("LoadAd", BindingFlags.Public | BindingFlags.Static)
+            ?? _lpRewardedType.GetMethod("LoadAd", BindingFlags.Public | BindingFlags.Instance);
+
+        if (_lpIsAvailableMethod == null || _lpShowMethod == null)
+            return false;
+
+        _lpUsesInstance = !_lpIsAvailableMethod.IsStatic || !_lpShowMethod.IsStatic;
+        return true;
     }
 
     private void CallNewLevelPlayInitialize()
@@ -219,6 +242,14 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
         try
         {
             _lpInitializeMethod.Invoke(null, new object[] { androidAppKey });
+            if (_lpUsesInstance)
+            {
+                CreateNewLevelPlayInstance();
+            }
+            else
+            {
+                LoadNewLevelPlayAd();
+            }
         }
         catch (Exception ex)
         {
@@ -233,7 +264,16 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
     {
         try
         {
-            var result = _lpIsAvailableMethod.Invoke(null, null);
+            if (_lpUsesInstance && _lpRewardedInstance == null)
+            {
+                CreateNewLevelPlayInstance();
+            }
+
+            if (_lpUsesInstance && _lpRewardedInstance == null)
+                return false;
+
+            var target = _lpIsAvailableMethod.IsStatic ? null : _lpRewardedInstance;
+            var result = _lpIsAvailableMethod.Invoke(target, null);
             return result is bool b && b;
         }
         catch
@@ -246,7 +286,18 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
     {
         try
         {
-            _lpShowMethod.Invoke(null, null);
+            if (_lpUsesInstance && _lpRewardedInstance == null)
+            {
+                CreateNewLevelPlayInstance();
+            }
+
+            if (_lpUsesInstance && _lpRewardedInstance == null)
+            {
+                throw new InvalidOperationException("LevelPlay rewarded instance is missing.");
+            }
+
+            var target = _lpShowMethod.IsStatic ? null : _lpRewardedInstance;
+            _lpShowMethod.Invoke(target, null);
         }
         catch (Exception ex)
         {
@@ -261,9 +312,19 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
         // We only need "reward granted" and "failed to show/closed without reward".
         bool hookedAny = false;
 
-        hookedAny |= TryHookStaticEvent(_lpRewardedType, "OnAdRewarded", OnRewardedSuccess_New);
-        hookedAny |= TryHookStaticEvent(_lpRewardedType, "OnAdFailedToShow", OnRewardedFailed_New);
-        hookedAny |= TryHookStaticEvent(_lpRewardedType, "OnAdClosed", OnRewardedClosed_New);
+        var target = _lpUsesInstance ? _lpRewardedInstance : null;
+        var flags = _lpUsesInstance ? BindingFlags.Public | BindingFlags.Instance : BindingFlags.Public | BindingFlags.Static;
+
+        if (_lpUsesInstance && target == null)
+        {
+            if (logEvents) Debug.LogWarning("LevelPlayRewardedAdService: Cannot hook instance events without a rewarded ad instance.");
+            return;
+        }
+
+        hookedAny |= TryHookEvent(_lpRewardedType, target, flags, "OnAdRewarded", OnRewardedSuccess_New);
+        hookedAny |= TryHookEvent(_lpRewardedType, target, flags, "OnAdFailedToShow", OnRewardedFailed_New);
+        hookedAny |= TryHookEvent(_lpRewardedType, target, flags, "OnAdDisplayFailed", OnRewardedFailed_New);
+        hookedAny |= TryHookEvent(_lpRewardedType, target, flags, "OnAdClosed", OnRewardedClosed_New);
 
         if (!hookedAny && logEvents)
         {
@@ -275,12 +336,14 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
     {
         if (logEvents) Debug.Log("LevelPlayRewardedAdService: New rewarded success.");
         Complete(true);
+        LoadNewLevelPlayAd();
     }
 
     private void OnRewardedFailed_New(object _)
     {
         if (logEvents) Debug.Log("LevelPlayRewardedAdService: New rewarded failed to show.");
         Complete(false);
+        LoadNewLevelPlayAd();
     }
 
     private void OnRewardedClosed_New(object _)
@@ -288,13 +351,14 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
         // Some SDKs may close without reward; if reward already completed, Complete() is a no-op.
         if (logEvents) Debug.Log("LevelPlayRewardedAdService: New rewarded closed.");
         Complete(false);
+        LoadNewLevelPlayAd();
     }
 
-    private bool TryHookStaticEvent(Type declaringType, string eventName, Action<object> handler)
+    private bool TryHookEvent(Type declaringType, object target, BindingFlags bindingFlags, string eventName, Action<object> handler)
     {
         try
         {
-            var ev = declaringType.GetEvent(eventName, BindingFlags.Public | BindingFlags.Static);
+            var ev = declaringType.GetEvent(eventName, bindingFlags);
             if (ev == null)
             {
                 if (logEvents) Debug.Log($"LevelPlayRewardedAdService: New LevelPlay event not found: {declaringType.FullName}.{eventName}");
@@ -309,8 +373,13 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
                 return false;
             }
 
-            ev.AddEventHandler(null, del);
-            _newEventDelegates[$"{declaringType.FullName}.{eventName}"] = del;
+            ev.AddEventHandler(target, del);
+            _newEventSubscriptions.Add(new NewEventSubscription
+            {
+                EventInfo = ev,
+                Target = target,
+                Handler = del
+            });
 
             if (logEvents) Debug.Log($"LevelPlayRewardedAdService: Hooked New LevelPlay event: {declaringType.FullName}.{eventName}");
 
@@ -347,6 +416,60 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
 
         // Fallback: create a dynamic method is overkill; we just won’t hook.
         return null;
+    }
+
+    private void LoadNewLevelPlayAd()
+    {
+        if (_lpLoadMethod == null)
+            return;
+
+        var target = _lpLoadMethod.IsStatic ? null : _lpRewardedInstance;
+        if (target == null && !_lpLoadMethod.IsStatic)
+            return;
+
+        try
+        {
+            _lpLoadMethod.Invoke(target, null);
+        }
+        catch (Exception ex)
+        {
+            if (logEvents) Debug.LogWarning($"LevelPlayRewardedAdService: New LevelPlay LoadAd failed: {ex.Message}");
+        }
+    }
+
+    private void CreateNewLevelPlayInstance()
+    {
+        if (_lpRewardedInstance != null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(rewardedAdUnitId))
+        {
+            if (logEvents) Debug.LogWarning("LevelPlayRewardedAdService: Rewarded ad unit id is required for LevelPlay instance API.");
+            return;
+        }
+
+        try
+        {
+            var ctor = _lpRewardedType.GetConstructor(new[] { typeof(string) });
+            if (ctor != null)
+            {
+                _lpRewardedInstance = ctor.Invoke(new object[] { rewardedAdUnitId });
+            }
+            else
+            {
+                _lpRewardedInstance = Activator.CreateInstance(_lpRewardedType);
+            }
+        }
+        catch (Exception ex)
+        {
+            if (logEvents) Debug.LogWarning($"LevelPlayRewardedAdService: Failed to create LevelPlay rewarded instance: {ex.Message}");
+            _lpRewardedInstance = null;
+        }
+
+        if (_lpRewardedInstance != null)
+        {
+            LoadNewLevelPlayAd();
+        }
     }
 
     // ---------------------------
@@ -494,26 +617,13 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
 
     private void UnhookNewLevelPlayEvents()
     {
-        if (_lpRewardedType == null) return;
+        if (_newEventSubscriptions.Count == 0) return;
 
-        foreach (var kvp in _newEventDelegates)
+        foreach (var subscription in _newEventSubscriptions)
         {
             try
             {
-                // kvp.Key is "FullTypeName.EventName"
-                var lastDot = kvp.Key.LastIndexOf('.');
-                if (lastDot <= 0) continue;
-
-                var typeName = kvp.Key.Substring(0, lastDot);
-                var eventName = kvp.Key.Substring(lastDot + 1);
-
-                var declaringType = FindType(typeName);
-                if (declaringType == null) continue;
-
-                var ev = declaringType.GetEvent(eventName, BindingFlags.Public | BindingFlags.Static);
-                if (ev == null) continue;
-
-                ev.RemoveEventHandler(null, kvp.Value);
+                subscription.EventInfo.RemoveEventHandler(subscription.Target, subscription.Handler);
             }
             catch
             {
@@ -521,7 +631,7 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
             }
         }
 
-        _newEventDelegates.Clear();
+        _newEventSubscriptions.Clear();
     }
 
     private void OnDestroy()
