@@ -99,6 +99,22 @@ public class AudioManager : MonoBehaviour
             }
         }
 
+        if (musicSourceA == null || musicSourceB == null)
+        {
+            Debug.LogWarning($"{nameof(AudioManager)} requires two music sources for crossfading. Falling back to single-source playback.", this);
+        }
+
+        if (sfxSource == null)
+        {
+            Debug.LogWarning($"{nameof(AudioManager)} is missing an SFX source.", this);
+        }
+
+        if (gameplayMusicTracks != null && gameplayTrackBPMs != null &&
+            gameplayMusicTracks.Length != gameplayTrackBPMs.Length)
+        {
+            Debug.LogWarning($"{nameof(AudioManager)} gameplay track count does not match BPM count.", this);
+        }
+
         if (musicSourceA != null)
         {
             musicSourceA.loop = false;
@@ -133,7 +149,7 @@ public class AudioManager : MonoBehaviour
         if (mainMixer == null) return;
 
         float db = -6f;
-        mainMixer.SetFloat("MusicVolume", db);
+        mainMixer.SetFloat(musicVolumeParam, db);
     }
 
     public void PlayGameplayMusic()
@@ -176,19 +192,55 @@ public class AudioManager : MonoBehaviour
             case 2: db = -5f; break;
         }
 
-        mainMixer.SetFloat("MusicVolume", db);
+        mainMixer.SetFloat(musicVolumeParam, db);
     }
 
     // Core crossfade logic
     private void CrossfadeToClip(AudioClip newClip, bool loop)
     {
         if (newClip == null) return;
-        if (musicSourceA == null || musicSourceB == null) return;
+        if (musicSourceA == null || musicSourceB == null)
+        {
+            PlayOnSingleSource(newClip, loop);
+            return;
+        }
+
+        if (ActiveMusicSource != null && ActiveMusicSource.clip == newClip && ActiveMusicSource.isPlaying)
+            return;
 
         if (_crossfadeRoutine != null)
             StopCoroutine(_crossfadeRoutine);
 
         _crossfadeRoutine = StartCoroutine(CrossfadeRoutine(newClip, loop));
+    }
+
+    private void PlayOnSingleSource(AudioClip newClip, bool loop)
+    {
+        if (_crossfadeRoutine != null)
+        {
+            StopCoroutine(_crossfadeRoutine);
+            _crossfadeRoutine = null;
+        }
+
+        AudioSource singleSource = musicSourceA != null ? musicSourceA : musicSourceB;
+        if (singleSource == null) return;
+
+        if (singleSource.clip == newClip && singleSource.isPlaying)
+            return;
+
+        AudioSource otherSource = singleSource == musicSourceA ? musicSourceB : musicSourceA;
+        if (otherSource != null)
+        {
+            otherSource.Stop();
+            otherSource.volume = 0f;
+        }
+
+        singleSource.clip = newClip;
+        singleSource.loop = loop;
+        singleSource.volume = 1f;
+        singleSource.Play();
+
+        _useA = singleSource == musicSourceA;
     }
 
     private System.Collections.IEnumerator CrossfadeRoutine(AudioClip newClip, bool loop)
@@ -197,6 +249,12 @@ public class AudioManager : MonoBehaviour
         AudioSource to = InactiveMusicSource;
 
         if (to == null || from == null) yield break;
+
+        if (from.clip == newClip && from.isPlaying)
+        {
+            _crossfadeRoutine = null;
+            yield break;
+        }
 
         // Setup the "to" source
         to.clip = newClip;
@@ -254,12 +312,23 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private float lowpassMuffledCutoff = 800f;
     [SerializeField] private float lowpassTransitionTime = 0.12f;
     [SerializeField] private float lowpassHoldTime = 0.25f;
+    [SerializeField] private AudioMixerSnapshot lowpassNormalSnapshot;
+    [SerializeField] private AudioMixerSnapshot lowpassMuffledSnapshot;
 
     /// <summary>
     /// Briefly muffles the music (death, big hit, slow-mo).
     /// </summary>
     public void TriggerDeathMuffle()
     {
+        if (lowpassNormalSnapshot != null && lowpassMuffledSnapshot != null)
+        {
+            if (_lowpassRoutine != null)
+                StopCoroutine(_lowpassRoutine);
+
+            _lowpassRoutine = StartCoroutine(LowpassSnapshotPulseRoutine());
+            return;
+        }
+
         if (mainMixer == null || string.IsNullOrEmpty(musicLowpassParam))
             return;
 
@@ -267,6 +336,17 @@ public class AudioManager : MonoBehaviour
             StopCoroutine(_lowpassRoutine);
 
         _lowpassRoutine = StartCoroutine(LowpassPulseRoutine());
+    }
+
+    private System.Collections.IEnumerator LowpassSnapshotPulseRoutine()
+    {
+        lowpassMuffledSnapshot.TransitionTo(lowpassTransitionTime);
+
+        if (lowpassHoldTime > 0f)
+            yield return new WaitForSeconds(lowpassHoldTime);
+
+        lowpassNormalSnapshot.TransitionTo(lowpassTransitionTime);
+        _lowpassRoutine = null;
     }
 
     private System.Collections.IEnumerator LowpassPulseRoutine()
