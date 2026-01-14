@@ -274,6 +274,9 @@ public class PlayerProfile : ScriptableObject
         softCurrency = Mathf.Max(0, data.softCurrency);
         premiumCurrency = Mathf.Max(0, data.premiumCurrency);
         selectedShipId = data.selectedShipId;
+        selectedSkinId = data.selectedSkinId;
+        selectedTrailId = data.selectedTrailId;
+        selectedCoreFxId = data.selectedCoreFxId;
         unlockedItemIds = data.unlockedItemIds ?? new List<string>();
         upgradeLevels = data.upgradeLevels ?? new List<UpgradeLevelEntry>();
     }
@@ -288,7 +291,10 @@ public class PlayerProfile : ScriptableObject
             premiumCurrency = premiumCurrency,
             selectedShipId = selectedShipId,
             unlockedItemIds = new List<string>(unlockedItemIds),
-            upgradeLevels = new List<UpgradeLevelEntry>(upgradeLevels)
+            upgradeLevels = new List<UpgradeLevelEntry>(upgradeLevels),
+            selectedSkinId = selectedSkinId,
+            selectedTrailId = selectedTrailId,
+            selectedCoreFxId = selectedCoreFxId
         };
 
         string json = JsonUtility.ToJson(data);
@@ -313,9 +319,10 @@ public class PlayerProfile : ScriptableObject
     public void UnlockItem(string itemId)
     {
         if (!unlockedItemIds.Contains(itemId))
+        {
             unlockedItemIds.Add(itemId);
-
-        Save();
+            Save();
+        }
     }
 
     public void AddCurrency(ShopCurrencyType currencyType, int amount)
@@ -337,63 +344,44 @@ public class PlayerProfile : ScriptableObject
         if (database == null)
             return;
 
+        string previousSkinId = selectedSkinId;
+        string previousTrailId = selectedTrailId;
+        string previousCoreFxId = selectedCoreFxId;
+
         selectedSkinId = EnsureDefaultSelection(selectedSkinId, database.skins);
         selectedTrailId = EnsureDefaultSelection(selectedTrailId, database.trails);
         selectedCoreFxId = EnsureDefaultSelection(selectedCoreFxId, database.coreFx);
+
+        if (previousSkinId != selectedSkinId
+            || previousTrailId != selectedTrailId
+            || previousCoreFxId != selectedCoreFxId)
+        {
+            Save();
+        }
     }
 
     public bool TrySelectSkin(string skinId, ShipDatabase database)
     {
-        var skin = database != null ? database.GetSkin(skinId) : null;
-        if (skin == null)
-            return false;
-
-        if (!HasUnlocked(skinId))
-        {
-            if (skin.cost > 0)
-                return false;
-
-            UnlockItem(skinId);
-        }
-
-        selectedSkinId = skinId;
-        return true;
+        return TrySelectCosmetic(
+            skinId,
+            database != null ? database.GetSkin(skinId) : null,
+            id => selectedSkinId = id);
     }
 
     public bool TrySelectTrail(string trailId, ShipDatabase database)
     {
-        var trail = database != null ? database.GetTrail(trailId) : null;
-        if (trail == null)
-            return false;
-
-        if (!HasUnlocked(trailId))
-        {
-            if (trail.cost > 0)
-                return false;
-
-            UnlockItem(trailId);
-        }
-
-        selectedTrailId = trailId;
-        return true;
+        return TrySelectCosmetic(
+            trailId,
+            database != null ? database.GetTrail(trailId) : null,
+            id => selectedTrailId = id);
     }
 
     public bool TrySelectCoreFx(string coreFxId, ShipDatabase database)
     {
-        var coreFx = database != null ? database.GetCoreFx(coreFxId) : null;
-        if (coreFx == null)
-            return false;
-
-        if (!HasUnlocked(coreFxId))
-        {
-            if (coreFx.cost > 0)
-                return false;
-
-            UnlockItem(coreFxId);
-        }
-
-        selectedCoreFxId = coreFxId;
-        return true;
+        return TrySelectCosmetic(
+            coreFxId,
+            database != null ? database.GetCoreFx(coreFxId) : null,
+            id => selectedCoreFxId = id);
     }
 
     public bool TrySpend(ShopCurrencyType currencyType, int amount)
@@ -487,6 +475,9 @@ public class PlayerProfile : ScriptableObject
         public string selectedShipId;
         public List<string> unlockedItemIds;
         public List<UpgradeLevelEntry> upgradeLevels;
+        public string selectedSkinId;
+        public string selectedTrailId;
+        public string selectedCoreFxId;
     }
 
     private static string ComputeHash(string json)
@@ -566,5 +557,30 @@ public class PlayerProfile : ScriptableObject
                 cost = 0;
                 return false;
         }
+    }
+
+    private bool TrySelectCosmetic<T>(string itemId, T item, System.Action<string> setSelection)
+        where T : ScriptableObject
+    {
+        if (item == null)
+            return false;
+
+        if (!HasUnlocked(itemId))
+        {
+            if (!TryGetItemData(item, out _, out int cost) || cost > 0)
+                return false;
+
+            UnlockItemWithoutSave(itemId);
+        }
+
+        setSelection?.Invoke(itemId);
+        Save();
+        return true;
+    }
+
+    private void UnlockItemWithoutSave(string itemId)
+    {
+        if (!unlockedItemIds.Contains(itemId))
+            unlockedItemIds.Add(itemId);
     }
 }
