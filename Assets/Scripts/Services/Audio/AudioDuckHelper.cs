@@ -13,12 +13,14 @@ public class AudioDuckHelper : MonoBehaviour
 
     public void Duck()
     {
+        if (mixer == null) return;
         if (_routine != null) StopCoroutine(_routine);
         _routine = StartCoroutine(DuckRoutine());
     }
 
     private System.Collections.IEnumerator DuckRoutine()
     {
+        if (mixer == null) yield break;
         mixer.SetFloat(musicVolumeParam, duckVolumeDb);
         yield return new WaitForSeconds(duckDuration);
         mixer.SetFloat(musicVolumeParam, normalVolumeDb);
