@@ -21,6 +21,9 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
     [SerializeField] private string rewardedAdUnitId = "YOUR_LEVELPLAY_REWARDED_UNIT_ID";
     [SerializeField] private bool initializeOnStart = true;
     [SerializeField] private bool logEvents = true;
+    [Header("Debugging")]
+    [Tooltip("Enable the LevelPlay integration test suite (only works in Editor/Development builds).")]
+    [SerializeField] private bool enableTestSuite = false;
     [Tooltip("Fail-safe timeout (seconds) in case the SDK never calls back.")]
     [SerializeField] private float showTimeoutSeconds = 30f;
 
@@ -48,7 +51,7 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
         if (_adapter != null)
             return;
 
-        var newAdapter = new NewLevelPlayRewardedAdAdapter(androidAppKey, rewardedAdUnitId, logEvents, Complete);
+        var newAdapter = new NewLevelPlayRewardedAdAdapter(androidAppKey, rewardedAdUnitId, logEvents, enableTestSuite, Complete);
         if (newAdapter.Initialize())
         {
             _adapter = newAdapter;
@@ -171,6 +174,7 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
         private readonly string _androidAppKey;
         private readonly string _rewardedAdUnitId;
         private readonly bool _logEvents;
+        private readonly bool _enableTestSuite;
         private readonly Action<bool> _complete;
 
         private readonly List<NewEventSubscription> _newEventSubscriptions = new List<NewEventSubscription>();
@@ -178,17 +182,20 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
         private Type _lpSdkType;
         private Type _lpRewardedType;
         private MethodInfo _lpInitializeMethod;
+        private MethodInfo _lpSetMetaDataMethod;
+        private MethodInfo _lpLaunchTestSuiteMethod;
         private MethodInfo _lpIsAvailableMethod;
         private MethodInfo _lpShowMethod;
         private MethodInfo _lpLoadMethod;
         private object _lpRewardedInstance;
         private bool _lpUsesInstance;
 
-        public NewLevelPlayRewardedAdAdapter(string androidAppKey, string rewardedAdUnitId, bool logEvents, Action<bool> complete)
+        public NewLevelPlayRewardedAdAdapter(string androidAppKey, string rewardedAdUnitId, bool logEvents, bool enableTestSuite, Action<bool> complete)
         {
             _androidAppKey = androidAppKey;
             _rewardedAdUnitId = rewardedAdUnitId;
             _logEvents = logEvents;
+            _enableTestSuite = enableTestSuite;
             _complete = complete;
         }
 
@@ -266,6 +273,8 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
             _lpInitializeMethod = _lpSdkType.GetMethod("Initialize", BindingFlags.Public | BindingFlags.Static);
             if (_lpInitializeMethod == null)
                 return false;
+            _lpSetMetaDataMethod = _lpSdkType.GetMethod("SetMetaData", BindingFlags.Public | BindingFlags.Static);
+            _lpLaunchTestSuiteMethod = _lpSdkType.GetMethod("LaunchTestSuite", BindingFlags.Public | BindingFlags.Static);
 
             _lpIsAvailableMethod = _lpRewardedType.GetMethod("IsAdAvailable", BindingFlags.Public | BindingFlags.Static)
                 ?? _lpRewardedType.GetMethod("IsAdAvailable", BindingFlags.Public | BindingFlags.Instance);
@@ -286,7 +295,9 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
 #if UNITY_ANDROID
             try
             {
+                EnableLevelPlayTestSuite();
                 _lpInitializeMethod.Invoke(null, new object[] { _androidAppKey });
+                LaunchLevelPlayTestSuite();
                 if (_lpUsesInstance)
                 {
                     CreateNewLevelPlayInstance();
@@ -302,6 +313,57 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
             }
 #else
             if (_logEvents) Debug.Log("LevelPlayRewardedAdService: New LevelPlay initialize skipped (not Android).");
+#endif
+        }
+
+        private void EnableLevelPlayTestSuite()
+        {
+            if (!ShouldRunTestSuite())
+                return;
+
+            if (_lpSetMetaDataMethod == null)
+                return;
+
+            try
+            {
+                _lpSetMetaDataMethod.Invoke(null, new object[] { "is_test_suite", "enable" });
+                if (_logEvents) Debug.Log("LevelPlayRewardedAdService: Enabled LevelPlay test suite metadata.");
+            }
+            catch (Exception ex)
+            {
+                if (_logEvents) Debug.LogWarning($"LevelPlayRewardedAdService: Failed to set LevelPlay test suite metadata: {ex.Message}");
+            }
+        }
+
+        private void LaunchLevelPlayTestSuite()
+        {
+            if (!ShouldRunTestSuite())
+                return;
+
+            if (_lpLaunchTestSuiteMethod == null)
+                return;
+
+            try
+            {
+                _lpLaunchTestSuiteMethod.Invoke(null, null);
+                if (_logEvents) Debug.Log("LevelPlayRewardedAdService: Launched LevelPlay test suite.");
+            }
+            catch (Exception ex)
+            {
+                if (_logEvents) Debug.LogWarning($"LevelPlayRewardedAdService: Failed to launch LevelPlay test suite: {ex.Message}");
+            }
+        }
+
+        private bool ShouldRunTestSuite()
+        {
+            if (!_enableTestSuite)
+                return false;
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            return true;
+#else
+            if (_logEvents) Debug.Log("LevelPlayRewardedAdService: Test suite disabled for non-development builds.");
+            return false;
 #endif
         }
 
