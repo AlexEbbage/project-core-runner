@@ -27,6 +27,7 @@ public class CountdownUIController : MonoBehaviour
 
     [Tooltip("Countdown string for GO step.")]
     [SerializeField] private string goText = "GO!";
+    [SerializeField] private string goLocalizationKey = "ui.countdown_go";
 
     [Header("Animation Curves")]
     [Tooltip("Scale over [0..1] of each step.")]
@@ -117,7 +118,8 @@ public class CountdownUIController : MonoBehaviour
         }
 
         // GO!
-        yield return PlayOneStep(goText, isGoStep: true);
+        var localizedGoText = LocalizationService.Get(goLocalizationKey, goText);
+        yield return PlayOneStep(localizedGoText, isGoStep: true);
 
         //// Restore time scale
         //if (useSlowMotion)
