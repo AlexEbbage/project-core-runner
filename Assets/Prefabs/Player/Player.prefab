@@ -474,6 +474,7 @@ GameObject:
   - component: {fileID: 3680374950635981383}
   - component: {fileID: 8084200942801160098}
   - component: {fileID: 3195259044316396430}
+  - component: {fileID: 7123456789012345678}
   - component: {fileID: 7274417757588723331}
   m_Layer: 0
   m_Name: Player
@@ -600,6 +601,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d214e2327def83e4a84a855ab88a3a69, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerVisual
+--- !u!114 &7123456789012345678
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1264614614236666218}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49e47a61e47744dcaa0c60e4d5adcb5d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerCosmetics
+  profile: {fileID: 0}
+  shipDatabase: {fileID: 0}
+  skinRoot: {fileID: 1941368006187265864}
+  trailRoot: {fileID: 8619038019613577884}
+  coreFxRoot: {fileID: 1941368006187265864}
+  hideDefaultVisualWhenSkinSelected: 1
+  defaultTrailRenderer: {fileID: 3383864135087723465}
 --- !u!114 &7274417757588723331
 MonoBehaviour:
   m_ObjectHideFlags: 0
