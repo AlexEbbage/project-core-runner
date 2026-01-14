@@ -20,13 +20,16 @@ public class HangarPageController : MonoBehaviour
     [SerializeField] private HangarUpgradeItemView upgradeItemPrefab;
     [SerializeField] private HangarCosmeticItemView cosmeticItemPrefab;
 
-    private readonly Dictionary<ShipUpgradeDefinition, int> _upgradeLevels = new();
     private readonly List<GameObject> _spawnedItems = new();
 
     public void Initialize(PlayerProfile playerProfile, ShipDatabase database)
     {
         profile = playerProfile;
         shipDatabase = database;
+        if (profile != null && !string.IsNullOrEmpty(profile.selectedShipId))
+            currentShipId = profile.selectedShipId;
+        if (profile != null && !string.IsNullOrEmpty(currentShipId))
+            profile.SetSelectedShip(currentShipId);
         RefreshStats();
         SelectTab(selectedTab);
     }
@@ -66,7 +69,8 @@ public class HangarPageController : MonoBehaviour
         if (!profile.TrySpend(ShopCurrencyType.Soft, cost))
             return;
 
-        _upgradeLevels[itemView.Definition] = currentLevel + 1;
+        if (profile != null)
+            profile.SetUpgradeLevel(itemView.Definition.upgradeType, currentLevel + 1);
         SelectTab(selectedTab);
         RefreshStats();
     }
@@ -202,6 +206,6 @@ public class HangarPageController : MonoBehaviour
         if (upgrade == null)
             return 0;
 
-        return _upgradeLevels.TryGetValue(upgrade, out int level) ? level : 0;
+        return profile != null ? profile.GetUpgradeLevel(upgrade.upgradeType) : 0;
     }
 }
