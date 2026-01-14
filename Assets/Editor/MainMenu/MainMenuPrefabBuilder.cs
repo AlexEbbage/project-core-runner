@@ -27,13 +27,19 @@ public static class MainMenuPrefabBuilder
     [MenuItem("Tools/UI/Build Main Menu UI")]
     public static void BuildMainMenuUI()
     {
+        BuildMainMenuUI(MainMenuBuilderConfig.CreateDefault());
+    }
+
+    public static void BuildMainMenuUI(MainMenuBuilderConfig builderConfig)
+    {
         EnsureFolder(PrefabRoot);
 
+        builderConfig = MainMenuBuilderConfig.Merge(builderConfig, MainMenuBuilderConfig.CreateDefault());
         var progressionConfig = GetOrCreateProgressionTasksConfig();
         var taskRowPrefab = BuildProgressionTaskRowPrefab();
         var taskRowVariants = BuildProgressionTaskRowVariants(taskRowPrefab);
         var rewardNodePrefab = BuildProgressionRewardNodePrefab();
-        var progressionHubPrefab = BuildProgressionHubPrefab(taskRowPrefab, taskRowVariants, rewardNodePrefab, progressionConfig);
+        var progressionHubPrefab = BuildProgressionHubPrefab(taskRowPrefab, taskRowVariants, rewardNodePrefab, progressionConfig, builderConfig.ProgressionPage);
 
         var canvas = new GameObject("Canvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
         var canvasComponent = canvas.GetComponent<Canvas>();
@@ -51,29 +57,29 @@ public static class MainMenuPrefabBuilder
         }
 
         var uiRoot = CreateRect("UIRoot", canvas.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-        var topBar = BuildTopBar(uiRoot);
-        var pageContainer = BuildPageContainer(uiRoot, progressionHubPrefab);
-        var bottomNav = BuildBottomNav(uiRoot);
+        var topBar = BuildTopBar(uiRoot, builderConfig.TopBar);
+        var pageContainer = BuildPageContainer(uiRoot, progressionHubPrefab, builderConfig);
+        var bottomNav = BuildBottomNav(uiRoot, builderConfig.BottomNavButtons);
         var modalsRoot = CreateRect("ModalsRoot", canvas.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         var modal = BuildShopModal(modalsRoot);
 
         var menuController = uiRoot.gameObject.AddComponent<MainMenuController>();
-        AssignMenuController(menuController, pageContainer, bottomNav);
+        AssignMenuController(menuController, pageContainer, bottomNav, builderConfig);
 
         var topBarController = topBar.gameObject.AddComponent<TopBarController>();
-        AssignTopBar(topBarController, menuController, topBar);
+        AssignTopBar(topBarController, menuController, topBar, builderConfig.TopBar);
 
         var bottomNavController = bottomNav.gameObject.AddComponent<BottomNavBarController>();
-        AssignBottomNav(bottomNavController, menuController, bottomNav);
+        AssignBottomNav(bottomNavController, menuController, bottomNav, builderConfig.BottomNavButtons);
 
-        AttachHangarController(pageContainer);
-        AttachShopController(pageContainer, modal);
+        AttachHangarController(pageContainer, builderConfig.HangarPage);
+        AttachShopController(pageContainer, modal, builderConfig.ShopPage);
 
         PrefabUtility.SaveAsPrefabAsset(canvas, Path.Combine(PrefabRoot, "MainMenuCanvas.prefab"));
         Object.DestroyImmediate(canvas);
     }
 
-    private static RectTransform BuildTopBar(Transform parent)
+    private static RectTransform BuildTopBar(Transform parent, TopBarConfig config)
     {
         var topBar = CreateRect("TopBar", parent, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(0, 1));
         topBar.sizeDelta = new Vector2(0, 200);
@@ -101,15 +107,22 @@ public static class MainMenuPrefabBuilder
         currencyPills.sizeDelta = new Vector2(600, 160);
         currencyPills.gameObject.AddComponent<HorizontalLayoutGroup>().spacing = 16f;
 
-        BuildCurrencyPill(currencyPills, "SoftCurrencyPill");
-        BuildCurrencyPill(currencyPills, "PremiumCurrencyPill");
-        BuildCurrencyPill(currencyPills, "OtherCurrencyPill");
+        if (config?.CurrencyPills != null)
+        {
+            foreach (var pillConfig in config.CurrencyPills)
+            {
+                if (pillConfig == null)
+                    continue;
+
+                BuildCurrencyPill(currencyPills, pillConfig);
+            }
+        }
 
         topBar.gameObject.name = "TopBar";
         return topBar;
     }
 
-    private static RectTransform BuildBottomNav(Transform parent)
+    private static RectTransform BuildBottomNav(Transform parent, IReadOnlyList<BottomNavButtonConfig> buttonConfigs)
     {
         var bottomBar = CreateRect("BottomNavBar", parent, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 0));
         bottomBar.sizeDelta = new Vector2(0, 200);
@@ -118,84 +131,127 @@ public static class MainMenuPrefabBuilder
         layout.spacing = 24f;
         layout.padding = new RectOffset(20, 20, 20, 20);
 
-        BuildNavButton(bottomBar, "ShopButton");
-        BuildNavButton(bottomBar, "HangarButton");
-        BuildNavButton(bottomBar, "PlayButton");
-        BuildNavButton(bottomBar, "ChallengesButton");
-        BuildNavButton(bottomBar, "ProgressionButton");
+        if (buttonConfigs != null)
+        {
+            foreach (var buttonConfig in buttonConfigs)
+            {
+                if (buttonConfig == null)
+                    continue;
+
+                BuildNavButton(bottomBar, buttonConfig);
+            }
+        }
 
         return bottomBar;
     }
 
-    private static RectTransform BuildPageContainer(Transform parent, RectTransform progressionHubPrefab)
+    private static RectTransform BuildPageContainer(Transform parent, RectTransform progressionHubPrefab, MainMenuBuilderConfig config)
     {
+        config ??= MainMenuBuilderConfig.CreateDefault();
         var container = CreateRect("PageContainer", parent, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0, 0), new Vector2(0, 0));
         container.offsetMin = new Vector2(0, 200);
         container.offsetMax = new Vector2(0, -200);
 
-        BuildHangarPage(container);
-        BuildPlaceholderPage(container, "PlayPage");
-        BuildShopPage(container);
-        BuildPlaceholderPage(container, "ChallengesPage");
-        BuildProgressionPage(container, progressionHubPrefab);
+        foreach (var pageKind in config.PageOrder)
+        {
+            switch (pageKind)
+            {
+                case PageKind.Hangar:
+                    BuildHangarPage(container, config.HangarPage);
+                    break;
+                case PageKind.Play:
+                case PageKind.Challenges:
+                    BuildPlaceholderPage(container, config.PlaceholderPages, pageKind);
+                    break;
+                case PageKind.Shop:
+                    BuildShopPage(container, config.ShopPage);
+                    break;
+                case PageKind.Progression:
+                    BuildProgressionPage(container, progressionHubPrefab, config.ProgressionPage);
+                    break;
+            }
+        }
 
         return container;
     }
 
-    private static void BuildHangarPage(Transform parent)
+    private static void BuildHangarPage(Transform parent, HangarPageConfig config)
     {
-        var page = CreateRect("HangarPage", parent, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        if (config == null)
+            return;
+
+        var page = CreateRect(config.Name, parent, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         page.gameObject.AddComponent<CanvasGroup>();
 
-        var shipDisplay = CreateRect("ShipDisplayArea", page, new Vector2(0, 0.5f), new Vector2(1, 1), new Vector2(0, 0), new Vector2(0, 1));
+        var shipDisplay = CreateRect(config.ShipDisplayPanelName, page, new Vector2(0, 0.5f), new Vector2(1, 1), new Vector2(0, 0), new Vector2(0, 1));
         shipDisplay.sizeDelta = new Vector2(0, 400);
 
-        var statsPanel = CreateRect("StatsPanel", page, new Vector2(0, 0.5f), new Vector2(1, 0.5f), new Vector2(0, 1), new Vector2(0, 1));
+        var statsPanel = CreateRect(config.StatsPanelName, page, new Vector2(0, 0.5f), new Vector2(1, 0.5f), new Vector2(0, 1), new Vector2(0, 1));
         statsPanel.sizeDelta = new Vector2(0, 300);
         statsPanel.gameObject.AddComponent<VerticalLayoutGroup>().spacing = 8f;
 
-        BuildStatRow(statsPanel, ShipStatType.Speed);
-        BuildStatRow(statsPanel, ShipStatType.Handling);
-        BuildStatRow(statsPanel, ShipStatType.Stability);
-        BuildStatRow(statsPanel, ShipStatType.Boost);
-        BuildStatRow(statsPanel, ShipStatType.Energy);
+        if (config.StatTypes != null)
+        {
+            foreach (var statType in config.StatTypes)
+            {
+                BuildStatRow(statsPanel, statType);
+            }
+        }
 
-        var subTabBar = CreateRect("SubTabBar", page, new Vector2(0, 0.5f), new Vector2(1, 0.5f), new Vector2(0, 1), new Vector2(0, 1));
+        var subTabBar = CreateRect(config.SubTabBarName, page, new Vector2(0, 0.5f), new Vector2(1, 0.5f), new Vector2(0, 1), new Vector2(0, 1));
         subTabBar.anchoredPosition = new Vector2(0, -300);
         subTabBar.sizeDelta = new Vector2(0, 120);
         subTabBar.gameObject.AddComponent<HorizontalLayoutGroup>().spacing = 16f;
-        BuildNavButton(subTabBar, "UpgradesTabButton");
-        BuildNavButton(subTabBar, "SkinsTabButton");
-        BuildNavButton(subTabBar, "TrailsTabButton");
-        BuildNavButton(subTabBar, "CoreFxTabButton");
+        if (config.Tabs != null)
+        {
+            foreach (var tab in config.Tabs)
+            {
+                if (tab == null)
+                    continue;
 
-        BuildHorizontalScroll(page, "ContentScroll", new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 0), 360);
+                BuildNavButton(subTabBar, tab);
+            }
+        }
+
+        BuildHorizontalScroll(page, config.ContentScrollName, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 0), 360);
     }
 
-    private static void BuildShopPage(Transform parent)
+    private static void BuildShopPage(Transform parent, ShopPageConfig config)
     {
-        var page = CreateRect("ShopPage", parent, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        if (config == null)
+            return;
+
+        var page = CreateRect(config.Name, parent, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         page.gameObject.AddComponent<CanvasGroup>();
 
-        var subTabBar = CreateRect("SubTabBar", page, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(0, 1));
+        var subTabBar = CreateRect(config.SubTabBarName, page, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(0, 1));
         subTabBar.sizeDelta = new Vector2(0, 120);
         subTabBar.gameObject.AddComponent<HorizontalLayoutGroup>().spacing = 16f;
-        BuildNavButton(subTabBar, "SkinsTabButton");
-        BuildNavButton(subTabBar, "ShipsTabButton");
-        BuildNavButton(subTabBar, "TrailsTabButton");
-        BuildNavButton(subTabBar, "CurrencyTabButton");
+        if (config.Tabs != null)
+        {
+            foreach (var tab in config.Tabs)
+            {
+                if (tab == null)
+                    continue;
 
-        BuildHorizontalScroll(page, "ContentScroll", new Vector2(0, 0), new Vector2(1, 1), new Vector2(0, 0), new Vector2(0, 0), 300);
+                BuildNavButton(subTabBar, tab);
+            }
+        }
+
+        BuildHorizontalScroll(page, config.ContentScrollName, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0, 0), new Vector2(0, 0), 300);
     }
 
-    private static void BuildProgressionPage(Transform parent, RectTransform progressionHubPrefab)
+    private static void BuildProgressionPage(Transform parent, RectTransform progressionHubPrefab, ProgressionPageConfig config)
     {
-        var page = CreateRect("ProgressionPage", parent, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        if (config == null)
+            return;
+
+        var page = CreateRect(config.Name, parent, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         page.gameObject.AddComponent<CanvasGroup>();
 
         if (progressionHubPrefab == null)
         {
-            CreateText("Title", page, "ProgressionPage", 36);
+            CreateText("Title", page, config.TitleLabel, 36);
             return;
         }
 
@@ -247,18 +303,24 @@ public static class MainMenuPrefabBuilder
         return modal;
     }
 
-    private static void AttachHangarController(RectTransform pageContainer)
+    private static void AttachHangarController(RectTransform pageContainer, HangarPageConfig config)
     {
-        var hangarPage = pageContainer.Find("HangarPage");
+        if (config == null)
+            return;
+
+        var hangarPage = pageContainer.Find(config.Name);
         if (hangarPage == null)
             return;
 
         var hangarController = hangarPage.gameObject.AddComponent<HangarPageController>();
-        var statsPanel = hangarPage.Find("StatsPanel");
+        var statsPanel = hangarPage.Find(config.StatsPanelName);
+        if (statsPanel == null)
+            return;
+
         var statRows = statsPanel.GetComponentsInChildren<HangarStatRowView>();
         SetSerializedReference(hangarController, "statRows", statRows);
 
-        var scroll = hangarPage.Find("ContentScroll");
+        var scroll = hangarPage.Find(config.ContentScrollName);
         if (scroll != null)
         {
             var content = scroll.Find("Viewport/Content");
@@ -272,14 +334,17 @@ public static class MainMenuPrefabBuilder
         SetSerializedReference(hangarController, "cosmeticItemPrefab", cosmeticPrefab.GetComponent<HangarCosmeticItemView>());
     }
 
-    private static void AttachShopController(RectTransform pageContainer, RectTransform modal)
+    private static void AttachShopController(RectTransform pageContainer, RectTransform modal, ShopPageConfig config)
     {
-        var shopPage = pageContainer.Find("ShopPage");
+        if (config == null)
+            return;
+
+        var shopPage = pageContainer.Find(config.Name);
         if (shopPage == null)
             return;
 
         var shopController = shopPage.gameObject.AddComponent<ShopPageController>();
-        var scroll = shopPage.Find("ContentScroll");
+        var scroll = shopPage.Find(config.ContentScrollName);
         if (scroll != null)
         {
             var content = scroll.Find("Viewport/Content");
@@ -524,7 +589,8 @@ public static class MainMenuPrefabBuilder
         RectTransform taskRowPrefab,
         Dictionary<ProgressionTaskRowStyle, RectTransform> taskRowVariants,
         RectTransform rewardNodePrefab,
-        ProgressionTasksConfig config)
+        ProgressionTasksConfig config,
+        ProgressionPageConfig pageConfig)
     {
         var root = CreateRect("ProgressionTasksHub", null, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         var hubView = root.gameObject.AddComponent<ProgressionTasksHubView>();
@@ -543,9 +609,10 @@ public static class MainMenuPrefabBuilder
         tabLayout.childAlignment = TextAnchor.MiddleCenter;
         tabLayout.childForceExpandWidth = false;
         tabLayout.childForceExpandHeight = false;
-        var dailyTab = BuildTabButton(tabBar, "DailyTab", "Daily");
-        var weeklyTab = BuildTabButton(tabBar, "WeeklyTab", "Weekly");
-        var monthlyTab = BuildTabButton(tabBar, "MonthlyTab", "Monthly");
+        var tabConfigs = BuildProgressionTabConfigMap(pageConfig);
+        var dailyTab = BuildTabButton(tabBar, tabConfigs[ProgressionCadence.Daily]);
+        var weeklyTab = BuildTabButton(tabBar, tabConfigs[ProgressionCadence.Weekly]);
+        var monthlyTab = BuildTabButton(tabBar, tabConfigs[ProgressionCadence.Monthly]);
 
         var contentRoot = CreateRect("ContentRoot", root, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
         contentRoot.sizeDelta = new Vector2(0, 1100);
@@ -590,6 +657,26 @@ public static class MainMenuPrefabBuilder
         var prefab = PrefabUtility.SaveAsPrefabAsset(root.gameObject, prefabPath);
         Object.DestroyImmediate(root.gameObject);
         return prefab.transform as RectTransform;
+    }
+
+    private static Dictionary<ProgressionCadence, ProgressionTabConfig> BuildProgressionTabConfigMap(ProgressionPageConfig pageConfig)
+    {
+        var defaults = new Dictionary<ProgressionCadence, ProgressionTabConfig>
+        {
+            { ProgressionCadence.Daily, new ProgressionTabConfig(ProgressionCadence.Daily, "DailyTab", "Daily", null) },
+            { ProgressionCadence.Weekly, new ProgressionTabConfig(ProgressionCadence.Weekly, "WeeklyTab", "Weekly", null) },
+            { ProgressionCadence.Monthly, new ProgressionTabConfig(ProgressionCadence.Monthly, "MonthlyTab", "Monthly", null) }
+        };
+
+        if (pageConfig?.Tabs == null)
+            return defaults;
+
+        foreach (var tab in pageConfig.Tabs)
+        {
+            defaults[tab.Cadence] = tab;
+        }
+
+        return defaults;
     }
 
     private static RectTransform BuildProgressionContentContainer(
@@ -862,28 +949,87 @@ public static class MainMenuPrefabBuilder
         return row;
     }
 
-    private static RectTransform BuildPlaceholderPage(Transform parent, string name)
+    private static void BuildPlaceholderPage(Transform parent, IReadOnlyList<PlaceholderPageConfig> pageConfigs, PageKind pageKind)
     {
-        var page = CreateRect(name, parent, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-        page.gameObject.AddComponent<CanvasGroup>();
-        CreateText("Title", page, name, 36);
-        return page;
+        if (pageConfigs == null)
+            return;
+
+        foreach (var pageConfig in pageConfigs)
+        {
+            if (pageConfig == null)
+                continue;
+
+            if (pageConfig.Kind != pageKind)
+                continue;
+
+            var page = CreateRect(pageConfig.Name, parent, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            page.gameObject.AddComponent<CanvasGroup>();
+            CreateText("Title", page, pageConfig.Label, 36);
+            return;
+        }
     }
 
-    private static void BuildCurrencyPill(Transform parent, string name)
+    private static void BuildCurrencyPill(Transform parent, CurrencyPillConfig config)
     {
-        var pill = CreateButton(name, parent, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
+        if (config == null)
+            return;
+
+        var pill = CreateButton(config.Name, parent, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
         var layout = pill.gameObject.AddComponent<HorizontalLayoutGroup>();
         layout.spacing = 8f;
-        var icon = CreateImage("IconImage", pill, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(40, 40));
-        icon.raycastTarget = false;
+        var label = pill.GetComponentInChildren<TMP_Text>();
+        if (label != null)
+            label.text = GetLabelOrFallback(config.Label, config.Name);
+
+        if (config.Icon != null)
+        {
+            var icon = CreateImage("IconImage", pill, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(40, 40));
+            icon.sprite = config.Icon;
+            icon.raycastTarget = false;
+        }
         CreateText("AmountText", pill, "0", 24);
     }
 
-    private static void BuildNavButton(Transform parent, string name)
+    private static void BuildNavButton(Transform parent, TabButtonConfig config)
     {
-        var button = CreateButton(name, parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        button.GetComponentInChildren<TMP_Text>().text = name.Replace("Button", string.Empty);
+        if (config == null)
+            return;
+
+        var button = CreateButton(config.Name, parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        var label = button.GetComponentInChildren<TMP_Text>();
+        if (label != null)
+            label.text = GetLabelOrFallback(config.Label, config.Name);
+
+        if (config.Icon != null)
+        {
+            var layout = button.gameObject.AddComponent<HorizontalLayoutGroup>();
+            layout.spacing = 8f;
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            var icon = CreateImage("IconImage", button, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(36, 36));
+            icon.sprite = config.Icon;
+            icon.raycastTarget = false;
+        }
+    }
+
+    private static void BuildNavButton(Transform parent, BottomNavButtonConfig config)
+    {
+        if (config == null)
+            return;
+
+        var button = CreateButton(config.Name, parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        var label = button.GetComponentInChildren<TMP_Text>();
+        if (label != null)
+            label.text = GetLabelOrFallback(config.Label, config.Name);
+
+        if (config.Icon != null)
+        {
+            var layout = button.gameObject.AddComponent<HorizontalLayoutGroup>();
+            layout.spacing = 8f;
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            var icon = CreateImage("IconImage", button, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(36, 36));
+            icon.sprite = config.Icon;
+            icon.raycastTarget = false;
+        }
     }
 
     private static RectTransform CreateRect(string name, Transform parent, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 anchoredPosition)
@@ -981,13 +1127,25 @@ public static class MainMenuPrefabBuilder
         return overlay.gameObject;
     }
 
-    private static RectTransform BuildTabButton(Transform parent, string name, string label)
+    private static RectTransform BuildTabButton(Transform parent, ProgressionTabConfig config)
     {
-        var button = CreateButton(name, parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero);
+        var button = CreateButton(config.Name, parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero);
         var layoutElement = button.gameObject.AddComponent<LayoutElement>();
         layoutElement.preferredWidth = 220f;
         layoutElement.preferredHeight = 80f;
-        button.GetComponentInChildren<TMP_Text>().text = label;
+        var label = button.GetComponentInChildren<TMP_Text>();
+        if (label != null)
+            label.text = GetLabelOrFallback(config.Label, config.Name);
+
+        if (config.Icon != null)
+        {
+            var layout = button.gameObject.AddComponent<HorizontalLayoutGroup>();
+            layout.spacing = 8f;
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            var icon = CreateImage("IconImage", button, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(32, 32));
+            icon.sprite = config.Icon;
+            icon.raycastTarget = false;
+        }
         return button;
     }
 
@@ -1023,42 +1181,105 @@ public static class MainMenuPrefabBuilder
         button.onClick.AddListener(action);
     }
 
-    private static void AssignMenuController(MainMenuController menu, RectTransform pageContainer, RectTransform bottomNav)
+    private static void AssignMenuController(MainMenuController menu, RectTransform pageContainer, RectTransform bottomNav, MainMenuBuilderConfig config)
     {
-        SetSerializedReference(menu, "hangarPage", pageContainer.Find("HangarPage"));
-        SetSerializedReference(menu, "playPage", pageContainer.Find("PlayPage"));
-        SetSerializedReference(menu, "shopPage", pageContainer.Find("ShopPage"));
-        SetSerializedReference(menu, "challengesPage", pageContainer.Find("ChallengesPage"));
-        SetSerializedReference(menu, "progressionPage", pageContainer.Find("ProgressionPage"));
+        var hangarName = config?.HangarPage?.Name ?? "HangarPage";
+        var shopName = config?.ShopPage?.Name ?? "ShopPage";
+        var progressionName = config?.ProgressionPage?.Name ?? "ProgressionPage";
+        var playName = GetPlaceholderPageName(config, PageKind.Play, "PlayPage");
+        var challengesName = GetPlaceholderPageName(config, PageKind.Challenges, "ChallengesPage");
+
+        SetSerializedReference(menu, "hangarPage", pageContainer.Find(hangarName));
+        SetSerializedReference(menu, "playPage", pageContainer.Find(playName));
+        SetSerializedReference(menu, "shopPage", pageContainer.Find(shopName));
+        SetSerializedReference(menu, "challengesPage", pageContainer.Find(challengesName));
+        SetSerializedReference(menu, "progressionPage", pageContainer.Find(progressionName));
         SetSerializedReference(menu, "bottomNavBar", bottomNav.GetComponent<BottomNavBarController>());
     }
 
-    private static void AssignTopBar(TopBarController controller, MainMenuController menu, RectTransform topBar)
+    private static void AssignTopBar(TopBarController controller, MainMenuController menu, RectTransform topBar, TopBarConfig config)
     {
         SetSerializedReference(controller, "menuController", menu);
         SetSerializedReference(controller, "levelText", topBar.Find("ProfileArea/LevelText").GetComponent<TMP_Text>());
         SetSerializedReference(controller, "xpProgressBar", topBar.Find("ProfileArea/XpProgressBar").GetComponent<Image>());
-        SetSerializedReference(controller, "softCurrencyText", topBar.Find("CurrencyPills/SoftCurrencyPill/AmountText").GetComponent<TMP_Text>());
-        SetSerializedReference(controller, "premiumCurrencyText", topBar.Find("CurrencyPills/PremiumCurrencyPill/AmountText").GetComponent<TMP_Text>());
 
-        var softButton = topBar.Find("CurrencyPills/SoftCurrencyPill").GetComponent<Button>();
-        var premiumButton = topBar.Find("CurrencyPills/PremiumCurrencyPill").GetComponent<Button>();
-        AddButtonAction(softButton, controller.OnSoftCurrencyClicked);
-        AddButtonAction(premiumButton, controller.OnPremiumCurrencyClicked);
+        var softPill = FindCurrencyPill(config, "SoftCurrencyPill");
+        var premiumPill = FindCurrencyPill(config, "PremiumCurrencyPill");
+
+        if (softPill != null)
+        {
+            var softRoot = topBar.Find($"CurrencyPills/{softPill.Name}");
+            if (softRoot != null)
+            {
+                SetSerializedReference(controller, "softCurrencyText", softRoot.Find("AmountText").GetComponent<TMP_Text>());
+                AddButtonAction(softRoot.GetComponent<Button>(), controller.OnSoftCurrencyClicked);
+            }
+        }
+
+        if (premiumPill != null)
+        {
+            var premiumRoot = topBar.Find($"CurrencyPills/{premiumPill.Name}");
+            if (premiumRoot != null)
+            {
+                SetSerializedReference(controller, "premiumCurrencyText", premiumRoot.Find("AmountText").GetComponent<TMP_Text>());
+                AddButtonAction(premiumRoot.GetComponent<Button>(), controller.OnPremiumCurrencyClicked);
+            }
+        }
     }
 
-    private static void AssignBottomNav(BottomNavBarController controller, MainMenuController menu, RectTransform bottomNav)
+    private static void AssignBottomNav(BottomNavBarController controller, MainMenuController menu, RectTransform bottomNav, IReadOnlyList<BottomNavButtonConfig> buttonConfigs)
     {
-        SetSerializedReference(controller, "buttons", new[]
+        if (buttonConfigs == null)
         {
-            CreateNavButtonConfig(bottomNav, MainPage.Shop, "ShopButton"),
-            CreateNavButtonConfig(bottomNav, MainPage.Hangar, "HangarButton"),
-            CreateNavButtonConfig(bottomNav, MainPage.Play, "PlayButton"),
-            CreateNavButtonConfig(bottomNav, MainPage.Challenges, "ChallengesButton"),
-            CreateNavButtonConfig(bottomNav, MainPage.Progression, "ProgressionButton")
-        });
+            controller.Initialize(menu);
+            return;
+        }
 
+        var configs = new List<SerializedNavButton>(buttonConfigs.Count);
+        for (var i = 0; i < buttonConfigs.Count; i++)
+        {
+            var config = buttonConfigs[i];
+            if (config == null)
+                continue;
+
+            configs.Add(CreateNavButtonConfig(bottomNav, config.Page, config.Name));
+        }
+
+        SetSerializedReference(controller, "buttons", configs.ToArray());
         controller.Initialize(menu);
+    }
+
+    private static CurrencyPillConfig FindCurrencyPill(TopBarConfig config, string name)
+    {
+        if (config?.CurrencyPills == null)
+            return null;
+
+        foreach (var pill in config.CurrencyPills)
+        {
+            if (pill.Name == name)
+                return pill;
+        }
+
+        return null;
+    }
+
+    private static string GetLabelOrFallback(string label, string fallback)
+    {
+        return string.IsNullOrWhiteSpace(label) ? fallback : label;
+    }
+
+    private static string GetPlaceholderPageName(MainMenuBuilderConfig config, PageKind kind, string fallbackName)
+    {
+        if (config?.PlaceholderPages == null)
+            return fallbackName;
+
+        foreach (var page in config.PlaceholderPages)
+        {
+            if (page.Kind == kind)
+                return page.Name;
+        }
+
+        return fallbackName;
     }
 
     private static SerializedNavButton CreateNavButtonConfig(Transform root, MainPage page, string name)
