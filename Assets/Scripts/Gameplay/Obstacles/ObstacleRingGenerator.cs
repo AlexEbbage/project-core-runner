@@ -49,6 +49,7 @@ public partial class ObstacleRingGenerator : MonoBehaviour
     {
         public Transform root;
         public ObstacleRingType type;
+        public bool isObstacleRing;
         public GameObject obstacleInstance;
         public Renderer[] renderers;
         public readonly List<GameObject> pickups = new List<GameObject>();
@@ -195,6 +196,8 @@ public partial class ObstacleRingGenerator : MonoBehaviour
     private MaterialPropertyBlock _colorPropertyBlock;
     private static readonly int ColorProperty = Shader.PropertyToID("_Color");
 
+    public event System.Action<ObstacleRingType> OnObstacleRingPassed;
+
     // Debug properties
     public bool InWedgeRunDebug => _inWedgeRun;
     public int WedgeRunRingsRemainingDebug => _wedgeRunRingsRemaining;
@@ -288,6 +291,11 @@ public partial class ObstacleRingGenerator : MonoBehaviour
             float z = ring.root.position.z;
             if (playerZ - z > recycleBehindDistance)
             {
+                if (ring.isObstacleRing)
+                {
+                    OnObstacleRingPassed?.Invoke(ring.type);
+                }
+
                 ring.root.position = new Vector3(0f, 0f, _nextSpawnZ);
                 _nextSpawnZ += ringSpacing;
 
@@ -302,14 +310,17 @@ public partial class ObstacleRingGenerator : MonoBehaviour
     {
         ClearPickups(ring);
         bool isObstacleRing = ShouldSpawnObstacleRing();
+        ring.isObstacleRing = isObstacleRing;
         if (!isObstacleRing)
         {
+            ring.type = default;
             ConfigurePickupRing(ring);
             return;
         }
 
         EnsurePatternState();
         ObstacleRingType type = _currentPatternType;
+        ring.type = type;
 
         bool isWedgeType = type == ObstacleRingType.Wedge;
 
