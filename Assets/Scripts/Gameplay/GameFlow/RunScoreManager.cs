@@ -6,8 +6,6 @@ using UnityEngine;
 /// </summary>
 public class RunScoreManager : MonoBehaviour
 {
-    private const string BestScoreKey = "BestScore";
-
     [Header("Config (optional)")]
     [SerializeField] private GameBalanceConfig balanceConfig;
 
@@ -64,7 +62,7 @@ public class RunScoreManager : MonoBehaviour
             comboToMultiplierFactor = balanceConfig.comboToMultiplierFactor;
         }
 
-        _bestScore = PlayerPrefs.GetFloat(BestScoreKey, 0f);
+        _bestScore = RunStatsStore.BestScore;
     }
 
     private void OnEnable()
@@ -160,8 +158,8 @@ public class RunScoreManager : MonoBehaviour
         if (_currentScore > _bestScore)
         {
             _bestScore = _currentScore;
-            PlayerPrefs.SetFloat(BestScoreKey, _bestScore);
-            PlayerPrefs.Save();
+            RunStatsStore.SetBestScore(_bestScore);
+            RunStatsStore.Save();
 
             if (logScoreEvents)
             {
