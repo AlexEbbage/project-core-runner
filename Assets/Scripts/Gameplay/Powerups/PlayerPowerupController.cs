@@ -59,6 +59,8 @@ public class PlayerPowerupController : MonoBehaviour
     private readonly System.Collections.Generic.Dictionary<PowerupType, GameObject> _loopVfxInstances =
         new System.Collections.Generic.Dictionary<PowerupType, GameObject>();
 
+    public event System.Action<PowerupType> OnPowerupCollected;
+
     private void Awake()
     {
         if (playerController == null)
@@ -104,6 +106,8 @@ public class PlayerPowerupController : MonoBehaviour
 
     public void ActivatePowerup(PowerupType powerupType)
     {
+        OnPowerupCollected?.Invoke(powerupType);
+
         switch (powerupType)
         {
             case PowerupType.AutoPilot:

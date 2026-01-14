@@ -35,6 +35,8 @@ public class PlayerHealth : MonoBehaviour
     [SerializeField] private bool logEvents = false;
 
     public event Action OnDeath;
+    public event Action<string> OnDeathWithSource;
+    public event Action<string> OnGlancingHit;
     public event Action<float, float> OnHealthChanged;
     public event Action OnShieldBroken;
 
@@ -78,7 +80,7 @@ public class PlayerHealth : MonoBehaviour
     public float CurrentHealth => _currentHealth;
     public float MaxHealth => maxHealth;
 
-    public void HandleSideScrapeHit(Vector3 hitPoint, Vector3 hitNormal)
+    public void HandleSideScrapeHit(Vector3 hitPoint, Vector3 hitNormal, string obstacleType = null)
     {
         if (_isDead)
             return;
@@ -92,7 +94,7 @@ public class PlayerHealth : MonoBehaviour
 
         if (_glancingActive)
         {
-            Kill();
+            Kill(obstacleType);
             return;
         }
 
@@ -110,10 +112,11 @@ public class PlayerHealth : MonoBehaviour
         audioManager?.PlayHit();
 
         StartGlancingState();
+        OnGlancingHit?.Invoke(obstacleType);
         ApplyDamage(sideScrapeDamage);
     }
 
-    public void HandleHeadOnHit(Vector3 hitPoint, Vector3 hitNormal)
+    public void HandleHeadOnHit(Vector3 hitPoint, Vector3 hitNormal, string obstacleType = null)
     {
         if (_isDead)
             return;
@@ -135,7 +138,7 @@ public class PlayerHealth : MonoBehaviour
 
         if (headOnIsInstantDeath)
         {
-            Kill();
+            Kill(obstacleType);
         }
         else
         {
@@ -157,7 +160,7 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
-    private void Kill()
+    private void Kill(string obstacleType = null)
     {
         if (_isDead)
             return;
@@ -175,6 +178,7 @@ public class PlayerHealth : MonoBehaviour
         }
 
         OnDeath?.Invoke();
+        OnDeathWithSource?.Invoke(obstacleType);
     }
 
     private void SpawnVfx(GameObject prefab, Vector3 position, Vector3 normal)

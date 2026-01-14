@@ -40,6 +40,8 @@ public class RunSpeedController : MonoBehaviour
 
     private float _lastAppliedSpeed;
 
+    public float CurrentSpeed => _lastAppliedSpeed;
+
     private void Awake()
     {
         if (playerController == null) playerController = FindFirstObjectByType<PlayerController>();

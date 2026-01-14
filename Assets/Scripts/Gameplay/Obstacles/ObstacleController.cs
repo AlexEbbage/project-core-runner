@@ -29,14 +29,27 @@ public class ObstacleController : MonoBehaviour
         Transform playerTransform = collision.collider.transform;
 
         float alignment = Vector3.Dot(playerTransform.forward, -normal);
+        string obstacleType = GetObstacleTypeName();
 
         if (alignment >= headOnThreshold)
         {
-            health.HandleHeadOnHit(hitPoint, normal);
+            health.HandleHeadOnHit(hitPoint, normal, obstacleType);
         }
         else
         {
-            health.HandleSideScrapeHit(hitPoint, normal);
+            health.HandleSideScrapeHit(hitPoint, normal, obstacleType);
         }
+    }
+
+    private string GetObstacleTypeName()
+    {
+        if (GetComponent<FanObstacle>() != null)
+            return "Fan";
+        if (GetComponent<LaserObstacle>() != null)
+            return "Laser";
+        if (GetComponent<WedgeObstacle>() != null)
+            return "Wedge";
+
+        return gameObject.name;
     }
 }

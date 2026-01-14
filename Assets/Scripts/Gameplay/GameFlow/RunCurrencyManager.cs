@@ -14,6 +14,7 @@ public class RunCurrencyManager : MonoBehaviour
     private int _currentCoins;
 
     public int CurrentCoins => _currentCoins;
+    public event System.Action<int> OnCoinsAdded;
 
     private void Awake()
     {
@@ -29,6 +30,7 @@ public class RunCurrencyManager : MonoBehaviour
             return;
 
         _currentCoins += amount;
+        OnCoinsAdded?.Invoke(amount);
     }
 
     public int GetCoinValue() => coinValue;

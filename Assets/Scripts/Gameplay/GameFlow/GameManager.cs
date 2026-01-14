@@ -22,6 +22,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private RunSpeedController speedController;
     [SerializeField] private RunZoneManager runZoneManager;
     [SerializeField] private ObstacleRingGenerator obstacleRingGenerator;
+    [SerializeField] private RunStatsTracker statsTracker;
 
     [Header("Player Visuals (optional)")]
     [SerializeField] private PlayerVisual playerVisual;
@@ -106,6 +107,7 @@ public class GameManager : MonoBehaviour
         if (scoreManager == null) scoreManager = FindFirstObjectByType<RunScoreManager>();
         if (speedController == null) speedController = FindFirstObjectByType<RunSpeedController>();
         if (runZoneManager == null) runZoneManager = FindFirstObjectByType<RunZoneManager>();
+        if (statsTracker == null) statsTracker = FindFirstObjectByType<RunStatsTracker>();
 
 
         if (playerVisual == null && playerController != null)
@@ -254,6 +256,7 @@ public class GameManager : MonoBehaviour
         _services?.Audio?.PlayButtonClick();
         _services?.Audio?.PlayMenuMusic();
         runZoneManager?.OnRunEnded();
+        statsTracker?.EndRun();
         GoToMenu();
     }
 
@@ -401,6 +404,7 @@ public class GameManager : MonoBehaviour
         playerVisual.SetVisible(true);
         scoreManager?.ResetRun();
         speedController?.ResetForNewRun();
+        statsTracker?.ResetRunStats();
         runZoneManager?.OnResetRun();
 
         LogAnalyticsEvent("run_start");
@@ -416,6 +420,7 @@ public class GameManager : MonoBehaviour
         _gameTimerEnabled = true;
         scoreManager?.StartRun();
         speedController?.StartRun();
+        statsTracker?.StartRun();
         runZoneManager?.StartRun();
     }
 
@@ -436,6 +441,7 @@ public class GameManager : MonoBehaviour
         _gameTimerEnabled = true;
         scoreManager?.ResumeAfterContinue();
         speedController?.ResumeAfterContinue();
+        statsTracker?.ResumeRun();
         runZoneManager?.StartRun();
     }
 
@@ -451,6 +457,7 @@ public class GameManager : MonoBehaviour
         scoreManager?.StopRun();
         speedController?.StopRun();
         playerController?.StopRun();
+        statsTracker?.PauseRun();
     }
 
     private void ResumeGame()
@@ -497,6 +504,7 @@ public class GameManager : MonoBehaviour
             { "time", _elapsedTime },
             { "continues_used", continuesUsed }
         });
+        statsTracker?.EndRun();
 
         ShowGameOverUI();
     }
