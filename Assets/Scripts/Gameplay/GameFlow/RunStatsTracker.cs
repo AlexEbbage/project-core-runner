@@ -3,23 +3,10 @@ using UnityEngine;
 
 /// <summary>
 /// Tracks run stats such as distance, max speed, combos, coins, powerups, and hit breakdowns.
-/// Updates lifetime totals and bests using PlayerPrefs when a run ends.
+/// Updates lifetime totals and bests using RunStatsStore when a run ends.
 /// </summary>
 public class RunStatsTracker : MonoBehaviour
 {
-    private const string TotalDistanceKey = "Stats_TotalDistance";
-    private const string LongestRunDistanceKey = "Stats_LongestRunDistance";
-    private const string MaxSpeedKey = "Stats_MaxSpeed";
-    private const string HighestComboKey = "Stats_HighestCombo";
-    private const string TotalCoinsKey = "Stats_TotalCoins";
-    private const string TotalPowerupsKey = "Stats_TotalPowerups";
-    private const string TotalDeathsKey = "Stats_TotalDeaths";
-    private const string TotalGlancingHitsKey = "Stats_TotalGlancingHits";
-    private const string TotalObstaclesDodgedKey = "Stats_TotalObstaclesDodged";
-    private const string DeathsBySourceKey = "Stats_DeathsBySource";
-    private const string GlancingBySourceKey = "Stats_GlancingBySource";
-    private const string PowerupsByTypeKey = "Stats_PowerupsByType";
-
     [Header("References")]
     [SerializeField] private Transform playerTransform;
     [SerializeField] private RunScoreManager scoreManager;
@@ -32,19 +19,6 @@ public class RunStatsTracker : MonoBehaviour
     private readonly Dictionary<string, int> _deathsBySource = new Dictionary<string, int>();
     private readonly Dictionary<string, int> _glancingBySource = new Dictionary<string, int>();
     private readonly Dictionary<PowerupType, int> _powerupsByType = new Dictionary<PowerupType, int>();
-
-    [System.Serializable]
-    private struct StringIntEntry
-    {
-        public string key;
-        public int value;
-    }
-
-    [System.Serializable]
-    private class StringIntList
-    {
-        public List<StringIntEntry> entries = new List<StringIntEntry>();
-    }
 
     private bool _isTracking;
     private bool _runFinalized;
@@ -212,47 +186,19 @@ public class RunStatsTracker : MonoBehaviour
         _isTracking = false;
         _runFinalized = true;
 
-        float totalDistance = PlayerPrefs.GetFloat(TotalDistanceKey, 0f) + _totalDistance;
-        PlayerPrefs.SetFloat(TotalDistanceKey, totalDistance);
-
-        int totalCoins = PlayerPrefs.GetInt(TotalCoinsKey, 0) + _coinsCollected;
-        PlayerPrefs.SetInt(TotalCoinsKey, totalCoins);
-
-        int totalPowerups = PlayerPrefs.GetInt(TotalPowerupsKey, 0) + _powerupsCollected;
-        PlayerPrefs.SetInt(TotalPowerupsKey, totalPowerups);
-
-        int totalDeaths = PlayerPrefs.GetInt(TotalDeathsKey, 0) + _deaths;
-        PlayerPrefs.SetInt(TotalDeathsKey, totalDeaths);
-
-        int totalGlancingHits = PlayerPrefs.GetInt(TotalGlancingHitsKey, 0) + _glancingHits;
-        PlayerPrefs.SetInt(TotalGlancingHitsKey, totalGlancingHits);
-
-        int totalObstaclesDodged = PlayerPrefs.GetInt(TotalObstaclesDodgedKey, 0) + _obstaclesDodged;
-        PlayerPrefs.SetInt(TotalObstaclesDodgedKey, totalObstaclesDodged);
-
-        float longestRun = PlayerPrefs.GetFloat(LongestRunDistanceKey, 0f);
-        if (_totalDistance > longestRun)
-        {
-            PlayerPrefs.SetFloat(LongestRunDistanceKey, _totalDistance);
-        }
-
-        float maxSpeed = PlayerPrefs.GetFloat(MaxSpeedKey, 0f);
-        if (_maxSpeed > maxSpeed)
-        {
-            PlayerPrefs.SetFloat(MaxSpeedKey, _maxSpeed);
-        }
-
-        float highestCombo = PlayerPrefs.GetFloat(HighestComboKey, 0f);
-        if (_highestCombo > highestCombo)
-        {
-            PlayerPrefs.SetFloat(HighestComboKey, _highestCombo);
-        }
-
-        MergeStringIntMap(DeathsBySourceKey, _deathsBySource);
-        MergeStringIntMap(GlancingBySourceKey, _glancingBySource);
-        MergePowerupMap(PowerupsByTypeKey, _powerupsByType);
-
-        PlayerPrefs.Save();
+        RunStatsStore.AddTotalDistance(_totalDistance);
+        RunStatsStore.AddTotalCoins(_coinsCollected);
+        RunStatsStore.AddTotalPowerups(_powerupsCollected);
+        RunStatsStore.AddTotalDeaths(_deaths);
+        RunStatsStore.AddTotalGlancingHits(_glancingHits);
+        RunStatsStore.AddTotalObstaclesDodged(_obstaclesDodged);
+        RunStatsStore.SetLongestRunDistance(_totalDistance);
+        RunStatsStore.SetMaxSpeed(_maxSpeed);
+        RunStatsStore.SetHighestCombo(_highestCombo);
+        RunStatsStore.MergeDeathsBySource(_deathsBySource);
+        RunStatsStore.MergeGlancingHitsBySource(_glancingBySource);
+        RunStatsStore.MergePowerupsByType(_powerupsByType);
+        RunStatsStore.Save();
     }
 
     private void HandleCoinsAdded(int amount)
@@ -321,85 +267,4 @@ public class RunStatsTracker : MonoBehaviour
         }
     }
 
-    private void MergeStringIntMap(string prefsKey, Dictionary<string, int> delta)
-    {
-        if (delta == null || delta.Count == 0)
-            return;
-
-        var current = LoadStringIntMap(prefsKey);
-        foreach (var kvp in delta)
-        {
-            if (current.ContainsKey(kvp.Key))
-            {
-                current[kvp.Key] += kvp.Value;
-            }
-            else
-            {
-                current[kvp.Key] = kvp.Value;
-            }
-        }
-
-        SaveStringIntMap(prefsKey, current);
-    }
-
-    private void MergePowerupMap(string prefsKey, Dictionary<PowerupType, int> delta)
-    {
-        if (delta == null || delta.Count == 0)
-            return;
-
-        var current = LoadStringIntMap(prefsKey);
-        foreach (var kvp in delta)
-        {
-            string key = kvp.Key.ToString();
-            if (current.ContainsKey(key))
-            {
-                current[key] += kvp.Value;
-            }
-            else
-            {
-                current[key] = kvp.Value;
-            }
-        }
-
-        SaveStringIntMap(prefsKey, current);
-    }
-
-    private Dictionary<string, int> LoadStringIntMap(string prefsKey)
-    {
-        string json = PlayerPrefs.GetString(prefsKey, string.Empty);
-        if (string.IsNullOrEmpty(json))
-            return new Dictionary<string, int>();
-
-        var list = JsonUtility.FromJson<StringIntList>(json);
-        var result = new Dictionary<string, int>();
-        if (list == null || list.entries == null)
-            return result;
-
-        for (int i = 0; i < list.entries.Count; i++)
-        {
-            var entry = list.entries[i];
-            if (string.IsNullOrEmpty(entry.key))
-                continue;
-
-            result[entry.key] = entry.value;
-        }
-
-        return result;
-    }
-
-    private void SaveStringIntMap(string prefsKey, Dictionary<string, int> map)
-    {
-        var list = new StringIntList();
-        foreach (var kvp in map)
-        {
-            list.entries.Add(new StringIntEntry
-            {
-                key = kvp.Key,
-                value = kvp.Value
-            });
-        }
-
-        string json = JsonUtility.ToJson(list);
-        PlayerPrefs.SetString(prefsKey, json);
-    }
 }
