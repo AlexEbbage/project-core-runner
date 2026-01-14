@@ -485,8 +485,11 @@ public class PlayerProfile : ScriptableObject
         string deviceId = SystemInfo.deviceUniqueIdentifier ?? "unknown-device";
         string payload = $"{json}|{deviceId}|{HashSalt}";
         byte[] bytes = Encoding.UTF8.GetBytes(payload);
-        byte[] hash = SHA256.HashData(bytes);
-        return System.Convert.ToBase64String(hash);
+        using (SHA256 sha256 = SHA256.Create())
+        {
+            byte[] hash = sha256.ComputeHash(bytes);
+            return System.Convert.ToBase64String(hash);
+        }
     }
     
     private string EnsureDefaultSelection<T>(string currentId, T[] items) where T : ScriptableObject
