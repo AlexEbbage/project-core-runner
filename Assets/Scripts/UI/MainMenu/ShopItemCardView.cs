@@ -18,7 +18,7 @@ public class ShopItemCardView : MonoBehaviour
         if (iconImage != null)
             iconImage.sprite = item != null ? item.icon : null;
         if (nameText != null)
-            nameText.text = item != null ? item.displayName : "Item";
+            nameText.text = item != null ? item.displayName : LocalizationService.Get("ui.item_default", "Item");
         if (priceText != null)
             priceText.text = item != null ? item.price.ToString() : "0";
         if (buyButton != null)

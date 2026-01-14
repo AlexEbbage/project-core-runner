@@ -59,6 +59,7 @@ public class HudController : MonoBehaviour
             playerHealth.OnHealthChanged += HandleHealthChanged;
         }
 
+        LocalizationService.LanguageChanged += UpdateBestScoreDisplay;
         UpdateBestScoreDisplay();
     }
 
@@ -68,6 +69,8 @@ public class HudController : MonoBehaviour
         {
             playerHealth.OnHealthChanged -= HandleHealthChanged;
         }
+
+        LocalizationService.LanguageChanged -= UpdateBestScoreDisplay;
     }
 
     private void Update()
@@ -127,7 +130,7 @@ public class HudController : MonoBehaviour
         if (bestScoreText == null || scoreManager == null)
             return;
 
-        bestScoreText.text = $"BEST: {scoreManager.BestScore:0}";
+        bestScoreText.text = LocalizationService.Format("ui.best", scoreManager.BestScore);
     }
 
     public void Show()
