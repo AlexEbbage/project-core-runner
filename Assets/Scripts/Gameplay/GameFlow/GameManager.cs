@@ -295,7 +295,7 @@ public class GameManager : MonoBehaviour
             });
 
             Time.timeScale = 1f;
-            HandleContinueAdResult(success: true);
+            HandleContinueAdResult(RewardedAdResult.Rewarded);
             return;
         }
 
@@ -525,14 +525,14 @@ public class GameManager : MonoBehaviour
         pauseMenuUI?.Hide();
     }
 
-    private void HandleContinueAdResult(bool success)
+    private void HandleContinueAdResult(RewardedAdResult result)
     {
         _adInProgress = false;
 
-        if (!success)
+        if (result != RewardedAdResult.Rewarded)
         {
             if (logStateChanges)
-                Debug.Log("GameManager: Rewarded ad failed or was skipped. No continue.");
+                Debug.Log($"GameManager: Rewarded ad unavailable or skipped ({result}). No continue.");
 
             LogAnalyticsEvent("ad_skipped", new Dictionary<string, object>
             {

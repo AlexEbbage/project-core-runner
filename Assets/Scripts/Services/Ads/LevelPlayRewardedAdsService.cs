@@ -21,10 +21,11 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
     [SerializeField] private bool enableTestSuite = false;
     [Tooltip("Fail-safe timeout (seconds) in case the SDK never calls back.")]
     [SerializeField] private float showTimeoutSeconds = 30f;
-    private Action<bool> _pendingCallback;
+    private Action<RewardedAdResult> _pendingCallback;
     private bool _isShowing;
     private Coroutine _showTimeoutRoutine;
     private bool _rewardEarned;
+    private bool _closedWithoutReward;
     private bool _initRequested;
 
     private LevelPlayRewardedAd _rewardedAd;
@@ -82,7 +83,7 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
         return _rewardedAd.IsAdReady();
     }
 
-    public void ShowRewardedAd(Action<bool> onCompleted)
+    public void ShowRewardedAd(Action<RewardedAdResult> onCompleted)
     {
         if (_isShowing)
         {
@@ -95,7 +96,7 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
             Initialize();
             if (_rewardedAd == null)
             {
-                onCompleted?.Invoke(false);
+                onCompleted?.Invoke(RewardedAdResult.NotReady);
                 return;
             }
         }
@@ -103,13 +104,14 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
         if (!IsRewardedAdReady())
         {
             if (logEvents) Debug.Log("LevelPlayRewardedAdService: rewarded not ready.");
-            onCompleted?.Invoke(false);
+            onCompleted?.Invoke(RewardedAdResult.NotReady);
             return;
         }
 
         _pendingCallback = onCompleted;
         _isShowing = true;
         _rewardEarned = false;
+        _closedWithoutReward = false;
 
         // Fail-safe: if the SDK never calls back, complete as failure.
         StartShowTimeout();
@@ -117,7 +119,7 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
         _rewardedAd.ShowAd();
     }
 
-    private void Complete(bool success)
+    private void Complete(RewardedAdResult result)
     {
         if (!_isShowing && _pendingCallback == null) return;
 
@@ -127,7 +129,7 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
         var cb = _pendingCallback;
         _pendingCallback = null;
 
-        cb?.Invoke(success);
+        cb?.Invoke(result);
     }
 
     private void StartShowTimeout()
@@ -151,7 +153,7 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
         if (_isShowing && _pendingCallback != null)
         {
             if (logEvents) Debug.LogWarning("LevelPlayRewardedAdService: Show timed out. Completing as failure.");
-            Complete(false);
+            Complete(_closedWithoutReward ? RewardedAdResult.ClosedBeforeReward : RewardedAdResult.FailedToShow);
         }
     }
 
@@ -235,7 +237,7 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
     private void RewardedOnAdDisplayFailedEvent(LevelPlayAdInfo adInfo, LevelPlayAdError error)
     {
         if (logEvents) Debug.LogWarning($"LevelPlayRewardedAdService: Rewarded display failed: {error.ErrorMessage}");
-        Complete(false);
+        Complete(RewardedAdResult.FailedToShow);
         LoadRewardedAd();
     }
 
@@ -243,7 +245,7 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
     {
         if (logEvents) Debug.Log($"LevelPlayRewardedAdService: Rewarded earned ({adReward.Name}:{adReward.Amount}).");
         _rewardEarned = true;
-        Complete(true);
+        Complete(RewardedAdResult.Rewarded);
     }
 
     private void RewardedOnAdClosedEvent(LevelPlayAdInfo adInfo)
@@ -252,11 +254,15 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
 
         if (_rewardEarned)
         {
-            Complete(true);
+            Complete(RewardedAdResult.Rewarded);
         }
-        else if (logEvents)
+        else
         {
-            Debug.Log("LevelPlayRewardedAdService: Awaiting reward callback after close.");
+            _closedWithoutReward = true;
+            if (logEvents)
+            {
+                Debug.Log("LevelPlayRewardedAdService: Awaiting reward callback after close.");
+            }
         }
 
         LoadRewardedAd();
