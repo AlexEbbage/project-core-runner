@@ -201,6 +201,20 @@ public class PlayerProfile : ScriptableObject
             unlockedItemIds.Add(itemId);
     }
 
+    public void AddCurrency(ShopCurrencyType currencyType, int amount)
+    {
+        if (amount <= 0)
+            return;
+
+        if (currencyType == ShopCurrencyType.Soft)
+        {
+            softCurrency += amount;
+            return;
+        }
+
+        premiumCurrency += amount;
+    }
+
     public bool TrySpend(ShopCurrencyType currencyType, int amount)
     {
         if (amount <= 0)
