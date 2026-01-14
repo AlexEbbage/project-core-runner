@@ -176,15 +176,21 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void SetState(GameState newState)
+    private void TransitionToState(GameState newState, float timeScale)
     {
-        _stateMachine.SetState(newState);
+        if (_stateMachine.SetState(newState))
+        {
+            Time.timeScale = timeScale;
+        }
     }
 
     // --- UI hooks ---
 
     public void OnPlayButtonPressed()
     {
+        if (_stateMachine.CurrentState != GameState.Menu)
+            return;
+
         _services?.Audio?.PlayButtonClick();
         _services?.Audio?.PlayGameplayMusic();
         StartNewRunFromMenu();
@@ -192,12 +198,18 @@ public class GameManager : MonoBehaviour
 
     public void OnRestartButtonPressed()
     {
+        if (_stateMachine.CurrentState != GameState.GameOver)
+            return;
+
         _services?.Audio?.PlayButtonClick();
         StartNewRunFromGameOver();
     }
 
     public void OnMenuButtonPressedFromGameOver()
     {
+        if (_stateMachine.CurrentState != GameState.GameOver)
+            return;
+
         _services?.Audio?.PlayButtonClick();
         _services?.Audio?.PlayMenuMusic();
         runZoneManager?.OnRunEnded();
@@ -224,6 +236,9 @@ public class GameManager : MonoBehaviour
 
     public void OnMenuButtonPressedFromPause()
     {
+        if (_stateMachine.CurrentState != GameState.Paused)
+            return;
+
         _services?.Audio?.PlayButtonClick();
         _services?.Audio?.PlayMenuMusic();
         runZoneManager?.OnRunEnded();
@@ -321,11 +336,11 @@ public class GameManager : MonoBehaviour
 
     private void GoToMenu()
     {
-        Time.timeScale = 1f;
-        SetState(GameState.Menu);
+        TransitionToState(GameState.Menu, 1f);
 
         continuesUsed = 0;
         _adInProgress = false;
+        _gameTimerEnabled = false;
 
         // We WANT the background to fly, so keep movement running
         playerController?.StartRun();
@@ -356,10 +371,10 @@ public class GameManager : MonoBehaviour
 
     private void StartNewRun()
     {
-        Time.timeScale = 1f;
-        SetState(GameState.Playing);
+        TransitionToState(GameState.Playing, 1f);
 
         _elapsedTime = 0;
+        _gameTimerEnabled = false;
 
         // Show and enable the player now we're playing
         SetPlayerVisible(true);
@@ -394,8 +409,8 @@ public class GameManager : MonoBehaviour
 
     public void ContinueRun()
     {
-        Time.timeScale = 1f;
-        SetState(GameState.Playing);
+        TransitionToState(GameState.Playing, 1f);
+        _gameTimerEnabled = false;
 
         obstacleRingGenerator.DissolveNextRings(startClearRings, dissolveDuration);
         playerController?.StartRun();
@@ -414,8 +429,7 @@ public class GameManager : MonoBehaviour
 
     private void PauseGame()
     {
-        SetState(GameState.Paused);
-        Time.timeScale = 0f;
+        TransitionToState(GameState.Paused, 0f);
 
         _gameTimerEnabled = false;
 
@@ -429,13 +443,22 @@ public class GameManager : MonoBehaviour
 
     private void ResumeGame()
     {
-        SetState(GameState.Playing);
-        Time.timeScale = 1f;
+        TransitionToState(GameState.Playing, 1f);
 
         pauseMenuUI?.Hide();
         hudController?.Show();
 
-        ContinueRun();
+        ResumePausedRun();
+    }
+
+    private void ResumePausedRun()
+    {
+        playerController?.StartRun();
+        scoreManager?.StartRun();
+        speedController?.StartRun();
+        runZoneManager?.StartRun();
+
+        _gameTimerEnabled = true;
     }
 
     private void HandlePlayerDeath()
@@ -452,8 +475,7 @@ public class GameManager : MonoBehaviour
         }
 
         _gameTimerEnabled = false;
-        Time.timeScale = 0.2f;
-        SetState(GameState.GameOver);
+        TransitionToState(GameState.GameOver, 0.2f);
         playerController?.StopRun();
         playerVisual.SetVisible(false);
 
@@ -589,13 +611,45 @@ public class GameManager : MonoBehaviour
             _logStateChanges = logStateChanges;
         }
 
-        public void SetState(GameState newState)
+        public bool SetState(GameState newState)
         {
+            if (!IsValidTransition(CurrentState, newState))
+            {
+                if (_logStateChanges)
+                {
+                    Debug.LogWarning($"GameManager: Invalid state transition {CurrentState} -> {newState}");
+                }
+
+                return false;
+            }
+
             CurrentState = newState;
 
             if (_logStateChanges)
             {
                 Debug.Log($"GameManager: State -> {CurrentState}");
+            }
+
+            return true;
+        }
+
+        private bool IsValidTransition(GameState from, GameState to)
+        {
+            if (from == to)
+                return true;
+
+            switch (from)
+            {
+                case GameState.Menu:
+                    return to == GameState.Playing;
+                case GameState.Playing:
+                    return to == GameState.Paused || to == GameState.GameOver || to == GameState.Menu;
+                case GameState.Paused:
+                    return to == GameState.Playing || to == GameState.Menu;
+                case GameState.GameOver:
+                    return to == GameState.Playing || to == GameState.Menu;
+                default:
+                    return false;
             }
         }
     }
