@@ -37,6 +37,7 @@ public class GameManager : MonoBehaviour
     [Header("References - Services")]
     [SerializeField] private MonoBehaviour rewardedAdServiceBehaviour;
     [SerializeField] private MonoBehaviour analyticsServiceBehaviour;
+    [SerializeField] private MonoBehaviour pushNotificationServiceBehaviour;
     [SerializeField] private AudioManager audioManager;
     [SerializeField] private VfxManager vfxManager;
 
@@ -58,6 +59,7 @@ public class GameManager : MonoBehaviour
 
     private IRewardedAdService _rewardedAdService;
     private IAnalyticsService _analytics;
+    private IPushNotificationService _pushNotifications;
     private bool _adInProgress;
     private float _elapsedTime;
     private bool _gameTimerEnabled;
@@ -142,6 +144,15 @@ public class GameManager : MonoBehaviour
             }
         }
 
+        if (pushNotificationServiceBehaviour != null)
+        {
+            _pushNotifications = pushNotificationServiceBehaviour as IPushNotificationService;
+            if (_pushNotifications == null)
+            {
+                Debug.LogWarning("GameManager: pushNotificationServiceBehaviour does not implement IPushNotificationService.");
+            }
+        }
+
         _services = new GameServicesFacade(audioManager, vfxManager, _rewardedAdService, _analytics);
     }
 
@@ -164,6 +175,7 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         Time.timeScale = 1f;
+        _pushNotifications?.Initialize();
         _services?.Audio?.PlayMenuMusic();
         GoToMenu();
     }
