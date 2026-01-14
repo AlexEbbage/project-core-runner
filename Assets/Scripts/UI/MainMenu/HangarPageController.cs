@@ -26,10 +26,7 @@ public class HangarPageController : MonoBehaviour
     {
         profile = playerProfile;
         shipDatabase = database;
-        if (profile != null && !string.IsNullOrEmpty(profile.selectedShipId))
-            currentShipId = profile.selectedShipId;
-        if (profile != null && !string.IsNullOrEmpty(currentShipId))
-            profile.SetSelectedShip(currentShipId);
+        profile?.EnsureDefaults(shipDatabase);
         RefreshStats();
         SelectTab(selectedTab);
     }
@@ -80,7 +77,8 @@ public class HangarPageController : MonoBehaviour
         if (profile == null || string.IsNullOrEmpty(skinId))
             return;
 
-        profile.UnlockItem(skinId);
+        if (profile.TrySelectSkin(skinId, shipDatabase))
+            SelectTab(selectedTab);
     }
 
     public void OnTrailSelected(string trailId)
@@ -88,7 +86,8 @@ public class HangarPageController : MonoBehaviour
         if (profile == null || string.IsNullOrEmpty(trailId))
             return;
 
-        profile.UnlockItem(trailId);
+        if (profile.TrySelectTrail(trailId, shipDatabase))
+            SelectTab(selectedTab);
     }
 
     public void OnCoreFxSelected(string coreFxId)
@@ -96,7 +95,8 @@ public class HangarPageController : MonoBehaviour
         if (profile == null || string.IsNullOrEmpty(coreFxId))
             return;
 
-        profile.UnlockItem(coreFxId);
+        if (profile.TrySelectCoreFx(coreFxId, shipDatabase))
+            SelectTab(selectedTab);
     }
 
     private void RefreshStats()
@@ -150,8 +150,10 @@ public class HangarPageController : MonoBehaviour
                 continue;
 
             bool unlocked = profile != null && profile.HasUnlocked(skin.id);
+            bool equipped = profile != null && profile.SelectedSkinId == skin.id;
             var instance = Instantiate(cosmeticItemPrefab, contentRoot);
-            instance.Initialize(skin.id, skin.displayName, skin.icon, skin.cost, unlocked, false);
+            instance.Initialize(skin.id, skin.displayName, skin.icon, skin.cost, unlocked, equipped);
+            instance.SetAction(() => OnSkinSelected(skin.id));
             _spawnedItems.Add(instance.gameObject);
         }
     }
@@ -167,8 +169,10 @@ public class HangarPageController : MonoBehaviour
                 continue;
 
             bool unlocked = profile != null && profile.HasUnlocked(trail.id);
+            bool equipped = profile != null && profile.SelectedTrailId == trail.id;
             var instance = Instantiate(cosmeticItemPrefab, contentRoot);
-            instance.Initialize(trail.id, trail.displayName, trail.icon, trail.cost, unlocked, false);
+            instance.Initialize(trail.id, trail.displayName, trail.icon, trail.cost, unlocked, equipped);
+            instance.SetAction(() => OnTrailSelected(trail.id));
             _spawnedItems.Add(instance.gameObject);
         }
     }
@@ -184,8 +188,10 @@ public class HangarPageController : MonoBehaviour
                 continue;
 
             bool unlocked = profile != null && profile.HasUnlocked(coreFx.id);
+            bool equipped = profile != null && profile.SelectedCoreFxId == coreFx.id;
             var instance = Instantiate(cosmeticItemPrefab, contentRoot);
-            instance.Initialize(coreFx.id, coreFx.displayName, coreFx.icon, coreFx.cost, unlocked, false);
+            instance.Initialize(coreFx.id, coreFx.displayName, coreFx.icon, coreFx.cost, unlocked, equipped);
+            instance.SetAction(() => OnCoreFxSelected(coreFx.id));
             _spawnedItems.Add(instance.gameObject);
         }
     }

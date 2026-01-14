@@ -106,6 +106,7 @@ public class ShipSkinDefinition : ScriptableObject
     public string displayName;
     public Sprite icon;
     public int cost;
+    public GameObject prefab;
 }
 
 [CreateAssetMenu(menuName = "Main Menu/Ship Trail Definition")]
@@ -115,6 +116,7 @@ public class ShipTrailDefinition : ScriptableObject
     public string displayName;
     public Sprite icon;
     public int cost;
+    public GameObject prefab;
 }
 
 [CreateAssetMenu(menuName = "Main Menu/Ship Core FX Definition")]
@@ -124,6 +126,7 @@ public class ShipCoreFxDefinition : ScriptableObject
     public string displayName;
     public Sprite icon;
     public int cost;
+    public GameObject prefab;
 }
 
 [CreateAssetMenu(menuName = "Main Menu/Shop Item Definition")]
@@ -156,6 +159,48 @@ public class ShipDatabase : ScriptableObject
         {
             if (ship != null && ship.id == shipId)
                 return ship;
+        }
+
+        return null;
+    }
+
+    public ShipSkinDefinition GetSkin(string skinId)
+    {
+        if (skins == null)
+            return null;
+
+        foreach (var skin in skins)
+        {
+            if (skin != null && skin.id == skinId)
+                return skin;
+        }
+
+        return null;
+    }
+
+    public ShipTrailDefinition GetTrail(string trailId)
+    {
+        if (trails == null)
+            return null;
+
+        foreach (var trail in trails)
+        {
+            if (trail != null && trail.id == trailId)
+                return trail;
+        }
+
+        return null;
+    }
+
+    public ShipCoreFxDefinition GetCoreFx(string coreFxId)
+    {
+        if (coreFx == null)
+            return null;
+
+        foreach (var fx in coreFx)
+        {
+            if (fx != null && fx.id == coreFxId)
+                return fx;
         }
 
         return null;
@@ -251,6 +296,14 @@ public class PlayerProfile : ScriptableObject
         PlayerPrefs.SetString(ProfileHashKey, ComputeHash(json));
         PlayerPrefs.Save();
     }
+    
+    [SerializeField] private string selectedSkinId;
+    [SerializeField] private string selectedTrailId;
+    [SerializeField] private string selectedCoreFxId;
+
+    public string SelectedSkinId => selectedSkinId;
+    public string SelectedTrailId => selectedTrailId;
+    public string SelectedCoreFxId => selectedCoreFxId;
 
     public bool HasUnlocked(string itemId)
     {
@@ -263,6 +316,84 @@ public class PlayerProfile : ScriptableObject
             unlockedItemIds.Add(itemId);
 
         Save();
+    }
+
+    public void AddCurrency(ShopCurrencyType currencyType, int amount)
+    {
+        if (amount <= 0)
+            return;
+
+        if (currencyType == ShopCurrencyType.Soft)
+        {
+            softCurrency += amount;
+            return;
+        }
+
+        premiumCurrency += amount;
+    }
+    
+    public void EnsureDefaults(ShipDatabase database)
+    {
+        if (database == null)
+            return;
+
+        selectedSkinId = EnsureDefaultSelection(selectedSkinId, database.skins);
+        selectedTrailId = EnsureDefaultSelection(selectedTrailId, database.trails);
+        selectedCoreFxId = EnsureDefaultSelection(selectedCoreFxId, database.coreFx);
+    }
+
+    public bool TrySelectSkin(string skinId, ShipDatabase database)
+    {
+        var skin = database != null ? database.GetSkin(skinId) : null;
+        if (skin == null)
+            return false;
+
+        if (!HasUnlocked(skinId))
+        {
+            if (skin.cost > 0)
+                return false;
+
+            UnlockItem(skinId);
+        }
+
+        selectedSkinId = skinId;
+        return true;
+    }
+
+    public bool TrySelectTrail(string trailId, ShipDatabase database)
+    {
+        var trail = database != null ? database.GetTrail(trailId) : null;
+        if (trail == null)
+            return false;
+
+        if (!HasUnlocked(trailId))
+        {
+            if (trail.cost > 0)
+                return false;
+
+            UnlockItem(trailId);
+        }
+
+        selectedTrailId = trailId;
+        return true;
+    }
+
+    public bool TrySelectCoreFx(string coreFxId, ShipDatabase database)
+    {
+        var coreFx = database != null ? database.GetCoreFx(coreFxId) : null;
+        if (coreFx == null)
+            return false;
+
+        if (!HasUnlocked(coreFxId))
+        {
+            if (coreFx.cost > 0)
+                return false;
+
+            UnlockItem(coreFxId);
+        }
+
+        selectedCoreFxId = coreFxId;
+        return true;
     }
 
     public bool TrySpend(ShopCurrencyType currencyType, int amount)
@@ -365,5 +496,75 @@ public class PlayerProfile : ScriptableObject
         byte[] bytes = Encoding.UTF8.GetBytes(payload);
         byte[] hash = SHA256.HashData(bytes);
         return System.Convert.ToBase64String(hash);
+    }
+    
+    private string EnsureDefaultSelection<T>(string currentId, T[] items) where T : ScriptableObject
+    {
+        if (items == null)
+            return currentId;
+
+        if (!string.IsNullOrEmpty(currentId))
+        {
+            foreach (var item in items)
+            {
+                if (item == null)
+                    continue;
+
+                if (!TryGetItemData(item, out string id, out int cost))
+                    continue;
+
+                if (id != currentId)
+                    continue;
+
+                if (HasUnlocked(id) || cost <= 0)
+                    return currentId;
+            }
+        }
+
+        foreach (var item in items)
+        {
+            if (item == null)
+                continue;
+
+            if (!TryGetItemData(item, out string id, out int cost))
+                continue;
+
+            if (string.IsNullOrEmpty(id))
+                continue;
+
+            if (HasUnlocked(id))
+                return id;
+
+            if (cost <= 0)
+            {
+                UnlockItem(id);
+                return id;
+            }
+        }
+
+        return string.Empty;
+    }
+
+    private static bool TryGetItemData(ScriptableObject item, out string id, out int cost)
+    {
+        switch (item)
+        {
+            case ShipSkinDefinition skin:
+                id = skin.id;
+                cost = skin.cost;
+                return true;
+            case ShipTrailDefinition trail:
+                id = trail.id;
+                cost = trail.cost;
+                return true;
+            case ShipCoreFxDefinition fx:
+                id = fx.id;
+                cost = fx.cost;
+                return true;
+            default:
+                id = null;
+                cost = 0;
+                return false;
+        }
     }
 }

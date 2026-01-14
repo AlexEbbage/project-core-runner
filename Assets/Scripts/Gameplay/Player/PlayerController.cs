@@ -27,6 +27,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private bool allowKeyboardInputInEditor = true;
     [Tooltip("Scales touch drag input after normalizing by screen width.")]
     [SerializeField] private float touchInputSensitivity = 1f;
+    [Tooltip("Fraction of screen width per second needed to reach full touch input.")]
+    [SerializeField, Range(0.01f, 0.5f)] private float touchInputFullScaleFraction = 0.02f;
 
     [Header("Run Control")]
     [Tooltip("If true, movement is enabled immediately at Start. Otherwise, call StartRun() from GameManager.")]
@@ -75,7 +77,8 @@ public class PlayerController : MonoBehaviour
         Vector2 input = context.ReadValue<Vector2>();
         if (context.control?.device is Touchscreen)
         {
-            float normalized = input.x / Mathf.Max(Screen.width, 1f);
+            float deltaTime = Mathf.Max(Time.unscaledDeltaTime, 0.001f);
+            float normalized = input.x / Mathf.Max(Screen.width * touchInputFullScaleFraction * deltaTime, 1f);
             _moveInput = Mathf.Clamp(normalized * touchInputSensitivity, -1f, 1f);
             return;
         }

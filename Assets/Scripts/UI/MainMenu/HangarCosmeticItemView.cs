@@ -31,4 +31,14 @@ public class HangarCosmeticItemView : MonoBehaviour
         if (actionButton != null)
             actionButton.interactable = unlocked || cost <= 0;
     }
+
+    public void SetAction(System.Action action)
+    {
+        if (actionButton == null)
+            return;
+
+        actionButton.onClick.RemoveAllListeners();
+        if (action != null)
+            actionButton.onClick.AddListener(() => action());
+    }
 }
