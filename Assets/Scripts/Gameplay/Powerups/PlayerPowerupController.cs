@@ -26,6 +26,7 @@ public class PlayerPowerupController : MonoBehaviour
     [SerializeField] private RunScoreManager runScoreManager;
     [SerializeField] private ObstacleRingGenerator obstacleRingGenerator;
     [SerializeField] private AudioManager audioManager;
+    [SerializeField] private VfxManager vfxManager;
 
     [Header("Powerup Values")]
     [SerializeField] private float autoPilotDuration = 4f;
@@ -68,6 +69,9 @@ public class PlayerPowerupController : MonoBehaviour
 
         if (audioManager == null)
             audioManager = FindFirstObjectByType<AudioManager>();
+
+        if (vfxManager == null)
+            vfxManager = VfxManager.Instance;
 
         if (balanceConfig != null)
         {
@@ -253,7 +257,7 @@ public class PlayerPowerupController : MonoBehaviour
 
         if (effects.startVfxPrefab != null)
         {
-            Instantiate(effects.startVfxPrefab, transform.position, transform.rotation, transform);
+            SpawnOneShotVfx(effects.startVfxPrefab, transform.position, transform.rotation, transform);
         }
 
         if (effects.loopVfxPrefab != null)
@@ -274,7 +278,7 @@ public class PlayerPowerupController : MonoBehaviour
 
         if (effects.endVfxPrefab != null)
         {
-            Instantiate(effects.endVfxPrefab, transform.position, transform.rotation, transform);
+            SpawnOneShotVfx(effects.endVfxPrefab, transform.position, transform.rotation, transform);
         }
 
         if (effects.endSfx != null)
@@ -302,6 +306,68 @@ public class PlayerPowerupController : MonoBehaviour
         }
 
         return null;
+    }
+
+    private void SpawnOneShotVfx(GameObject prefab, Vector3 position, Quaternion rotation, Transform parent)
+    {
+        if (prefab == null)
+            return;
+
+        if (vfxManager != null)
+        {
+            var instance = vfxManager.Spawn(prefab, position, rotation);
+            if (instance != null && parent != null)
+            {
+                instance.transform.SetParent(parent, true);
+            }
+            return;
+        }
+
+        var instance = parent != null
+            ? Instantiate(prefab, parent)
+            : Instantiate(prefab, position, rotation);
+        instance.transform.SetPositionAndRotation(position, rotation);
+        float lifetime = GetInstanceLifetime(instance);
+        Destroy(instance, lifetime);
+    }
+
+    private float GetInstanceLifetime(GameObject instance)
+    {
+        if (instance == null)
+            return 2f;
+
+        ParticleSystem[] systems = instance.GetComponentsInChildren<ParticleSystem>(true);
+        float maxLifetime = 0f;
+
+        foreach (ParticleSystem system in systems)
+        {
+            var main = system.main;
+            float startLifetime = GetMaxCurveValue(main.startLifetime);
+            maxLifetime = Mathf.Max(maxLifetime, main.duration + startLifetime);
+        }
+
+        if (maxLifetime <= 0f)
+        {
+            maxLifetime = 2f;
+        }
+
+        return maxLifetime;
+    }
+
+    private static float GetMaxCurveValue(ParticleSystem.MinMaxCurve curve)
+    {
+        switch (curve.mode)
+        {
+            case ParticleSystemCurveMode.TwoConstants:
+                return curve.constantMax;
+            case ParticleSystemCurveMode.TwoCurves:
+                return curve.curveMultiplier * curve.curveMax.Evaluate(1f);
+            case ParticleSystemCurveMode.Curve:
+                return curve.curveMultiplier * curve.curve.Evaluate(1f);
+            case ParticleSystemCurveMode.Constant:
+            default:
+                return curve.constant;
+        }
     }
 
     private void UpdateAutoPilotInput()

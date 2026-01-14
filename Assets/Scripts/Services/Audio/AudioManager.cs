@@ -37,18 +37,22 @@ public class AudioManager : MonoBehaviour
 
     internal void SetMusicVolume(float musicVolume)
     {
-        if (_useA)
+        _musicVolume = Mathf.Clamp01(musicVolume);
+
+        if (musicSourceA != null)
         {
-            musicSourceA.volume = musicVolume; 
+            musicSourceA.volume = _musicVolume; 
         }
-        else
+
+        if (musicSourceB != null)
         {
-            musicSourceB.volume = musicVolume;
+            musicSourceB.volume = _musicVolume;
         }
     }
 
     internal void SetSfxVolume(float sfxVolume)
     {
+        if (sfxSource == null) return;
         sfxSource.volume = sfxVolume;
     }
 
@@ -58,6 +62,7 @@ public class AudioManager : MonoBehaviour
     private bool _isInMenu = true;
     private int _currentGameplayIndex = -1;
     private bool _useA = true; // which music source is "active"
+    private float _musicVolume = 1f;
     private Coroutine _crossfadeRoutine;
     private Coroutine _lowpassRoutine;
 
@@ -124,10 +129,12 @@ public class AudioManager : MonoBehaviour
             }
         }
 
+        _musicVolume = SettingsData.MusicVolume;
+
         if (musicSourceA != null)
         {
             musicSourceA.loop = false;
-            musicSourceA.volume = SettingsData.MusicVolume;
+            musicSourceA.volume = _musicVolume;
         }
 
         if (musicSourceB != null)
@@ -265,7 +272,7 @@ public class AudioManager : MonoBehaviour
 
         singleSource.clip = newClip;
         singleSource.loop = loop;
-        singleSource.volume = 1f;
+        singleSource.volume = _musicVolume;
         singleSource.Play();
 
         _useA = singleSource == musicSourceA;
@@ -295,6 +302,7 @@ public class AudioManager : MonoBehaviour
 
         float fromStartVolume = from.isPlaying ? from.volume : 0f;
         float toStartVolume = to.volume;
+        float targetVolume = _musicVolume;
 
         while (t < duration)
         {
@@ -302,7 +310,7 @@ public class AudioManager : MonoBehaviour
             float lerp = t / duration;
 
             float fromVol = Mathf.Lerp(fromStartVolume, 0f, lerp);
-            float toVol = Mathf.Lerp(toStartVolume, 1f, lerp);
+            float toVol = Mathf.Lerp(toStartVolume, targetVolume, lerp);
 
             from.volume = fromVol;
             to.volume = toVol;
@@ -313,7 +321,7 @@ public class AudioManager : MonoBehaviour
         from.volume = 0f;
         from.Stop();
 
-        to.volume = SettingsData.MusicVolume;
+        to.volume = targetVolume;
         _useA = !_useA; // swap active source
         _crossfadeRoutine = null;
     }
