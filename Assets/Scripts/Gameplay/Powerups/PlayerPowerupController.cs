@@ -319,10 +319,10 @@ public class PlayerPowerupController : MonoBehaviour
 
         if (vfxManager != null)
         {
-            var instance = vfxManager.Spawn(prefab, position, rotation);
-            if (instance != null && parent != null)
+            var spawnedInstance = vfxManager.Spawn(prefab, position, rotation);
+            if (spawnedInstance != null && parent != null)
             {
-                instance.transform.SetParent(parent, true);
+                spawnedInstance.transform.SetParent(parent, true);
             }
             return;
         }

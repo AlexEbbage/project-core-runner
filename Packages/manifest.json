@@ -1,11 +1,14 @@
 {
   "dependencies": {
+    "com.google.external-dependency-manager": "https://github.com/googlesamples/unity-jar-resolver.git?path=upm",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.collab-proxy": "2.10.2",
     "com.unity.feature.development": "1.0.1",
     "com.unity.inputsystem": "1.14.2",
+    "com.unity.mobile.android-logcat": "1.4.6",
+    "com.unity.mobile.notifications": "2.4.2",
     "com.unity.postprocessing": "3.4.0",
-    "com.unity.purchasing": "5.0.3",
+    "com.unity.purchasing": "5.1.2",
     "com.unity.services.levelplay": "9.2.0",
     "com.unity.textmeshpro": "3.0.9",
     "com.unity.timeline": "1.7.7",

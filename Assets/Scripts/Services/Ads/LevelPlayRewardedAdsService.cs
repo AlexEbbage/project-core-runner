@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using Unity.Services.LevelPlay;
 using UnityEngine;
 
 /// <summary>
@@ -48,26 +49,47 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
 
     public void Initialize()
     {
-        if (_adapter != null)
-            return;
+        // Register OnInitFailed and OnInitSuccess listeners
+        LevelPlay.OnInitSuccess += SdkInitializationCompletedEvent;
+        LevelPlay.OnInitFailed += SdkInitializationFailedEvent;
 
-        var newAdapter = new NewLevelPlayRewardedAdAdapter(androidAppKey, rewardedAdUnitId, logEvents, enableTestSuite, Complete);
-        if (newAdapter.Initialize())
-        {
-            _adapter = newAdapter;
-            if (logEvents) Debug.Log("LevelPlayRewardedAdService: Using NEW Unity LevelPlay backend.");
-            return;
-        }
+        // SDK init
+        LevelPlay.SetMetaData("is_test_suite", "enable");
+        LevelPlay.Init(androidAppKey);
 
-        var legacyAdapter = new LegacyIronSourceRewardedAdAdapter(androidAppKey, logEvents, Complete);
-        if (legacyAdapter.Initialize())
-        {
-            _adapter = legacyAdapter;
-            if (logEvents) Debug.Log("LevelPlayRewardedAdService: Using LEGACY IronSource backend.");
-            return;
-        }
 
-        if (logEvents) Debug.LogWarning("LevelPlayRewardedAdService: No LevelPlay/IronSource backend found. Ads will be unavailable.");
+        //if (_adapter != null)
+        //    return;
+
+        //var newAdapter = new NewLevelPlayRewardedAdAdapter(androidAppKey, rewardedAdUnitId, logEvents, enableTestSuite, Complete);
+        //if (newAdapter.Initialize())
+        //{
+        //    _adapter = newAdapter;
+        //    if (logEvents) Debug.Log("LevelPlayRewardedAdService: Using NEW Unity LevelPlay backend.");
+        //    return;
+        //}
+
+        //var legacyAdapter = new LegacyIronSourceRewardedAdAdapter(androidAppKey, logEvents, Complete);
+        //if (legacyAdapter.Initialize())
+        //{
+        //    _adapter = legacyAdapter;
+        //    if (logEvents) Debug.Log("LevelPlayRewardedAdService: Using LEGACY IronSource backend.");
+        //    return;
+        //}
+
+        //if (logEvents) Debug.LogWarning("LevelPlayRewardedAdService: No LevelPlay/IronSource backend found. Ads will be unavailable.");
+    }
+
+    private void SdkInitializationFailedEvent(LevelPlayInitError obj)
+    {
+        Debug.Log($"FAILED - ErrorCode: {obj.ErrorCode}, ErrorMessage: {obj.ErrorMessage}");
+    }
+
+    private void SdkInitializationCompletedEvent(LevelPlayConfiguration obj)
+    {
+        Debug.Log($"SUCESS - IsAdQualityEnabled: {obj.IsAdQualityEnabled}");
+
+        LevelPlay.LaunchTestSuite();
     }
 
     public bool IsRewardedAdReady()
@@ -264,29 +286,69 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
         {
             _lpSdkType = FindType("Unity.Services.LevelPlay.LevelPlaySDK")
                 ?? FindTypeByName("LevelPlaySDK");
+            if (_lpSdkType == null)
+            {
+                if (_logEvents) Debug.Log($"LevelPlayRewardedAdService: LevelPlaySDK is null");
+
+                return false;
+            }
+
             _lpRewardedType = FindType("Unity.Services.LevelPlay.LevelPlayRewardedAd")
                 ?? FindTypeByName("LevelPlayRewardedAd");
+            if (_lpRewardedType == null)
+            {
+                if (_logEvents) Debug.Log($"LevelPlayRewardedAdService: LevelPlayRewardedAd is null");
 
-            if (_lpSdkType == null || _lpRewardedType == null)
                 return false;
+            }
 
             _lpInitializeMethod = _lpSdkType.GetMethod("Initialize", BindingFlags.Public | BindingFlags.Static);
             if (_lpInitializeMethod == null)
+            {
+                if (_logEvents) Debug.Log($"LevelPlayRewardedAdService: Initialize is null");
+
                 return false;
+            }
+
             _lpSetMetaDataMethod = _lpSdkType.GetMethod("SetMetaData", BindingFlags.Public | BindingFlags.Static);
+            if (_lpSetMetaDataMethod == null && _logEvents)
+            {
+               Debug.Log($"LevelPlayRewardedAdService: SetMetaData is null");
+            }
+
             _lpLaunchTestSuiteMethod = _lpSdkType.GetMethod("LaunchTestSuite", BindingFlags.Public | BindingFlags.Static);
+            if (_lpLaunchTestSuiteMethod == null && _logEvents)
+            {
+                Debug.Log($"LevelPlayRewardedAdService: LaunchTestSuite is null");
+            }
 
             _lpIsAvailableMethod = _lpRewardedType.GetMethod("IsAdAvailable", BindingFlags.Public | BindingFlags.Static)
                 ?? _lpRewardedType.GetMethod("IsAdAvailable", BindingFlags.Public | BindingFlags.Instance);
+            if (_lpIsAvailableMethod == null)
+            {
+                if (_logEvents) Debug.Log($"LevelPlayRewardedAdService: IsAdAvailable is null");
+
+                return false;
+            }
+
             _lpShowMethod = _lpRewardedType.GetMethod("ShowAd", BindingFlags.Public | BindingFlags.Static)
                 ?? _lpRewardedType.GetMethod("ShowAd", BindingFlags.Public | BindingFlags.Instance);
+            if (_lpShowMethod == null)
+            {
+                if (_logEvents) Debug.Log($"LevelPlayRewardedAdService: ShowAd is null");
+
+                return false;
+            }
+
             _lpLoadMethod = _lpRewardedType.GetMethod("LoadAd", BindingFlags.Public | BindingFlags.Static)
                 ?? _lpRewardedType.GetMethod("LoadAd", BindingFlags.Public | BindingFlags.Instance);
-
-            if (_lpIsAvailableMethod == null || _lpShowMethod == null)
-                return false;
+            if (_lpLoadMethod == null && _logEvents)
+            {
+                Debug.Log($"LevelPlayRewardedAdService: LoadAd is null");
+            }
 
             _lpUsesInstance = !_lpIsAvailableMethod.IsStatic || !_lpShowMethod.IsStatic;
+
             return true;
         }
 
