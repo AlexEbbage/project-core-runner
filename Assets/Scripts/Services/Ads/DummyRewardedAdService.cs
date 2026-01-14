@@ -26,7 +26,7 @@ public class DummyRewardedAdService : MonoBehaviour, IRewardedAdService
         return !_isShowing;
     }
 
-    public void ShowRewardedAd(Action<bool> onCompleted)
+    public void ShowRewardedAd(Action<RewardedAdResult> onCompleted)
     {
         if (_isShowing)
         {
@@ -41,7 +41,7 @@ public class DummyRewardedAdService : MonoBehaviour, IRewardedAdService
         StartCoroutine(SimulateAdCoroutine(onCompleted));
     }
 
-    private IEnumerator SimulateAdCoroutine(Action<bool> onCompleted)
+    private IEnumerator SimulateAdCoroutine(Action<RewardedAdResult> onCompleted)
     {
         _isShowing = true;
         yield return new WaitForSeconds(simulatedAdDuration);
@@ -51,6 +51,6 @@ public class DummyRewardedAdService : MonoBehaviour, IRewardedAdService
         if (logEvents)
             Debug.Log($"DummyRewardedAdService: Ad completed. Success={result}");
 
-        onCompleted?.Invoke(result);
+        onCompleted?.Invoke(result ? RewardedAdResult.Rewarded : RewardedAdResult.FailedToShow);
     }
 }
