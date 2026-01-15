@@ -220,7 +220,7 @@ public class RunUiController : MonoBehaviour
 
     private void HandleResumePressed()
     {
-        HidePause();
+        HidePause(); 
         OnResumeRequested?.Invoke();
     }
 
@@ -255,7 +255,9 @@ public class RunUiController : MonoBehaviour
 
     private void HandleDoubleRewardsPressed()
     {
-        resultsView?.DoubleRewardsButton?.interactable = false;
+        if (resultsView?.DoubleRewardsButton != null)
+            resultsView.DoubleRewardsButton.interactable = false;
+
         OnWatchAdDoubleRewardsRequested?.Invoke();
     }
 
