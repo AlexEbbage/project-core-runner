@@ -1,0 +1,13 @@
+{
+  "entries": [
+    {"key": "ui.highscore_multiline", "value": "Highscore:\n{0}"},
+    {"key": "ui.no_levels", "value": "No Levels"},
+    {"key": "ui.item_default", "value": "Item"},
+    {"key": "ui.upgrade_default", "value": "Upgrade"},
+    {"key": "ui.level_prefix", "value": "Lv {0}"},
+    {"key": "ui.score", "value": "Score: {0}"},
+    {"key": "ui.highscore", "value": "Highscore: {0}"},
+    {"key": "ui.best", "value": "BEST: {0}"},
+    {"key": "ui.countdown_go", "value": "GO!"}
+  ]
+}

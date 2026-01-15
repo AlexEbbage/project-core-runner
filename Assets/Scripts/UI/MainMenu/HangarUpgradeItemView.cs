@@ -13,6 +13,16 @@ public class HangarUpgradeItemView : MonoBehaviour
     public ShipUpgradeDefinition Definition { get; private set; }
     public int CurrentLevel { get; private set; }
 
+    private void OnEnable()
+    {
+        LocalizationService.LanguageChanged += UpdateLevelLabel;
+    }
+
+    private void OnDisable()
+    {
+        LocalizationService.LanguageChanged -= UpdateLevelLabel;
+    }
+
     public void Initialize(ShipUpgradeDefinition definition, int currentLevel, int cost, bool canUpgrade)
     {
         Definition = definition;
@@ -22,15 +32,22 @@ public class HangarUpgradeItemView : MonoBehaviour
             iconImage.sprite = definition != null ? definition.icon : null;
 
         if (nameText != null)
-            nameText.text = definition != null ? definition.displayName : "Upgrade";
+            nameText.text = definition != null
+                ? definition.displayName
+                : LocalizationService.Get("ui.upgrade_default", "Upgrade");
 
-        if (levelText != null)
-            levelText.text = $"Lv {currentLevel}";
+        UpdateLevelLabel();
 
         if (costText != null)
             costText.text = cost.ToString();
 
         if (upgradeButton != null)
             upgradeButton.interactable = canUpgrade;
+    }
+
+    private void UpdateLevelLabel()
+    {
+        if (levelText != null)
+            levelText.text = LocalizationService.Format("ui.level_prefix", CurrentLevel);
     }
 }

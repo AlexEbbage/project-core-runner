@@ -6,6 +6,7 @@ public class SettingsMenuUI : MonoBehaviour
     [SerializeField] private Slider musicSlider;
     [SerializeField] private Slider sfxSlider;
     [SerializeField] private Toggle vibrateToggle;
+    [SerializeField] private Toggle touchInputToggle;
 
     [SerializeField] private AudioManager audioManager;
 
@@ -18,6 +19,8 @@ public class SettingsMenuUI : MonoBehaviour
         musicSlider.value = SettingsData.MusicVolume;
         sfxSlider.value = SettingsData.SfxVolume;
         vibrateToggle.isOn = SettingsData.VibrateEnabled;
+        if (touchInputToggle != null)
+            touchInputToggle.isOn = SettingsData.CurrentTouchInputMode == SettingsData.TouchInputMode.Buttons;
 
         ApplyToAudio();
     }
@@ -37,6 +40,13 @@ public class SettingsMenuUI : MonoBehaviour
     public void OnVibrateToggleChanged(bool on)
     {
         SettingsData.VibrateEnabled = on;
+    }
+
+    public void OnTouchInputToggleChanged(bool on)
+    {
+        SettingsData.CurrentTouchInputMode = on
+            ? SettingsData.TouchInputMode.Buttons
+            : SettingsData.TouchInputMode.Drag;
     }
 
     private void ApplyToAudio()
