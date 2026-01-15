@@ -104,7 +104,7 @@ public class PlayerController : MonoBehaviour
       
         if (UseTouchButtonsMode() && TryGetTouchButtonsInput(out float touchInput))
         {
-            _moveInput = touchInput;
+            _moveInputTarget = touchInput;
         }
         
         float dt = Time.deltaTime;

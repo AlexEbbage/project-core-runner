@@ -1920,6 +1920,7 @@ MonoBehaviour:
   stepDuration: 1
   audioOffset: 0.5
   goText: GO!
+  goLocalizationKey: ui.countdown_go
   scaleCurve:
     serializedVersion: 2
     m_Curve:
@@ -3119,14 +3120,14 @@ Light:
   serializedVersion: 10
   m_Type: 1
   m_Shape: 0
-  m_Color: {r: 0.95686275, g: 0.8901961, b: 0.8156863, a: 1}
-  m_Intensity: 1
+  m_Color: {r: 1, g: 0.86241764, b: 0.75, a: 1}
+  m_Intensity: 1.5
   m_Range: 200
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
   m_CookieSize: 10
   m_Shadows:
-    m_Type: 2
+    m_Type: 0
     m_Resolution: -1
     m_CustomResolution: -1
     m_Strength: 1
@@ -3178,13 +3179,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 620520891}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.23911765, y: 0.3696438, z: -0.09904577, w: 0.89239913}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 30, y: 45, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &631600763
 GameObject:
   m_ObjectHideFlags: 0
@@ -3859,7 +3860,7 @@ MonoBehaviour:
     m_NumColorKeys: 2
     m_NumAlphaKeys: 2
   colorA: {r: 1, g: 1, b: 1, a: 0}
-  colorB: {r: 0.9395693, g: 0.9622642, b: 0.9622642, a: 0}
+  colorB: {r: 0.9433962, g: 0.923201, b: 0.90334636, a: 0}
   colorCycleSpeed: 0.02
   darkenFactor: 0
 --- !u!4 &806837120
@@ -4989,7 +4990,7 @@ MonoBehaviour:
   loadingGroup: {fileID: 865467334}
   progressSlider: {fileID: 685620203}
   progressLabel: {fileID: 403653894}
-  minimumDisplayTime: 0.35
+  minimumDisplayTime: 2
 --- !u!114 &945280079
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9159,9 +9160,25 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 641003461002926308, guid: 6943d67c051a348418331897719c8d0a, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 641003461002926308, guid: 6943d67c051a348418331897719c8d0a, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -5
+      objectReference: {fileID: 0}
     - target: {fileID: 2290180026593041131, guid: 6943d67c051a348418331897719c8d0a, type: 3}
       propertyPath: m_Constraints
       value: 112
+      objectReference: {fileID: 0}
+    - target: {fileID: 3737435428038827897, guid: 6943d67c051a348418331897719c8d0a, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 3737435428038827897, guid: 6943d67c051a348418331897719c8d0a, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 5327737902511198156, guid: 6943d67c051a348418331897719c8d0a, type: 3}
       propertyPath: m_LocalScale.x
@@ -9240,12 +9257,44 @@ PrefabInstance:
       value: -0.368
       objectReference: {fileID: 0}
     - target: {fileID: 8712049006509512818, guid: 6943d67c051a348418331897719c8d0a, type: 3}
+      propertyPath: m_Range
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 8712049006509512818, guid: 6943d67c051a348418331897719c8d0a, type: 3}
+      propertyPath: m_Color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8712049006509512818, guid: 6943d67c051a348418331897719c8d0a, type: 3}
+      propertyPath: m_Color.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8712049006509512818, guid: 6943d67c051a348418331897719c8d0a, type: 3}
+      propertyPath: m_Color.r
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8712049006509512818, guid: 6943d67c051a348418331897719c8d0a, type: 3}
       propertyPath: m_Intensity
-      value: 2.5
+      value: 1.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9193368032105164721, guid: 6943d67c051a348418331897719c8d0a, type: 3}
+      propertyPath: m_Range
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 9193368032105164721, guid: 6943d67c051a348418331897719c8d0a, type: 3}
+      propertyPath: m_Color.b
+      value: 0.9669811
+      objectReference: {fileID: 0}
+    - target: {fileID: 9193368032105164721, guid: 6943d67c051a348418331897719c8d0a, type: 3}
+      propertyPath: m_Color.g
+      value: 0.9891741
+      objectReference: {fileID: 0}
+    - target: {fileID: 9193368032105164721, guid: 6943d67c051a348418331897719c8d0a, type: 3}
+      propertyPath: m_Color.r
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 9193368032105164721, guid: 6943d67c051a348418331897719c8d0a, type: 3}
       propertyPath: m_Intensity
-      value: 1.5
+      value: 1.1
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 890158178261027335, guid: 6943d67c051a348418331897719c8d0a, type: 3}
@@ -9439,6 +9488,9 @@ MonoBehaviour:
   allowKeyboardInputInEditor: 1
   touchInputSensitivity: 1
   touchInputFullScaleFraction: 0.02
+  inputDeadZone: 0.02
+  inputSmoothingTime: 0.08
+  forceTouchButtonsMode: 0
   startMovingOnStart: 1
 --- !u!114 &7848395938132188008
 MonoBehaviour:
