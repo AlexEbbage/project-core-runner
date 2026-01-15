@@ -78,6 +78,7 @@ public class MainMenuUI : MonoBehaviour
     private void OnEnable()
     {
         RemoveAdsIAPManager.OnRemoveAdsUnlocked += HandleRemoveAdsUnlocked;
+        LocalizationService.LanguageChanged += HandleLanguageChanged;
 
         UpdateBestScoreDisplay();
         EnsureValidLevelIndex();
@@ -89,6 +90,7 @@ public class MainMenuUI : MonoBehaviour
     private void OnDisable()
     {
         RemoveAdsIAPManager.OnRemoveAdsUnlocked -= HandleRemoveAdsUnlocked;
+        LocalizationService.LanguageChanged -= HandleLanguageChanged;
     }
 
     public void Show()
@@ -133,8 +135,7 @@ public class MainMenuUI : MonoBehaviour
         RunScoreManager scoreManager = FindFirstObjectByType<RunScoreManager>();
         if (scoreManager != null)
         {
-            float best = scoreManager.BestScore;
-            bestScoreText.text = $"Highscore:\n{best:0}";
+            bestScoreText.text = LocalizationService.Format("ui.highscore_multiline", scoreManager.BestScore);
         }
     }
 
@@ -157,7 +158,7 @@ public class MainMenuUI : MonoBehaviour
         if (levels == null || levels.Length == 0)
         {
             if (levelNameText != null)
-                levelNameText.text = "No Levels";
+                levelNameText.text = LocalizationService.Get("ui.no_levels", "No Levels");
 
             if (levelShapeImage != null)
                 levelShapeImage.enabled = false;
@@ -175,6 +176,12 @@ public class MainMenuUI : MonoBehaviour
             levelShapeImage.enabled = (info.shapeSprite != null);
             levelShapeImage.sprite = info.shapeSprite;
         }
+    }
+
+    private void HandleLanguageChanged()
+    {
+        UpdateBestScoreDisplay();
+        UpdateLevelDisplay();
     }
 
     private void ApplyLevelToWorld()

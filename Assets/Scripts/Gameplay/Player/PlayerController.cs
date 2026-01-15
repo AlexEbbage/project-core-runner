@@ -29,13 +29,21 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float touchInputSensitivity = 1f;
     [Tooltip("Fraction of screen width per second needed to reach full touch input.")]
     [SerializeField, Range(0.01f, 0.5f)] private float touchInputFullScaleFraction = 0.02f;
+    [Tooltip("Ignore tiny input noise below this threshold.")]
+    [SerializeField, Range(0f, 0.2f)] private float inputDeadZone = 0.02f;
+    [Tooltip("Seconds to smooth input changes to avoid jitter.")]
+    [SerializeField, Range(0.01f, 0.5f)] private float inputSmoothingTime = 0.08f;
+    [Tooltip("If true, touch uses left/right screen halves instead of drag input.")]
+    [SerializeField] private bool forceTouchButtonsMode;
 
     [Header("Run Control")]
     [Tooltip("If true, movement is enabled immediately at Start. Otherwise, call StartRun() from GameManager.")]
     [SerializeField] private bool startMovingOnStart = true;
 
     private float _currentForwardSpeed;
-    private float _moveInput;
+    private float _moveInputTarget;
+    private float _smoothedMoveInput;
+    private float _moveInputVelocity;
     private bool _isRunning;
     private bool _autoPilotActive;
     private float _autoPilotInput;
@@ -77,23 +85,30 @@ public class PlayerController : MonoBehaviour
         Vector2 input = context.ReadValue<Vector2>();
         if (context.control?.device is Touchscreen)
         {
+            if (UseTouchButtonsMode())
+                return;
+
             float deltaTime = Mathf.Max(Time.unscaledDeltaTime, 0.001f);
             float normalized = input.x / Mathf.Max(Screen.width * touchInputFullScaleFraction * deltaTime, 1f);
-            _moveInput = Mathf.Clamp(normalized * touchInputSensitivity, -1f, 1f);
+            _moveInputTarget = Mathf.Clamp(normalized * touchInputSensitivity, -1f, 1f);
             return;
         }
 
-        _moveInput = Mathf.Clamp(input.x, -1f, 1f);
+        _moveInputTarget = Mathf.Clamp(input.x, -1f, 1f);
     }
 
     private void Update()
     {
         if (!_isRunning)
             return;
-
+      
+        if (UseTouchButtonsMode() && TryGetTouchButtonsInput(out float touchInput))
+        {
+            _moveInput = touchInput;
+        }
+        
         float dt = Time.deltaTime;
-        //float horizontalInput = GetHorizontalInput();
-        float input = _autoPilotActive ? _autoPilotInput : _moveInput;
+        float input = _autoPilotActive ? _autoPilotInput : GetSmoothedInput(dt);
         UpdateMovementAndRotation(input, dt);
     }
 
@@ -102,11 +117,13 @@ public class PlayerController : MonoBehaviour
     public void StartRun()
     {
         _isRunning = true;
+        ResetSmoothedInput(_moveInputTarget);
     }
 
     public void StopRun()
     {
         _isRunning = false;
+        ResetSmoothedInput(0f);
     }
 
     public void SetForwardSpeed(float newSpeed)
@@ -167,6 +184,50 @@ public class PlayerController : MonoBehaviour
 //        return Mathf.Clamp(input, -1f, 1f);
 //    }
 
+    private bool UseTouchButtonsMode()
+    {
+        if (forceTouchButtonsMode)
+            return true;
+
+        return SettingsData.CurrentTouchInputMode == SettingsData.TouchInputMode.Buttons;
+    }
+
+    private bool TryGetTouchButtonsInput(out float input)
+    {
+        if (Touchscreen.current == null)
+        {
+            input = 0f;
+            return false;
+        }
+
+        bool leftPressed = false;
+        bool rightPressed = false;
+        bool anyPressed = false;
+        float halfWidth = Screen.width * 0.5f;
+
+        foreach (var touch in Touchscreen.current.touches)
+        {
+            if (!touch.press.isPressed)
+                continue;
+
+            anyPressed = true;
+            float x = touch.position.ReadValue().x;
+            if (x < halfWidth)
+                leftPressed = true;
+            else
+                rightPressed = true;
+        }
+
+        if (!anyPressed || leftPressed == rightPressed)
+        {
+            input = 0f;
+            return anyPressed;
+        }
+
+        input = leftPressed ? -1f : 1f;
+        return true;
+    }
+
     private void UpdateMovementAndRotation(float horizontalInput, float dt)
     {
         // Move forward along Z
@@ -186,6 +247,27 @@ public class PlayerController : MonoBehaviour
         Quaternion targetRotation = Quaternion.LookRotation(Vector3.forward, radialIn);
 
         transform.SetPositionAndRotation(newPos, targetRotation);
+    }
+
+    private float ApplyDeadZone(float value)
+    {
+        return Mathf.Abs(value) < inputDeadZone ? 0f : value;
+    }
+
+    private float GetSmoothedInput(float dt)
+    {
+        if (inputSmoothingTime <= 0f)
+            return ApplyDeadZone(_moveInputTarget);
+
+        float target = ApplyDeadZone(_moveInputTarget);
+        _smoothedMoveInput = Mathf.SmoothDamp(_smoothedMoveInput, target, ref _moveInputVelocity, inputSmoothingTime, Mathf.Infinity, dt);
+        return _smoothedMoveInput;
+    }
+
+    private void ResetSmoothedInput(float value)
+    {
+        _moveInputVelocity = 0f;
+        _smoothedMoveInput = value;
     }
 
 #if UNITY_EDITOR

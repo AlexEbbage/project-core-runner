@@ -23,6 +23,8 @@ public class GameOverUI : MonoBehaviour
     [SerializeField] private Button menuButton;
 
     private bool _hasContinueRemaining;
+    private float _lastFinalScore;
+    private float _lastBestScore;
 
     private void Awake()
     {
@@ -61,16 +63,24 @@ public class GameOverUI : MonoBehaviour
         }
     }
 
+    private void OnEnable()
+    {
+        LocalizationService.LanguageChanged += HandleLanguageChanged;
+    }
+
+    private void OnDisable()
+    {
+        LocalizationService.LanguageChanged -= HandleLanguageChanged;
+    }
+
     public void Show(float finalScore, float bestScore, int continuesUsed, int continuesRemaining, int maxContinues)
     {
         if (rootPanel != null)
             rootPanel.SetActive(true);
 
-        if (finalScoreText != null)
-            finalScoreText.text = $"Score: {finalScore:0}";
-
-        if (bestScoreText != null)
-            bestScoreText.text = $"Highscore: {bestScore:0}";
+        _lastFinalScore = finalScore;
+        _lastBestScore = bestScore;
+        UpdateScoreLabels();
 
         _hasContinueRemaining = continuesRemaining > 0;
         if (continueButton != null)
@@ -94,6 +104,21 @@ public class GameOverUI : MonoBehaviour
     {
         if (rootPanel != null)
             rootPanel.SetActive(false);
+    }
+
+    private void UpdateScoreLabels()
+    {
+        if (finalScoreText != null)
+            finalScoreText.text = LocalizationService.Format("ui.score", _lastFinalScore);
+
+        if (bestScoreText != null)
+            bestScoreText.text = LocalizationService.Format("ui.highscore", _lastBestScore);
+    }
+
+    private void HandleLanguageChanged()
+    {
+        if (rootPanel != null && rootPanel.activeInHierarchy)
+            UpdateScoreLabels();
     }
 
     private void OnContinuePressed()

@@ -1,0 +1,13 @@
+{
+  "entries": [
+    {"key": "ui.highscore_multiline", "value": "Puntuación máxima:\n{0}"},
+    {"key": "ui.no_levels", "value": "Sin niveles"},
+    {"key": "ui.item_default", "value": "Objeto"},
+    {"key": "ui.upgrade_default", "value": "Mejora"},
+    {"key": "ui.level_prefix", "value": "Nv {0}"},
+    {"key": "ui.score", "value": "Puntuación: {0}"},
+    {"key": "ui.highscore", "value": "Récord: {0}"},
+    {"key": "ui.best", "value": "MEJOR: {0}"},
+    {"key": "ui.countdown_go", "value": "¡YA!"}
+  ]
+}
