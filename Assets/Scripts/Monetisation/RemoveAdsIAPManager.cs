@@ -8,7 +8,7 @@ using UnityEngine.Purchasing;
 /// </summary>
 public class RemoveAdsIAPManager : MonoBehaviour, IStoreListener
 {
-    public const string Product_RemoveAds = "remove_ads";
+    public const string Product_RemoveAds = "premium_user";
 
     public static System.Action OnRemoveAdsUnlocked;
     public static System.Action<string> OnProductPurchased;

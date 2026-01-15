@@ -1,4 +1,5 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -8,7 +9,7 @@ public class LoadingScreenManager : MonoBehaviour
     [Header("UI")]
     [SerializeField] private CanvasGroup loadingGroup;
     [SerializeField] private Slider progressSlider;
-    [SerializeField] private Text progressLabel;
+    [SerializeField] private TMP_Text progressLabel;
 
     [Header("Behavior")]
     [SerializeField] private float minimumDisplayTime = 0.35f;

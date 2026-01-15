@@ -250,7 +250,7 @@ public class LevelPlayRewardedAdService : MonoBehaviour, IRewardedAdService
 
     private void RewardedOnAdClosedEvent(LevelPlayAdInfo adInfo)
     {
-        if (logEvents) Debug.Log("LevelPlayRewardedAdService: Rewarded closed.");
+        if (logEvents) Debug.Log($"LevelPlayRewardedAdService: Rewarded closed. Reward earned: {_rewardEarned}");
 
         if (_rewardEarned)
         {
