@@ -109,10 +109,16 @@ public class GameOverUI : MonoBehaviour
     private void UpdateScoreLabels()
     {
         if (finalScoreText != null)
-            finalScoreText.text = LocalizationService.Format("ui.score", _lastFinalScore);
+        {
+            int finalScore = Mathf.RoundToInt(_lastFinalScore);
+            finalScoreText.text = LocalizationService.Format("ui.score", finalScore);
+        }
 
         if (bestScoreText != null)
-            bestScoreText.text = LocalizationService.Format("ui.highscore", _lastBestScore);
+        {
+            int bestScore = Mathf.RoundToInt(_lastBestScore);
+            bestScoreText.text = LocalizationService.Format("ui.highscore", bestScore);
+        }
     }
 
     private void HandleLanguageChanged()
