@@ -1412,7 +1412,14 @@ public static class MainMenuPrefabBuilder
         if (layout == null || style == null)
             return;
 
-        layout.spacing = style.Spacing;
+        if (layout is HorizontalOrVerticalLayoutGroup linearLayout)
+        {
+            linearLayout.spacing = style.Spacing;
+        }
+        else if (layout is GridLayoutGroup gridLayout)
+        {
+            gridLayout.spacing = new Vector2(style.Spacing, style.Spacing);
+        }
         layout.padding = new RectOffset(style.Padding, style.Padding, style.Padding, style.Padding);
     }
 
