@@ -12,6 +12,18 @@ public class Pickup : MonoBehaviour
     [Header("Audio")]
     [SerializeField] private AudioManager audioManager;
 
+    [Header("Visual Motion")]
+    [SerializeField] private float spinDegreesPerSecond = 90f;
+    [SerializeField] private float bobAmplitude = 0.15f;
+    [SerializeField] private float bobFrequency = 1f;
+    [SerializeField] private float bobZPhaseScale = 0.1f;
+    [SerializeField] private float zRotationAmplitude = 25f;
+    [SerializeField] private float zRotationFrequency = 0.1f;
+
+    private Vector3 _baseLocalPosition;
+    private Quaternion _baseLocalRotation;
+    private float _bobPhaseOffset;
+
     private void Awake()
     {
         var collider = GetComponent<Collider>();
@@ -19,6 +31,30 @@ public class Pickup : MonoBehaviour
 
         if (audioManager == null)
             audioManager = FindFirstObjectByType<AudioManager>();
+    }
+
+    private void Start()
+    {
+        _baseLocalPosition = transform.localPosition;
+        _baseLocalRotation = transform.localRotation;
+
+        float zPhase = transform.position.z * zRotationFrequency;
+        float zRotationOffset = Mathf.Sin(zPhase) * zRotationAmplitude;
+        _baseLocalRotation = Quaternion.AngleAxis(zRotationOffset, Vector3.forward) * _baseLocalRotation;
+        transform.localRotation = _baseLocalRotation;
+
+        _bobPhaseOffset = transform.position.z * bobZPhaseScale;
+    }
+
+    private void Update()
+    {
+        float bobOffset = Mathf.Sin(Time.time * bobFrequency + _bobPhaseOffset) * bobAmplitude;
+        transform.localPosition = _baseLocalPosition + Vector3.up * bobOffset;
+
+        if (Mathf.Abs(spinDegreesPerSecond) > 0.01f)
+        {
+            transform.Rotate(Vector3.forward, spinDegreesPerSecond * Time.deltaTime, Space.Self);
+        }
     }
 
     private void OnTriggerEnter(Collider other)
