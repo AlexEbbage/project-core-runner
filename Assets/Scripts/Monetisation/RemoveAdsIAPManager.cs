@@ -101,6 +101,8 @@ public class RemoveAdsIAPManager : MonoBehaviour, IStoreListener
             return;
         }
 
+        AdsConfig.RemoveAds = false;
+
 #if UNITY_IOS
         var apple = storeExtensionProvider.GetExtension<IAppleExtensions>();
         apple.RestoreTransactions(result => Debug.Log("RestoreTransactions: " + result));
