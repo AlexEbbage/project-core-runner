@@ -34,6 +34,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private HudController hudController;
     [SerializeField] private PauseMenuUI pauseMenuUI;
     [SerializeField] private CountdownUIController countdownUIController;
+    [SerializeField] private LoadingScreenManager loadingScreenManager;
 
     [Header("References - Services")]
     [SerializeField] private MonoBehaviour rewardedAdServiceBehaviour;
@@ -124,6 +125,7 @@ public class GameManager : MonoBehaviour
         if (gameOverUI == null) gameOverUI = FindFirstObjectByType<GameOverUI>();
         if (hudController == null) hudController = FindFirstObjectByType<HudController>();
         if (pauseMenuUI == null) pauseMenuUI = FindFirstObjectByType<PauseMenuUI>();
+        if (loadingScreenManager == null) loadingScreenManager = FindFirstObjectByType<LoadingScreenManager>();
 
         if (audioManager == null) audioManager = FindFirstObjectByType<AudioManager>();
         if (vfxManager == null) vfxManager = VfxManager.Instance;
@@ -206,8 +208,11 @@ public class GameManager : MonoBehaviour
             return;
 
         _services?.Audio?.PlayButtonClick();
-        _services?.Audio?.PlayGameplayMusic();
-        StartNewRunFromMenu();
+        StartNewRunWithFade(() =>
+        {
+            _services?.Audio?.PlayGameplayMusic();
+            StartNewRunFromMenu();
+        });
     }
 
     public void OnRestartButtonPressed()
@@ -216,7 +221,7 @@ public class GameManager : MonoBehaviour
             return;
 
         _services?.Audio?.PlayButtonClick();
-        StartNewRunFromGameOver();
+        StartNewRunWithFade(StartNewRunFromGameOver);
     }
 
     public void OnMenuButtonPressedFromGameOver()
@@ -225,9 +230,12 @@ public class GameManager : MonoBehaviour
             return;
 
         _services?.Audio?.PlayButtonClick();
-        _services?.Audio?.PlayMenuMusic();
-        runZoneManager?.OnRunEnded();
-        GoToMenu();
+        ReturnToMenuWithFade(() =>
+        {
+            _services?.Audio?.PlayMenuMusic();
+            runZoneManager?.OnRunEnded();
+            GoToMenu();
+        });
     }
 
     public void OnPauseButtonPressed()
@@ -254,10 +262,13 @@ public class GameManager : MonoBehaviour
             return;
 
         _services?.Audio?.PlayButtonClick();
-        _services?.Audio?.PlayMenuMusic();
-        runZoneManager?.OnRunEnded();
-        statsTracker?.EndRun();
-        GoToMenu();
+        ReturnToMenuWithFade(() =>
+        {
+            _services?.Audio?.PlayMenuMusic();
+            runZoneManager?.OnRunEnded();
+            statsTracker?.EndRun();
+            GoToMenu();
+        });
     }
 
     public void OnContinueButtonPressed()
@@ -382,6 +393,28 @@ public class GameManager : MonoBehaviour
     {
         continuesUsed = 0;
         StartNewRun();
+    }
+
+    private void StartNewRunWithFade(System.Action startAction)
+    {
+        if (loadingScreenManager != null)
+        {
+            loadingScreenManager.PlayBlackFadeTransition(startAction);
+            return;
+        }
+
+        startAction?.Invoke();
+    }
+
+    private void ReturnToMenuWithFade(System.Action menuAction)
+    {
+        if (loadingScreenManager != null)
+        {
+            loadingScreenManager.PlayBlackFadeTransition(menuAction);
+            return;
+        }
+
+        menuAction?.Invoke();
     }
 
     private void StartNewRun()

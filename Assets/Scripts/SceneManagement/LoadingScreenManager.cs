@@ -21,6 +21,7 @@ public class LoadingScreenManager : MonoBehaviour
 
     private Coroutine loadingRoutine;
     private Coroutine fadeRoutine;
+    private Coroutine transitionRoutine;
     private float currentProgress;
 
     private void Awake()
@@ -52,6 +53,30 @@ public class LoadingScreenManager : MonoBehaviour
         }
 
         currentProgress = 0f;
+    }
+
+    private void OnDisable()
+    {
+        if (loadingRoutine != null)
+        {
+            StopCoroutine(loadingRoutine);
+            loadingRoutine = null;
+        }
+
+        if (fadeRoutine != null)
+        {
+            StopCoroutine(fadeRoutine);
+            fadeRoutine = null;
+        }
+
+        if (transitionRoutine != null)
+        {
+            StopCoroutine(transitionRoutine);
+            transitionRoutine = null;
+        }
+
+        ShowLoadingUI(false);
+        ResetFadeState();
     }
 
     public void LoadSceneByName(string sceneName)
@@ -93,6 +118,26 @@ public class LoadingScreenManager : MonoBehaviour
         return currentProgress;
     }
 
+    public float GetFadeDuration()
+    {
+        return fadeDuration;
+    }
+
+    public bool UsesUnscaledTime()
+    {
+        return useUnscaledTime;
+    }
+
+    public void PlayBlackFadeTransition(System.Action midAction, System.Action onComplete = null)
+    {
+        if (transitionRoutine != null)
+        {
+            StopCoroutine(transitionRoutine);
+        }
+
+        transitionRoutine = StartCoroutine(BlackFadeTransitionRoutine(midAction, onComplete));
+    }
+
     private void StartSceneLoad(System.Func<AsyncOperation> loadOperation)
     {
         if (loadingRoutine != null)
@@ -131,6 +176,35 @@ public class LoadingScreenManager : MonoBehaviour
         SetProgress(1f);
         HideLoadingScreen();
         loadingRoutine = null;
+    }
+
+    private IEnumerator BlackFadeTransitionRoutine(System.Action midAction, System.Action onComplete)
+    {
+        ShowLoadingUI(false);
+
+        if (fadeOverlay == null || fadeDuration <= 0f)
+        {
+            midAction?.Invoke();
+            onComplete?.Invoke();
+            transitionRoutine = null;
+            yield break;
+        }
+
+        StartFade(true);
+        yield return WaitForFadeDuration();
+
+        midAction?.Invoke();
+
+        StartFade(false);
+        yield return WaitForFadeDuration();
+
+        onComplete?.Invoke();
+        transitionRoutine = null;
+    }
+
+    private YieldInstruction WaitForFadeDuration()
+    {
+        return useUnscaledTime ? new WaitForSecondsRealtime(fadeDuration) : new WaitForSeconds(fadeDuration);
     }
 
     private void ShowLoadingUI(bool visible)
@@ -232,5 +306,17 @@ public class LoadingScreenManager : MonoBehaviour
             int percent = Mathf.RoundToInt(progress * 100f);
             progressLabel.text = $"{percent}%";
         }
+    }
+
+    private void ResetFadeState()
+    {
+        if (fadeOverlay == null)
+        {
+            return;
+        }
+
+        SetFadeAlpha(0f);
+        fadeOverlay.raycastTarget = false;
+        fadeOverlay.gameObject.SetActive(false);
     }
 }
