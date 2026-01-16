@@ -61,6 +61,7 @@ public partial class ObstacleRingGenerator
 
             float angleRad = angleDeg * Mathf.Deg2Rad;
             Vector3 localPos = new Vector3(Mathf.Cos(angleRad) * radius, Mathf.Sin(angleRad) * radius, 0f);
+            localPos += Vector3.up * pickupFloatHeight;
             Vector3 worldPos = ring.root.TransformPoint(localPos);
             if (IsPickupBlocked(worldPos))
                 continue;
@@ -187,6 +188,11 @@ public partial class ObstacleRingGenerator
     public void SetPickupSpawnChanceMultiplier(float multiplier)
     {
         _pickupSpawnChanceMultiplier = Mathf.Max(0f, multiplier);
+    }
+
+    public void SetPickupFloatHeight(float height)
+    {
+        pickupFloatHeight = Mathf.Max(0f, height);
     }
 
     private bool IsPickupBlocked(Vector3 worldPosition)

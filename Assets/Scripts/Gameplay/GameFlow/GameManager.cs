@@ -96,19 +96,24 @@ public class GameManager : MonoBehaviour
     {
         _stateMachine = new GameStateMachine(logStateChanges);
 
-        if (balanceConfig != null)
-        {
-            maxContinuesPerRun = balanceConfig.maxContinuesPerRun;
-            continueRespawnBackDistance = balanceConfig.continueRespawnBackDistance;
-            continueRespawnHeightOffset = balanceConfig.continueRespawnHeightOffset;
-        }
-
         if (playerController == null) playerController = FindFirstObjectByType<PlayerController>();
         if (playerHealth == null) playerHealth = FindFirstObjectByType<PlayerHealth>();
         if (scoreManager == null) scoreManager = FindFirstObjectByType<RunScoreManager>();
         if (speedController == null) speedController = FindFirstObjectByType<RunSpeedController>();
         if (runZoneManager == null) runZoneManager = FindFirstObjectByType<RunZoneManager>();
         if (statsTracker == null) statsTracker = FindFirstObjectByType<RunStatsTracker>();
+        if (obstacleRingGenerator == null) obstacleRingGenerator = FindFirstObjectByType<ObstacleRingGenerator>();
+
+        if (balanceConfig != null)
+        {
+            maxContinuesPerRun = balanceConfig.maxContinuesPerRun;
+            continueRespawnBackDistance = balanceConfig.continueRespawnBackDistance;
+            continueRespawnHeightOffset = balanceConfig.continueRespawnHeightOffset;
+            if (obstacleRingGenerator != null)
+            {
+                obstacleRingGenerator.SetPickupFloatHeight(balanceConfig.pickupFloatHeight);
+            }
+        }
 
 
         if (playerVisual == null && playerController != null)

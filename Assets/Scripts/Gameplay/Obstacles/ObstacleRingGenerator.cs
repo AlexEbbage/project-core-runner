@@ -111,6 +111,7 @@ public partial class ObstacleRingGenerator : MonoBehaviour
     [SerializeField] private float pickupSlotRadiusOverride = 0f;
     [SerializeField] private int pickupSlotsToFillMin = 1;
     [SerializeField] private int pickupSlotsToFillMax = 2;
+    [SerializeField] private float pickupFloatHeight = 0.5f;
     [Range(0f, 1f)]
     [SerializeField] private float pickupSlotSpawnChance = 0.8f;
     [Range(0f, 1f)]
