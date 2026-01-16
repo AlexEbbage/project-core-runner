@@ -130,7 +130,8 @@ public class HudController : MonoBehaviour
         if (bestScoreText == null || scoreManager == null)
             return;
 
-        bestScoreText.text = LocalizationService.Format("ui.best", scoreManager.BestScore);
+        int bestScore = Mathf.RoundToInt(scoreManager.BestScore);
+        bestScoreText.text = LocalizationService.Format("ui.best", bestScore);
     }
 
     public void Show()

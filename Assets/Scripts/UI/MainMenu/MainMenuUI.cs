@@ -135,7 +135,8 @@ public class MainMenuUI : MonoBehaviour
         RunScoreManager scoreManager = FindFirstObjectByType<RunScoreManager>();
         if (scoreManager != null)
         {
-            bestScoreText.text = LocalizationService.Format("ui.highscore_multiline", scoreManager.BestScore);
+            int bestScore = Mathf.RoundToInt(scoreManager.BestScore);
+            bestScoreText.text = LocalizationService.Format("ui.highscore_multiline", bestScore);
         }
     }
 
