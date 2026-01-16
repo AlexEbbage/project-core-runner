@@ -727,7 +727,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1357,6 +1357,7 @@ MonoBehaviour:
   hudController: {fileID: 338262364}
   pauseMenuUI: {fileID: 211400081}
   countdownUIController: {fileID: 338262365}
+  loadingScreenManager: {fileID: 0}
   rewardedAdServiceBehaviour: {fileID: 865911819}
   analyticsServiceBehaviour: {fileID: 450072598}
   pushNotificationServiceBehaviour: {fileID: 0}
@@ -5117,8 +5118,8 @@ MonoBehaviour:
   progressSlider: {fileID: 685620203}
   progressLabel: {fileID: 403653894}
   fadeOverlay: {fileID: 181088812}
-  minimumDisplayTime: 3
-  fadeDuration: 1
+  minimumDisplayTime: 1
+  fadeDuration: 0.3
   fadeCurve:
     serializedVersion: 2
     m_Curve:
@@ -5144,7 +5145,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   useUnscaledTime: 1
-  blackFadeOnly: 0
+  blackFadeOnly: 1
 --- !u!114 &945280079
 MonoBehaviour:
   m_ObjectHideFlags: 0
