@@ -112,8 +112,13 @@ public sealed class MainMenuBuilderConfig
 
         var style = new MainMenuStyleConfig(
             null,
+            Color.white,
             null,
+            Color.white,
+            new Color(1f, 1f, 1f, 0.2f),
             null,
+            new Color(0.3f, 0.8f, 0.2f, 1f),
+            new Color(1f, 1f, 1f, 0.2f),
             null,
             Color.white,
             8,
@@ -204,8 +209,13 @@ public sealed class MainMenuBuilderConfig
 
         return new MainMenuStyleConfig(
             overrides.PanelSprite ?? defaults?.PanelSprite,
+            overrides.PanelColor == default ? defaults?.PanelColor ?? Color.white : overrides.PanelColor,
             overrides.ButtonSprite ?? defaults?.ButtonSprite,
+            overrides.ButtonColor == default ? defaults?.ButtonColor ?? Color.white : overrides.ButtonColor,
+            overrides.ButtonFallbackColor == default ? defaults?.ButtonFallbackColor ?? new Color(1f, 1f, 1f, 0.2f) : overrides.ButtonFallbackColor,
             overrides.ProgressFillSprite ?? defaults?.ProgressFillSprite,
+            overrides.ProgressFillColor == default ? defaults?.ProgressFillColor ?? new Color(0.3f, 0.8f, 0.2f, 1f) : overrides.ProgressFillColor,
+            overrides.ProgressBackgroundColor == default ? defaults?.ProgressBackgroundColor ?? new Color(1f, 1f, 1f, 0.2f) : overrides.ProgressBackgroundColor,
             overrides.Font ?? defaults?.Font,
             overrides.TextColor == default ? defaults?.TextColor ?? Color.white : overrides.TextColor,
             overrides.Padding <= 0 ? defaults?.Padding ?? 8 : overrides.Padding,
@@ -224,8 +234,13 @@ public sealed class MainMenuBuilderConfig
 public sealed class MainMenuStyleConfig
 {
     public Sprite PanelSprite { get; }
+    public Color PanelColor { get; }
     public Sprite ButtonSprite { get; }
+    public Color ButtonColor { get; }
+    public Color ButtonFallbackColor { get; }
     public Sprite ProgressFillSprite { get; }
+    public Color ProgressFillColor { get; }
+    public Color ProgressBackgroundColor { get; }
     public TMP_FontAsset Font { get; }
     public Color TextColor { get; }
     public int Padding { get; }
@@ -236,8 +251,13 @@ public sealed class MainMenuStyleConfig
 
     public MainMenuStyleConfig(
         Sprite panelSprite,
+        Color panelColor,
         Sprite buttonSprite,
+        Color buttonColor,
+        Color buttonFallbackColor,
         Sprite progressFillSprite,
+        Color progressFillColor,
+        Color progressBackgroundColor,
         TMP_FontAsset font,
         Color textColor,
         int padding,
@@ -247,8 +267,13 @@ public sealed class MainMenuStyleConfig
         float bottomBarHeight)
     {
         PanelSprite = panelSprite;
+        PanelColor = panelColor;
         ButtonSprite = buttonSprite;
+        ButtonColor = buttonColor;
+        ButtonFallbackColor = buttonFallbackColor;
         ProgressFillSprite = progressFillSprite;
+        ProgressFillColor = progressFillColor;
+        ProgressBackgroundColor = progressBackgroundColor;
         Font = font;
         TextColor = textColor;
         Padding = padding;

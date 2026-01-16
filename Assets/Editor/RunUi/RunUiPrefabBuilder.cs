@@ -8,6 +8,30 @@ public static class RunUiPrefabBuilder
 {
     private const string HudPrefabRoot = "Assets/Prefabs/UI/HUD";
     private const string OverlayPrefabRoot = "Assets/Prefabs/UI/Overlays";
+    private const string PanelSpriteKey = "MainMenuPrefabBuilder.PanelSprite";
+    private const string PanelColorKey = "MainMenuPrefabBuilder.PanelColor";
+    private const string ButtonSpriteKey = "MainMenuPrefabBuilder.ButtonSprite";
+    private const string ButtonColorKey = "MainMenuPrefabBuilder.ButtonColor";
+    private const string ButtonFallbackColorKey = "MainMenuPrefabBuilder.ButtonFallbackColor";
+    private const string ProgressFillSpriteKey = "MainMenuPrefabBuilder.ProgressFillSprite";
+    private const string ProgressFillColorKey = "MainMenuPrefabBuilder.ProgressFillColor";
+    private const string ProgressBackgroundColorKey = "MainMenuPrefabBuilder.ProgressBackgroundColor";
+    private const string FontKey = "MainMenuPrefabBuilder.Font";
+    private const string TextColorKey = "MainMenuPrefabBuilder.TextColor";
+    private const string ClickSfxKey = "MainMenuPrefabBuilder.ClickSfx";
+    private const string HudTopBarHeightKey = "MainMenuPrefabBuilder.HudTopBarHeight";
+    private const string HudPaddingKey = "MainMenuPrefabBuilder.HudPadding";
+    private const string HudSpacingKey = "MainMenuPrefabBuilder.HudSpacing";
+    private const string HudProgressWidthKey = "MainMenuPrefabBuilder.HudProgressWidth";
+    private const string HudProgressHeightKey = "MainMenuPrefabBuilder.HudProgressHeight";
+    private const string HudScoreFontSizeKey = "MainMenuPrefabBuilder.HudScoreFontSize";
+    private const string HudBestFontSizeKey = "MainMenuPrefabBuilder.HudBestFontSize";
+    private const string HudPauseButtonWidthKey = "MainMenuPrefabBuilder.HudPauseButtonWidth";
+    private const string HudPauseButtonHeightKey = "MainMenuPrefabBuilder.HudPauseButtonHeight";
+
+    private static SharedStyleSettings _sharedStyle;
+    private static HudLayoutSettings _hudLayout;
+    private static bool _styleLoaded;
 
     private readonly struct HudElements
     {
@@ -24,6 +48,82 @@ public static class RunUiPrefabBuilder
             this.bestText = bestText;
             this.progressBar = progressBar;
             this.pauseButton = pauseButton;
+        }
+    }
+
+    private readonly struct SharedStyleSettings
+    {
+        public readonly Sprite panelSprite;
+        public readonly Color panelColor;
+        public readonly Sprite buttonSprite;
+        public readonly Color buttonColor;
+        public readonly Color buttonFallbackColor;
+        public readonly Sprite progressFillSprite;
+        public readonly Color progressFillColor;
+        public readonly Color progressBackgroundColor;
+        public readonly TMP_FontAsset font;
+        public readonly Color textColor;
+        public readonly AudioClip clickSfx;
+
+        public SharedStyleSettings(
+            Sprite panelSprite,
+            Color panelColor,
+            Sprite buttonSprite,
+            Color buttonColor,
+            Color buttonFallbackColor,
+            Sprite progressFillSprite,
+            Color progressFillColor,
+            Color progressBackgroundColor,
+            TMP_FontAsset font,
+            Color textColor,
+            AudioClip clickSfx)
+        {
+            this.panelSprite = panelSprite;
+            this.panelColor = panelColor;
+            this.buttonSprite = buttonSprite;
+            this.buttonColor = buttonColor;
+            this.buttonFallbackColor = buttonFallbackColor;
+            this.progressFillSprite = progressFillSprite;
+            this.progressFillColor = progressFillColor;
+            this.progressBackgroundColor = progressBackgroundColor;
+            this.font = font;
+            this.textColor = textColor;
+            this.clickSfx = clickSfx;
+        }
+    }
+
+    private readonly struct HudLayoutSettings
+    {
+        public readonly float topBarHeight;
+        public readonly int padding;
+        public readonly int spacing;
+        public readonly float progressWidth;
+        public readonly float progressHeight;
+        public readonly int scoreFontSize;
+        public readonly int bestFontSize;
+        public readonly float pauseButtonWidth;
+        public readonly float pauseButtonHeight;
+
+        public HudLayoutSettings(
+            float topBarHeight,
+            int padding,
+            int spacing,
+            float progressWidth,
+            float progressHeight,
+            int scoreFontSize,
+            int bestFontSize,
+            float pauseButtonWidth,
+            float pauseButtonHeight)
+        {
+            this.topBarHeight = topBarHeight;
+            this.padding = padding;
+            this.spacing = spacing;
+            this.progressWidth = progressWidth;
+            this.progressHeight = progressHeight;
+            this.scoreFontSize = scoreFontSize;
+            this.bestFontSize = bestFontSize;
+            this.pauseButtonWidth = pauseButtonWidth;
+            this.pauseButtonHeight = pauseButtonHeight;
         }
     }
 
@@ -108,6 +208,7 @@ public static class RunUiPrefabBuilder
     [MenuItem("Tools/UI/Build HUD + Overlays UI")]
     public static void BuildHudAndOverlaysUI()
     {
+        ReloadSharedStyle();
         EnsureFolder(HudPrefabRoot);
         EnsureFolder(OverlayPrefabRoot);
 
@@ -129,6 +230,7 @@ public static class RunUiPrefabBuilder
 
     private static GameObject BuildHudCanvas()
     {
+        EnsureStyleLoaded();
         var canvas = CreateCanvasRoot("HUDCanvas");
         var uiRoot = CreateRect("UIRoot", canvas.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         var hudElements = BuildHudTopBar(uiRoot);
@@ -139,6 +241,7 @@ public static class RunUiPrefabBuilder
 
     private static GameObject BuildRunUiCanvas(RewardRowView rewardRowPrefab)
     {
+        EnsureStyleLoaded();
         var canvas = CreateCanvasRoot("RunOverlaysCanvas");
         var uiRoot = CreateRect("UIRoot", canvas.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         var hudElements = BuildHudTopBar(uiRoot);
@@ -198,11 +301,11 @@ public static class RunUiPrefabBuilder
     {
         var hudRoot = CreateRect("HudRoot", parent, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         var topBar = CreateRect("TopHudBar", hudRoot, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
-        topBar.sizeDelta = new Vector2(0, 220f);
+        topBar.sizeDelta = new Vector2(0, _hudLayout.topBarHeight);
         var layout = topBar.gameObject.AddComponent<HorizontalLayoutGroup>();
         layout.childAlignment = TextAnchor.MiddleCenter;
-        layout.spacing = 24f;
-        layout.padding = new RectOffset(32, 32, 24, 24);
+        layout.spacing = _hudLayout.spacing;
+        layout.padding = new RectOffset(_hudLayout.padding, _hudLayout.padding, _hudLayout.padding, _hudLayout.padding);
         layout.childForceExpandHeight = false;
         layout.childForceExpandWidth = true;
 
@@ -214,8 +317,8 @@ public static class RunUiPrefabBuilder
         leftLayout.childForceExpandWidth = false;
         leftCluster.gameObject.AddComponent<LayoutElement>().preferredWidth = 320f;
 
-        var scoreText = CreateText("ScoreText", leftCluster, "0", 64, TextAlignmentOptions.Left);
-        var bestText = CreateText("BestText", leftCluster, "Best 0", 28, TextAlignmentOptions.Left);
+        var scoreText = CreateText("ScoreText", leftCluster, "0", _hudLayout.scoreFontSize, TextAlignmentOptions.Left);
+        var bestText = CreateText("BestText", leftCluster, "Best 0", _hudLayout.bestFontSize, TextAlignmentOptions.Left);
 
         var centerCluster = CreateRect("CenterCluster", topBar, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero);
         var centerLayout = centerCluster.gameObject.AddComponent<VerticalLayoutGroup>();
@@ -224,11 +327,11 @@ public static class RunUiPrefabBuilder
         centerLayout.childForceExpandWidth = true;
         centerCluster.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
 
-        var progressBar = CreateProgressSlider("RunProgressBar", centerCluster, new Vector2(520f, 22f));
+        var progressBar = CreateProgressSlider("RunProgressBar", centerCluster, new Vector2(_hudLayout.progressWidth, _hudLayout.progressHeight));
         progressBar.minValue = 0f;
         progressBar.maxValue = 1f;
         progressBar.value = 0f;
-        AddLayoutSize(progressBar.GetComponent<RectTransform>(), 520f, 22f);
+        AddLayoutSize(progressBar.GetComponent<RectTransform>(), _hudLayout.progressWidth, _hudLayout.progressHeight);
 
         var rightCluster = CreateRect("RightCluster", topBar, Vector2.zero, Vector2.one, new Vector2(1, 0.5f), Vector2.zero);
         rightCluster.gameObject.AddComponent<LayoutElement>().preferredWidth = 200f;
@@ -238,11 +341,11 @@ public static class RunUiPrefabBuilder
         rightLayout.childForceExpandHeight = false;
 
         var pauseButtonRoot = CreateButton("PauseButton", rightCluster, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f), Vector2.zero);
-        pauseButtonRoot.sizeDelta = new Vector2(140f, 80f);
+        pauseButtonRoot.sizeDelta = new Vector2(_hudLayout.pauseButtonWidth, _hudLayout.pauseButtonHeight);
         var pauseLabel = pauseButtonRoot.GetComponentInChildren<TMP_Text>();
         if (pauseLabel != null)
             pauseLabel.text = "Pause";
-        pauseButtonRoot.gameObject.AddComponent<LayoutElement>().preferredWidth = 140f;
+        pauseButtonRoot.gameObject.AddComponent<LayoutElement>().preferredWidth = _hudLayout.pauseButtonWidth;
 
         return new HudElements(hudRoot, scoreText, bestText, progressBar, pauseButtonRoot.GetComponent<Button>());
     }
@@ -372,8 +475,8 @@ public static class RunUiPrefabBuilder
         var content = CreateRect("Content", viewport, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
         var contentLayout = content.gameObject.AddComponent<VerticalLayoutGroup>();
         contentLayout.childAlignment = TextAnchor.UpperCenter;
-        contentLayout.spacing = 12f;
-        contentLayout.padding = new RectOffset(12, 12, 12, 12);
+        contentLayout.spacing = Mathf.Max(0f, _hudLayout.spacing);
+        contentLayout.padding = new RectOffset(_hudLayout.padding, _hudLayout.padding, _hudLayout.padding, _hudLayout.padding);
         contentLayout.childForceExpandHeight = false;
         contentLayout.childForceExpandWidth = true;
         content.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
@@ -431,12 +534,15 @@ public static class RunUiPrefabBuilder
         var panel = CreateRect("Panel", parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero);
         panel.sizeDelta = size;
         var image = panel.gameObject.AddComponent<Image>();
-        image.color = new Color(0.12f, 0.12f, 0.12f, 0.9f);
+        ApplyPanelSprite(image);
+        image.color = _sharedStyle.panelSprite != null
+            ? _sharedStyle.panelColor
+            : new Color(0.12f, 0.12f, 0.12f, 0.9f);
 
         var layout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
         layout.childAlignment = TextAnchor.UpperCenter;
-        layout.spacing = 18f;
-        layout.padding = new RectOffset(24, 24, 32, 32);
+        layout.spacing = Mathf.Max(0f, _hudLayout.spacing);
+        layout.padding = new RectOffset(_hudLayout.padding, _hudLayout.padding, _hudLayout.padding, _hudLayout.padding);
         layout.childForceExpandWidth = true;
         layout.childForceExpandHeight = false;
 
@@ -457,10 +563,10 @@ public static class RunUiPrefabBuilder
         var toggleRoot = CreateRect("Toggle", row, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), Vector2.zero);
         toggleRoot.sizeDelta = new Vector2(48f, 48f);
         var background = toggleRoot.gameObject.AddComponent<Image>();
-        background.color = new Color(1f, 1f, 1f, 0.2f);
+        ApplyButtonSprite(background);
 
         var checkmark = CreateImage("Checkmark", toggleRoot, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(28f, 28f));
-        checkmark.color = new Color(0.3f, 0.9f, 0.4f, 1f);
+        checkmark.color = _sharedStyle.progressFillColor;
         checkmark.raycastTarget = false;
 
         var toggle = toggleRoot.gameObject.AddComponent<Toggle>();
@@ -480,6 +586,12 @@ public static class RunUiPrefabBuilder
         rect.anchorMax = anchorMax;
         rect.pivot = pivot;
         rect.anchoredPosition = anchoredPosition;
+        if (anchorMin != anchorMax)
+        {
+            rect.anchoredPosition = Vector2.zero;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+        }
         if (parent != null)
             rect.SetParent(parent, false);
         return rect;
@@ -509,7 +621,7 @@ public static class RunUiPrefabBuilder
         tmp.text = text;
         tmp.fontSize = fontSize;
         tmp.alignment = alignment;
-        tmp.color = Color.white;
+        ApplyTextStyle(tmp);
         return tmp;
     }
 
@@ -518,14 +630,16 @@ public static class RunUiPrefabBuilder
         var root = CreateRect(name, parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero);
         root.sizeDelta = sizeDelta;
         var background = root.gameObject.AddComponent<Image>();
-        background.color = new Color(1f, 1f, 1f, 0.2f);
+        ApplyPanelSprite(background);
+        background.color = _sharedStyle.progressBackgroundColor;
 
         var fillArea = CreateRect("FillArea", root, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         var fill = CreateImage("Fill", fillArea, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0, 0.5f), Vector2.zero, Vector2.zero);
-        fill.color = new Color(0.3f, 0.8f, 0.2f, 1f);
+        fill.color = _sharedStyle.progressFillColor;
         fill.type = Image.Type.Filled;
         fill.fillMethod = Image.FillMethod.Horizontal;
         fill.fillAmount = 1f;
+        ApplyProgressFillSprite(fill);
 
         var slider = root.gameObject.AddComponent<Slider>();
         slider.fillRect = fill.rectTransform;
@@ -539,13 +653,142 @@ public static class RunUiPrefabBuilder
     {
         var rect = CreateRect(name, parent, anchorMin, anchorMax, pivot, anchoredPosition);
         var image = rect.gameObject.AddComponent<Image>();
-        image.color = new Color(1f, 1f, 1f, 0.2f);
+        ApplyButtonSprite(image);
         var button = rect.gameObject.AddComponent<Button>();
         var handler = rect.gameObject.AddComponent<UiInteractionHandler>();
+        ApplyClickSfx(handler);
         button.onClick.AddListener(handler.HandleClick);
         var label = CreateText("Label", rect, name, 24);
         label.raycastTarget = false;
         return rect;
+    }
+
+    private static void EnsureStyleLoaded()
+    {
+        if (_styleLoaded)
+            return;
+
+        ReloadSharedStyle();
+    }
+
+    private static SharedStyleSettings LoadSharedStyle()
+    {
+        var panelSprite = LoadAsset<Sprite>(PanelSpriteKey);
+        var buttonSprite = LoadAsset<Sprite>(ButtonSpriteKey);
+        var progressFillSprite = LoadAsset<Sprite>(ProgressFillSpriteKey);
+        var font = LoadAsset<TMP_FontAsset>(FontKey);
+        var clickSfx = LoadAsset<AudioClip>(ClickSfxKey);
+
+        return new SharedStyleSettings(
+            panelSprite,
+            LoadColor(PanelColorKey, Color.white),
+            buttonSprite,
+            LoadColor(ButtonColorKey, Color.white),
+            LoadColor(ButtonFallbackColorKey, new Color(1f, 1f, 1f, 0.2f)),
+            progressFillSprite,
+            LoadColor(ProgressFillColorKey, new Color(0.3f, 0.8f, 0.2f, 1f)),
+            LoadColor(ProgressBackgroundColorKey, new Color(1f, 1f, 1f, 0.2f)),
+            font,
+            LoadColor(TextColorKey, Color.white),
+            clickSfx);
+    }
+
+    private static HudLayoutSettings LoadHudLayout()
+    {
+        return new HudLayoutSettings(
+            Mathf.Max(0f, EditorPrefs.GetFloat(HudTopBarHeightKey, 220f)),
+            Mathf.Max(0, EditorPrefs.GetInt(HudPaddingKey, 24)),
+            Mathf.Max(0, EditorPrefs.GetInt(HudSpacingKey, 24)),
+            Mathf.Max(0f, EditorPrefs.GetFloat(HudProgressWidthKey, 520f)),
+            Mathf.Max(0f, EditorPrefs.GetFloat(HudProgressHeightKey, 22f)),
+            Mathf.Max(0, EditorPrefs.GetInt(HudScoreFontSizeKey, 64)),
+            Mathf.Max(0, EditorPrefs.GetInt(HudBestFontSizeKey, 28)),
+            Mathf.Max(0f, EditorPrefs.GetFloat(HudPauseButtonWidthKey, 140f)),
+            Mathf.Max(0f, EditorPrefs.GetFloat(HudPauseButtonHeightKey, 80f)));
+    }
+
+    private static T LoadAsset<T>(string key) where T : Object
+    {
+        var guid = EditorPrefs.GetString(key, string.Empty);
+        if (string.IsNullOrWhiteSpace(guid))
+            return null;
+
+        var path = AssetDatabase.GUIDToAssetPath(guid);
+        return string.IsNullOrWhiteSpace(path) ? null : AssetDatabase.LoadAssetAtPath<T>(path);
+    }
+
+    private static Color LoadColor(string key, Color fallback)
+    {
+        var value = EditorPrefs.GetString(key, string.Empty);
+        return ColorUtility.TryParseHtmlString(value, out var color) ? color : fallback;
+    }
+
+    private static void ApplyTextStyle(TMP_Text text)
+    {
+        if (text == null)
+            return;
+
+        if (_sharedStyle.font != null)
+            text.font = _sharedStyle.font;
+        text.color = _sharedStyle.textColor;
+    }
+
+    private static void ApplyPanelSprite(Image image)
+    {
+        if (image == null)
+            return;
+
+        if (_sharedStyle.panelSprite != null)
+        {
+            image.sprite = _sharedStyle.panelSprite;
+            image.type = Image.Type.Sliced;
+        }
+
+        image.color = _sharedStyle.panelColor;
+    }
+
+    private static void ApplyButtonSprite(Image image)
+    {
+        if (image == null)
+            return;
+
+        if (_sharedStyle.buttonSprite != null)
+        {
+            image.sprite = _sharedStyle.buttonSprite;
+            image.type = Image.Type.Sliced;
+            image.color = _sharedStyle.buttonColor;
+        }
+        else
+        {
+            image.color = _sharedStyle.buttonFallbackColor;
+        }
+    }
+
+    private static void ApplyProgressFillSprite(Image image)
+    {
+        if (image == null)
+            return;
+
+        if (_sharedStyle.progressFillSprite != null)
+        {
+            image.sprite = _sharedStyle.progressFillSprite;
+            image.type = Image.Type.Filled;
+        }
+    }
+
+    private static void ApplyClickSfx(UiInteractionHandler handler)
+    {
+        if (handler == null || _sharedStyle.clickSfx == null)
+            return;
+
+        SetSerializedReference(handler, "clickSfxOverride", _sharedStyle.clickSfx);
+    }
+
+    private static void ReloadSharedStyle()
+    {
+        _sharedStyle = LoadSharedStyle();
+        _hudLayout = LoadHudLayout();
+        _styleLoaded = true;
     }
 
     private static void AssignHudView(HudView view, HudElements elements)
