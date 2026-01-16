@@ -202,9 +202,16 @@ public class LoadingScreenManager : MonoBehaviour
         transitionRoutine = null;
     }
 
-    private YieldInstruction WaitForFadeDuration()
+    private IEnumerator WaitForFadeDuration()
     {
-        return useUnscaledTime ? new WaitForSecondsRealtime(fadeDuration) : new WaitForSeconds(fadeDuration);
+        if (useUnscaledTime)
+        {
+            yield return new WaitForSecondsRealtime(fadeDuration);
+        }
+        else
+        {
+            yield return new WaitForSeconds(fadeDuration);
+        }
     }
 
     private void ShowLoadingUI(bool visible)
