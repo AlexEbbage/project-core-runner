@@ -713,7 +713,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &181088812
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -727,7 +727,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 0}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1357,7 +1357,7 @@ MonoBehaviour:
   hudController: {fileID: 338262364}
   pauseMenuUI: {fileID: 211400081}
   countdownUIController: {fileID: 338262365}
-  loadingScreenManager: {fileID: 0}
+  loadingScreenManager: {fileID: 945280078}
   rewardedAdServiceBehaviour: {fileID: 865911819}
   analyticsServiceBehaviour: {fileID: 450072598}
   pushNotificationServiceBehaviour: {fileID: 0}
@@ -1392,6 +1392,7 @@ MonoBehaviour:
   speedUpFlash: {fileID: 0}
   cameraShake: {fileID: 330585549}
   speedParticles: {fileID: 0}
+  enableSpeedMilestoneShake: 0
   audioManager: {fileID: 2038007867}
   speedUpSfx: {fileID: 8300000, guid: 4be8b5d9483df2e448c1c31741110e83, type: 3}
   speedMilestoneStep: 5
@@ -1496,136 +1497,6 @@ MonoBehaviour:
     fogColor: {r: 0, g: 0, b: 0, a: 0}
     fogDensity: 0
     musicTrackIndex: 3
-  - name: ZONE 2
-    startTime: 999999
-    tunnelGradient:
-      serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 1}
-      key1: {r: 1, g: 1, b: 1, a: 1}
-      key2: {r: 0, g: 0, b: 0, a: 0}
-      key3: {r: 0, g: 0, b: 0, a: 0}
-      key4: {r: 0, g: 0, b: 0, a: 0}
-      key5: {r: 0, g: 0, b: 0, a: 0}
-      key6: {r: 0, g: 0, b: 0, a: 0}
-      key7: {r: 0, g: 0, b: 0, a: 0}
-      ctime0: 0
-      ctime1: 65535
-      ctime2: 0
-      ctime3: 0
-      ctime4: 0
-      ctime5: 0
-      ctime6: 0
-      ctime7: 0
-      atime0: 0
-      atime1: 65535
-      atime2: 0
-      atime3: 0
-      atime4: 0
-      atime5: 0
-      atime6: 0
-      atime7: 0
-      m_Mode: 0
-      m_ColorSpace: -1
-      m_NumColorKeys: 2
-      m_NumAlphaKeys: 2
-    obstacleGradient:
-      serializedVersion: 2
-      key0: {r: 0.50980395, g: 0.0072938837, b: 0, a: 1}
-      key1: {r: 0.48235297, g: 0.007843138, b: 0, a: 1}
-      key2: {r: 0, g: 0, b: 0, a: 0}
-      key3: {r: 0, g: 0, b: 0, a: 0}
-      key4: {r: 0, g: 0, b: 0, a: 0}
-      key5: {r: 0, g: 0, b: 0, a: 0}
-      key6: {r: 0, g: 0, b: 0, a: 0}
-      key7: {r: 0, g: 0, b: 0, a: 0}
-      ctime0: 0
-      ctime1: 65535
-      ctime2: 0
-      ctime3: 0
-      ctime4: 0
-      ctime5: 0
-      ctime6: 0
-      ctime7: 0
-      atime0: 0
-      atime1: 65535
-      atime2: 0
-      atime3: 0
-      atime4: 0
-      atime5: 0
-      atime6: 0
-      atime7: 0
-      m_Mode: 0
-      m_ColorSpace: -1
-      m_NumColorKeys: 2
-      m_NumAlphaKeys: 2
-    fogColor: {r: 0, g: 0, b: 0, a: 0}
-    fogDensity: 0
-    musicTrackIndex: 1
-  - name: ZONE 3
-    startTime: 9999999
-    tunnelGradient:
-      serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 1}
-      key1: {r: 1, g: 1, b: 1, a: 1}
-      key2: {r: 0, g: 0, b: 0, a: 0}
-      key3: {r: 0, g: 0, b: 0, a: 0}
-      key4: {r: 0, g: 0, b: 0, a: 0}
-      key5: {r: 0, g: 0, b: 0, a: 0}
-      key6: {r: 0, g: 0, b: 0, a: 0}
-      key7: {r: 0, g: 0, b: 0, a: 0}
-      ctime0: 0
-      ctime1: 65535
-      ctime2: 0
-      ctime3: 0
-      ctime4: 0
-      ctime5: 0
-      ctime6: 0
-      ctime7: 0
-      atime0: 0
-      atime1: 65535
-      atime2: 0
-      atime3: 0
-      atime4: 0
-      atime5: 0
-      atime6: 0
-      atime7: 0
-      m_Mode: 0
-      m_ColorSpace: -1
-      m_NumColorKeys: 2
-      m_NumAlphaKeys: 2
-    obstacleGradient:
-      serializedVersion: 2
-      key0: {r: 0.50980395, g: 0.0072938837, b: 0, a: 1}
-      key1: {r: 0.48235297, g: 0.007843138, b: 0, a: 1}
-      key2: {r: 0, g: 0, b: 0, a: 0}
-      key3: {r: 0, g: 0, b: 0, a: 0}
-      key4: {r: 0, g: 0, b: 0, a: 0}
-      key5: {r: 0, g: 0, b: 0, a: 0}
-      key6: {r: 0, g: 0, b: 0, a: 0}
-      key7: {r: 0, g: 0, b: 0, a: 0}
-      ctime0: 0
-      ctime1: 65535
-      ctime2: 0
-      ctime3: 0
-      ctime4: 0
-      ctime5: 0
-      ctime6: 0
-      ctime7: 0
-      atime0: 0
-      atime1: 65535
-      atime2: 0
-      atime3: 0
-      atime4: 0
-      atime5: 0
-      atime6: 0
-      atime7: 0
-      m_Mode: 0
-      m_ColorSpace: -1
-      m_NumColorKeys: 2
-      m_NumAlphaKeys: 2
-    fogColor: {r: 0, g: 0, b: 0, a: 0}
-    fogDensity: 0
-    musicTrackIndex: 2
   tunnelWalls: {fileID: 806837119}
   obstacleRings: {fileID: 883196103}
   audioManager: {fileID: 2038007867}
@@ -2671,6 +2542,8 @@ MonoBehaviour:
   restorePurchasesButtonRoot: {fileID: 2100000100}
   premiumBadgeRoot: {fileID: 2100000200}
   thankYouPopup: {fileID: 1689040174}
+  hidePremiumUserIAPButton: 0
+  hideRestorePurchasesButton: 0
 --- !u!114 &440793605
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4697,7 +4570,7 @@ MonoBehaviour:
     prefab: {fileID: 7324066071219425408, guid: 62489c711d3bfa7458136a7ac7dede5e, type: 3}
     weight: 1
     weightBonusAtMaxDifficulty: 0
-  pickupPrefab: {fileID: 0}
+  pickupPrefab: {fileID: 5849031700704092220, guid: 9ff7a0f4443f5ff41b7b0af292ff2326, type: 3}
   pickupSlotsPerRing: 6
   pickupSlotRadiusOverride: 0
   pickupSlotsToFillMin: 1
@@ -6848,6 +6721,8 @@ MonoBehaviour:
   restorePurchasesButtonRoot: {fileID: 2100000100}
   premiumBadgeRoot: {fileID: 2100000200}
   thankYouPopup: {fileID: 1689040174}
+  hidePremiumUserIAPButton: 1
+  hideRestorePurchasesButton: 1
 --- !u!1 &1563094308
 GameObject:
   m_ObjectHideFlags: 0
@@ -8531,7 +8406,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2100000002
 RectTransform:
   m_ObjectHideFlags: 0
@@ -8819,7 +8694,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2100000101
 RectTransform:
   m_ObjectHideFlags: 0

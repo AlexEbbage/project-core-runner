@@ -46,6 +46,10 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private GameObject premiumBadgeRoot;
     [SerializeField] private RemoveAdsThankYouUI thankYouPopup;
 
+    [Header("ButtonVisibility")]
+    [SerializeField] private bool hidePremiumUserIAPButton;
+    [SerializeField] private bool hideRestorePurchasesButton;
+
     private int _currentLevelIndex;
 
     private void Awake()
@@ -244,10 +248,11 @@ public class MainMenuUI : MonoBehaviour
     {
         bool hasRemoveAds = AdsConfig.RemoveAds;
 
-        if (removeAdsButtonRoot != null)
+        if (!hidePremiumUserIAPButton && removeAdsButtonRoot != null)
             removeAdsButtonRoot.SetActive(!hasRemoveAds);
 
-        if (restorePurchasesButtonRoot != null)
+        // TODO: I've realised that I've mixed restore and reset functionality.
+        if (!hideRestorePurchasesButton && restorePurchasesButtonRoot != null)
             restorePurchasesButtonRoot.SetActive(!hasRemoveAds);
 
         if (premiumBadgeRoot != null)
