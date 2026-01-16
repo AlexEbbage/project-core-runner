@@ -24,6 +24,7 @@ public class RunSpeedController : MonoBehaviour
     [SerializeField] private SpeedUpFlash speedUpFlash;
     [SerializeField] private CameraShake cameraShake;
     [SerializeField] private SpeedParticlesController speedParticles;
+    [SerializeField] private bool enableSpeedMilestoneShake = true;
     [Tooltip("Optional SFX for speed-up step.")]
     [SerializeField] private AudioManager audioManager;
     [SerializeField] private AudioClip speedUpSfx;
@@ -213,7 +214,7 @@ public class RunSpeedController : MonoBehaviour
         }
 
         // Camera shake
-        if (cameraShake != null)
+        if (enableSpeedMilestoneShake && cameraShake != null)
         {
             cameraShake.PlayShake();
         }
