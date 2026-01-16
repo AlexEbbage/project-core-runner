@@ -1184,6 +1184,12 @@ public static class MainMenuPrefabBuilder
         rect.anchorMax = anchorMax;
         rect.pivot = pivot;
         rect.anchoredPosition = anchoredPosition;
+        if (anchorMin != anchorMax)
+        {
+            rect.anchoredPosition = Vector2.zero;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+        }
         if (parent != null)
             rect.SetParent(parent, false);
         return rect;
@@ -1212,12 +1218,12 @@ public static class MainMenuPrefabBuilder
         var root = CreateRect(name, parent, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), Vector2.zero);
         root.sizeDelta = sizeDelta;
         var background = root.gameObject.AddComponent<Image>();
-        background.color = new Color(1f, 1f, 1f, 0.2f);
         ApplyPanelSprite(background);
+        background.color = GetProgressBackgroundColor();
 
         var fillArea = CreateRect("FillArea", root, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         var fill = CreateImage("Fill", fillArea, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0, 0.5f), new Vector2(0, 0), new Vector2(0, 0));
-        fill.color = new Color(0.3f, 0.8f, 0.2f, 1f);
+        fill.color = GetProgressFillColor();
         fill.type = Image.Type.Filled;
         fill.fillMethod = Image.FillMethod.Horizontal;
         fill.fillAmount = 1f;
@@ -1236,12 +1242,12 @@ public static class MainMenuPrefabBuilder
         var root = CreateRect(name, parent, new Vector2(0, 0.5f), new Vector2(1, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero);
         root.sizeDelta = sizeDelta;
         var background = root.gameObject.AddComponent<Image>();
-        background.color = new Color(1f, 1f, 1f, 0.15f);
         background.type = Image.Type.Sliced;
         ApplyPanelSprite(background);
+        background.color = GetProgressBackgroundColor();
 
         var fill = CreateImage("Fill", root, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0, 0.5f), Vector2.zero, Vector2.zero);
-        fill.color = new Color(0.3f, 0.8f, 0.2f, 1f);
+        fill.color = GetProgressFillColor();
         fill.type = Image.Type.Filled;
         fill.fillMethod = Image.FillMethod.Horizontal;
         fill.fillAmount = 0f;
@@ -1365,12 +1371,16 @@ public static class MainMenuPrefabBuilder
 
     private static void ApplyPanelSprite(Image image)
     {
-        if (image == null || _style?.PanelSprite == null)
+        if (image == null)
             return;
 
-        image.sprite = _style.PanelSprite;
-        image.type = Image.Type.Sliced;
-        image.color = Color.white;
+        if (_style?.PanelSprite != null)
+        {
+            image.sprite = _style.PanelSprite;
+            image.type = Image.Type.Sliced;
+        }
+
+        image.color = _style?.PanelColor ?? Color.white;
     }
 
     private static void ApplyButtonSprite(Image image)
@@ -1382,21 +1392,34 @@ public static class MainMenuPrefabBuilder
         {
             image.sprite = _style.ButtonSprite;
             image.type = Image.Type.Sliced;
-            image.color = Color.white;
+            image.color = _style.ButtonColor;
         }
         else
         {
-            image.color = new Color(1f, 1f, 1f, 0.2f);
+            image.color = _style?.ButtonFallbackColor ?? new Color(1f, 1f, 1f, 0.2f);
         }
     }
 
     private static void ApplyProgressFillSprite(Image image)
     {
-        if (image == null || _style?.ProgressFillSprite == null)
+        if (image == null)
             return;
 
-        image.sprite = _style.ProgressFillSprite;
-        image.type = Image.Type.Filled;
+        if (_style?.ProgressFillSprite != null)
+        {
+            image.sprite = _style.ProgressFillSprite;
+            image.type = Image.Type.Filled;
+        }
+    }
+
+    private static Color GetProgressFillColor()
+    {
+        return _style?.ProgressFillColor ?? new Color(0.3f, 0.8f, 0.2f, 1f);
+    }
+
+    private static Color GetProgressBackgroundColor()
+    {
+        return _style?.ProgressBackgroundColor ?? new Color(1f, 1f, 1f, 0.2f);
     }
 
     private static void ApplyClickSfx(UiInteractionHandler handler)
