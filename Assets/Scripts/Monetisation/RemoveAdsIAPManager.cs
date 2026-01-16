@@ -105,6 +105,12 @@ public class RemoveAdsIAPManager : MonoBehaviour, IStoreListener
         var apple = storeExtensionProvider.GetExtension<IAppleExtensions>();
         apple.RestoreTransactions(result => Debug.Log("RestoreTransactions: " + result));
 #elif UNITY_ANDROID
+        if (Application.isEditor)
+        {
+            Debug.Log("IAP: Restore purchases is not supported in the editor for Google Play.");
+            return;
+        }
+
         var google = storeExtensionProvider.GetExtension<IGooglePlayStoreExtensions>();
         google.RestoreTransactions((result, message) =>
             Debug.Log($"RestoreTransactions: {result}, {message}"));
