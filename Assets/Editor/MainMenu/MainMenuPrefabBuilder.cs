@@ -9,6 +9,9 @@ using UnityEngine.UI;
 public static class MainMenuPrefabBuilder
 {
     private const string PrefabRoot = "Assets/Prefabs/UI/MainMenu";
+    private static MainMenuStyleConfig _style;
+
+    public static string PrefabRootPath => PrefabRoot;
 
     private readonly struct ProgressionRewardTrackElements
     {
@@ -24,7 +27,6 @@ public static class MainMenuPrefabBuilder
         }
     }
 
-    [MenuItem("Tools/UI/Build Main Menu UI")]
     public static void BuildMainMenuUI()
     {
         BuildMainMenuUI(MainMenuBuilderConfig.CreateDefault());
@@ -35,6 +37,7 @@ public static class MainMenuPrefabBuilder
         EnsureFolder(PrefabRoot);
 
         builderConfig = MainMenuBuilderConfig.Merge(builderConfig, MainMenuBuilderConfig.CreateDefault());
+        _style = builderConfig.Style ?? MainMenuBuilderConfig.CreateDefault().Style;
         var progressionConfig = GetOrCreateProgressionTasksConfig();
         var taskRowPrefab = BuildProgressionTaskRowPrefab();
         var taskRowVariants = BuildProgressionTaskRowVariants(taskRowPrefab);
@@ -57,19 +60,29 @@ public static class MainMenuPrefabBuilder
         }
 
         var uiRoot = CreateRect("UIRoot", canvas.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        var rootLayout = uiRoot.gameObject.AddComponent<VerticalLayoutGroup>();
+        rootLayout.childAlignment = TextAnchor.UpperCenter;
+        rootLayout.childControlWidth = true;
+        rootLayout.childControlHeight = true;
+        rootLayout.childForceExpandWidth = true;
+        rootLayout.childForceExpandHeight = false;
+        ApplyLayoutSpacing(rootLayout, _style);
         var topBar = BuildTopBar(uiRoot, builderConfig.TopBar);
         var pageContainer = BuildPageContainer(uiRoot, progressionHubPrefab, builderConfig);
         var bottomNav = BuildBottomNav(uiRoot, builderConfig.BottomNavButtons);
         var modalsRoot = CreateRect("ModalsRoot", canvas.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         var modal = BuildShopModal(modalsRoot);
 
+        ApplyLayoutElement(topBar, preferredHeight: GetTopBarHeight());
+        ApplyLayoutElement(bottomNav, preferredHeight: GetBottomBarHeight());
+        ApplyLayoutElement(pageContainer, flexibleHeight: 1f);
+
         var menuController = uiRoot.gameObject.AddComponent<MainMenuController>();
-        AssignMenuController(menuController, pageContainer, bottomNav, builderConfig);
-
         var topBarController = topBar.gameObject.AddComponent<TopBarController>();
-        AssignTopBar(topBarController, menuController, topBar, builderConfig.TopBar);
-
         var bottomNavController = bottomNav.gameObject.AddComponent<BottomNavBarController>();
+
+        AssignMenuController(menuController, pageContainer, bottomNavController, builderConfig);
+        AssignTopBar(topBarController, menuController, topBar, builderConfig.TopBar);
         AssignBottomNav(bottomNavController, menuController, bottomNav, builderConfig.BottomNavButtons);
 
         AttachHangarController(pageContainer, builderConfig.HangarPage);
@@ -82,30 +95,58 @@ public static class MainMenuPrefabBuilder
     private static RectTransform BuildTopBar(Transform parent, TopBarConfig config)
     {
         var topBar = CreateRect("TopBar", parent, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(0, 1));
-        topBar.sizeDelta = new Vector2(0, 200);
+        var topBarImage = topBar.gameObject.AddComponent<Image>();
+        ApplyPanelSprite(topBarImage);
         var layout = topBar.gameObject.AddComponent<HorizontalLayoutGroup>();
         layout.childAlignment = TextAnchor.MiddleLeft;
-        layout.spacing = 20f;
-        layout.padding = new RectOffset(20, 20, 20, 20);
+        layout.spacing = GetSpacing();
+        layout.padding = GetPadding();
         layout.childForceExpandHeight = false;
         layout.childForceExpandWidth = false;
+        layout.childControlHeight = true;
+        layout.childControlWidth = true;
 
         var profileArea = CreateRect("ProfileArea", topBar, new Vector2(0, 0), new Vector2(0, 1), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
-        profileArea.sizeDelta = new Vector2(400, 160);
-        profileArea.gameObject.AddComponent<HorizontalLayoutGroup>().spacing = 16f;
+        ApplyLayoutElement(profileArea, preferredWidth: 420f, flexibleWidth: 0f);
+        var profileLayout = profileArea.gameObject.AddComponent<HorizontalLayoutGroup>();
+        profileLayout.spacing = GetSpacing();
+        profileLayout.childAlignment = TextAnchor.MiddleLeft;
+        profileLayout.childForceExpandWidth = false;
+        profileLayout.childForceExpandHeight = false;
+        profileLayout.childControlHeight = true;
+        profileLayout.childControlWidth = true;
 
-        var avatar = CreateImage("AvatarImage", profileArea, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(120, 120));
+        var avatar = CreateImage("AvatarImage", profileArea, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(96, 96));
         avatar.raycastTarget = false;
+        ApplyLayoutElement(avatar.rectTransform, preferredWidth: 96f, preferredHeight: 96f);
 
-        var levelText = CreateText("LevelText", profileArea, "Lv 1", 36);
-        var xpBar = CreateImage("XpProgressBar", profileArea, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(200, 30));
+        var profileInfo = CreateRect("ProfileInfo", profileArea, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
+        ApplyLayoutElement(profileInfo, flexibleWidth: 1f);
+        var profileInfoLayout = profileInfo.gameObject.AddComponent<VerticalLayoutGroup>();
+        profileInfoLayout.spacing = Mathf.Max(4f, GetSpacing() * 0.5f);
+        profileInfoLayout.childAlignment = TextAnchor.MiddleLeft;
+        profileInfoLayout.childControlHeight = true;
+        profileInfoLayout.childControlWidth = true;
+        profileInfoLayout.childForceExpandHeight = false;
+        profileInfoLayout.childForceExpandWidth = true;
+
+        var levelText = CreateText("LevelText", profileInfo, "Lv 1", 36);
+        ApplyLayoutElement(levelText.rectTransform, preferredHeight: 36f);
+        var xpBar = CreateImage("XpProgressBar", profileInfo, new Vector2(0, 0.5f), new Vector2(1, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(0, 18));
         xpBar.type = Image.Type.Filled;
         xpBar.fillMethod = Image.FillMethod.Horizontal;
         xpBar.fillAmount = 0.5f;
+        ApplyLayoutElement(xpBar.rectTransform, preferredHeight: 18f, flexibleWidth: 1f);
 
         var currencyPills = CreateRect("CurrencyPills", topBar, new Vector2(1, 0), new Vector2(1, 1), new Vector2(1, 0.5f), new Vector2(1, 0.5f));
-        currencyPills.sizeDelta = new Vector2(600, 160);
-        currencyPills.gameObject.AddComponent<HorizontalLayoutGroup>().spacing = 16f;
+        ApplyLayoutElement(currencyPills, flexibleWidth: 1f);
+        var pillLayout = currencyPills.gameObject.AddComponent<HorizontalLayoutGroup>();
+        pillLayout.spacing = GetSpacing();
+        pillLayout.childAlignment = TextAnchor.MiddleRight;
+        pillLayout.childControlWidth = true;
+        pillLayout.childControlHeight = true;
+        pillLayout.childForceExpandHeight = false;
+        pillLayout.childForceExpandWidth = false;
 
         if (config?.CurrencyPills != null)
         {
@@ -125,11 +166,16 @@ public static class MainMenuPrefabBuilder
     private static RectTransform BuildBottomNav(Transform parent, IReadOnlyList<BottomNavButtonConfig> buttonConfigs)
     {
         var bottomBar = CreateRect("BottomNavBar", parent, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 0));
-        bottomBar.sizeDelta = new Vector2(0, 200);
+        var bottomBarImage = bottomBar.gameObject.AddComponent<Image>();
+        ApplyPanelSprite(bottomBarImage);
         var layout = bottomBar.gameObject.AddComponent<HorizontalLayoutGroup>();
         layout.childAlignment = TextAnchor.MiddleCenter;
-        layout.spacing = 24f;
-        layout.padding = new RectOffset(20, 20, 20, 20);
+        layout.spacing = GetSpacing();
+        layout.padding = GetPadding();
+        layout.childControlWidth = true;
+        layout.childControlHeight = true;
+        layout.childForceExpandHeight = false;
+        layout.childForceExpandWidth = false;
 
         if (buttonConfigs != null)
         {
@@ -149,8 +195,7 @@ public static class MainMenuPrefabBuilder
     {
         config ??= MainMenuBuilderConfig.CreateDefault();
         var container = CreateRect("PageContainer", parent, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0, 0), new Vector2(0, 0));
-        container.offsetMin = new Vector2(0, 200);
-        container.offsetMax = new Vector2(0, -200);
+        ApplyLayoutElement(container, flexibleHeight: 1f);
 
         foreach (var pageKind in config.PageOrder)
         {
@@ -182,13 +227,27 @@ public static class MainMenuPrefabBuilder
 
         var page = CreateRect(config.Name, parent, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         page.gameObject.AddComponent<CanvasGroup>();
+        var pageLayout = page.gameObject.AddComponent<VerticalLayoutGroup>();
+        pageLayout.childAlignment = TextAnchor.UpperCenter;
+        pageLayout.childControlWidth = true;
+        pageLayout.childControlHeight = true;
+        pageLayout.childForceExpandWidth = true;
+        pageLayout.childForceExpandHeight = false;
+        ApplyLayoutSpacing(pageLayout, _style);
 
-        var shipDisplay = CreateRect(config.ShipDisplayPanelName, page, new Vector2(0, 0.5f), new Vector2(1, 1), new Vector2(0, 0), new Vector2(0, 1));
-        shipDisplay.sizeDelta = new Vector2(0, 400);
+        var shipDisplay = CreateRect(config.ShipDisplayPanelName, page, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
+        ApplyLayoutElement(shipDisplay, preferredHeight: 320f);
+        ApplyPanelSprite(shipDisplay.gameObject.AddComponent<Image>());
 
-        var statsPanel = CreateRect(config.StatsPanelName, page, new Vector2(0, 0.5f), new Vector2(1, 0.5f), new Vector2(0, 1), new Vector2(0, 1));
-        statsPanel.sizeDelta = new Vector2(0, 300);
-        statsPanel.gameObject.AddComponent<VerticalLayoutGroup>().spacing = 8f;
+        var statsPanel = CreateRect(config.StatsPanelName, page, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
+        ApplyLayoutElement(statsPanel, preferredHeight: 220f);
+        var statsLayout = statsPanel.gameObject.AddComponent<VerticalLayoutGroup>();
+        statsLayout.spacing = Mathf.Max(4f, GetSpacing() * 0.5f);
+        statsLayout.childAlignment = TextAnchor.UpperCenter;
+        statsLayout.childControlWidth = true;
+        statsLayout.childControlHeight = true;
+        statsLayout.childForceExpandWidth = true;
+        statsLayout.childForceExpandHeight = false;
 
         if (config.StatTypes != null)
         {
@@ -198,10 +257,15 @@ public static class MainMenuPrefabBuilder
             }
         }
 
-        var subTabBar = CreateRect(config.SubTabBarName, page, new Vector2(0, 0.5f), new Vector2(1, 0.5f), new Vector2(0, 1), new Vector2(0, 1));
-        subTabBar.anchoredPosition = new Vector2(0, -300);
-        subTabBar.sizeDelta = new Vector2(0, 120);
-        subTabBar.gameObject.AddComponent<HorizontalLayoutGroup>().spacing = 16f;
+        var subTabBar = CreateRect(config.SubTabBarName, page, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
+        ApplyLayoutElement(subTabBar, preferredHeight: 80f);
+        var subTabLayout = subTabBar.gameObject.AddComponent<HorizontalLayoutGroup>();
+        subTabLayout.spacing = GetSpacing();
+        subTabLayout.childAlignment = TextAnchor.MiddleCenter;
+        subTabLayout.childControlHeight = true;
+        subTabLayout.childControlWidth = true;
+        subTabLayout.childForceExpandWidth = false;
+        subTabLayout.childForceExpandHeight = false;
         if (config.Tabs != null)
         {
             foreach (var tab in config.Tabs)
@@ -213,7 +277,8 @@ public static class MainMenuPrefabBuilder
             }
         }
 
-        BuildHorizontalScroll(page, config.ContentScrollName, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 0), 360);
+        var scroll = BuildHorizontalScroll(page, config.ContentScrollName, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 0), 300f, 1f);
+        ApplyLayoutElement(scroll, flexibleHeight: 1f);
     }
 
     private static void BuildShopPage(Transform parent, ShopPageConfig config)
@@ -223,10 +288,23 @@ public static class MainMenuPrefabBuilder
 
         var page = CreateRect(config.Name, parent, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         page.gameObject.AddComponent<CanvasGroup>();
+        var pageLayout = page.gameObject.AddComponent<VerticalLayoutGroup>();
+        pageLayout.childAlignment = TextAnchor.UpperCenter;
+        pageLayout.childControlWidth = true;
+        pageLayout.childControlHeight = true;
+        pageLayout.childForceExpandWidth = true;
+        pageLayout.childForceExpandHeight = false;
+        ApplyLayoutSpacing(pageLayout, _style);
 
         var subTabBar = CreateRect(config.SubTabBarName, page, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(0, 1));
-        subTabBar.sizeDelta = new Vector2(0, 120);
-        subTabBar.gameObject.AddComponent<HorizontalLayoutGroup>().spacing = 16f;
+        ApplyLayoutElement(subTabBar, preferredHeight: 80f);
+        var subTabLayout = subTabBar.gameObject.AddComponent<HorizontalLayoutGroup>();
+        subTabLayout.spacing = GetSpacing();
+        subTabLayout.childAlignment = TextAnchor.MiddleCenter;
+        subTabLayout.childControlHeight = true;
+        subTabLayout.childControlWidth = true;
+        subTabLayout.childForceExpandWidth = false;
+        subTabLayout.childForceExpandHeight = false;
         if (config.Tabs != null)
         {
             foreach (var tab in config.Tabs)
@@ -238,7 +316,8 @@ public static class MainMenuPrefabBuilder
             }
         }
 
-        BuildHorizontalScroll(page, config.ContentScrollName, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0, 0), new Vector2(0, 0), 300);
+        var scroll = BuildHorizontalScroll(page, config.ContentScrollName, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0, 0), new Vector2(0, 0), 300f, 1f);
+        ApplyLayoutElement(scroll, flexibleHeight: 1f);
     }
 
     private static void BuildProgressionPage(Transform parent, RectTransform progressionHubPrefab, ProgressionPageConfig config)
@@ -248,10 +327,18 @@ public static class MainMenuPrefabBuilder
 
         var page = CreateRect(config.Name, parent, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         page.gameObject.AddComponent<CanvasGroup>();
+        var pageLayout = page.gameObject.AddComponent<VerticalLayoutGroup>();
+        pageLayout.childAlignment = TextAnchor.UpperCenter;
+        pageLayout.childControlWidth = true;
+        pageLayout.childControlHeight = true;
+        pageLayout.childForceExpandWidth = true;
+        pageLayout.childForceExpandHeight = false;
+        ApplyLayoutSpacing(pageLayout, _style);
 
         if (progressionHubPrefab == null)
         {
-            CreateText("Title", page, config.TitleLabel, 36);
+            var title = CreateText("Title", page, config.TitleLabel, 36);
+            ApplyLayoutElement(title.rectTransform, flexibleHeight: 1f);
             return;
         }
 
@@ -265,6 +352,7 @@ public static class MainMenuPrefabBuilder
         hubRect.anchorMax = Vector2.one;
         hubRect.offsetMin = Vector2.zero;
         hubRect.offsetMax = Vector2.zero;
+        ApplyLayoutElement(hubRect, flexibleHeight: 1f);
     }
 
     private static RectTransform BuildShopModal(Transform parent)
@@ -275,13 +363,20 @@ public static class MainMenuPrefabBuilder
         var background = CreateButton("Background", modal, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0, 0), new Vector2(0, 0));
         var panel = CreateRect("Panel", modal, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
         panel.sizeDelta = new Vector2(800, 900);
+        ApplyPanelSprite(panel.gameObject.AddComponent<Image>());
 
         var icon = CreateImage("ItemIcon", panel, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(200, 200));
         var nameText = CreateText("ItemNameText", panel, "Item", 36);
         var descriptionText = CreateText("DescriptionText", panel, "Description", 24);
         var priceArea = CreateRect("PriceArea", panel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
         priceArea.sizeDelta = new Vector2(400, 100);
-        priceArea.gameObject.AddComponent<HorizontalLayoutGroup>().spacing = 12f;
+        var priceLayout = priceArea.gameObject.AddComponent<HorizontalLayoutGroup>();
+        priceLayout.spacing = GetSpacing();
+        priceLayout.childAlignment = TextAnchor.MiddleCenter;
+        priceLayout.childControlHeight = true;
+        priceLayout.childControlWidth = true;
+        priceLayout.childForceExpandHeight = false;
+        priceLayout.childForceExpandWidth = false;
         var currencyIcon = CreateImage("CurrencyIcon", priceArea, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(60, 60));
         var priceText = CreateText("PriceText", priceArea, "0", 28);
         var buyButton = CreateButton("BuyButton", panel, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0));
@@ -359,6 +454,7 @@ public static class MainMenuPrefabBuilder
     private static RectTransform BuildHangarUpgradePrefab()
     {
         var root = CreateRect("HangarUpgradeItemCard", null, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        ApplyLayoutElement(root, preferredWidth: 320f, preferredHeight: 140f);
         var component = root.gameObject.AddComponent<HangarUpgradeItemView>();
         var icon = CreateImage("IconImage", root, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(100, 100));
         var nameText = CreateText("NameText", root, "Upgrade", 24);
@@ -382,6 +478,7 @@ public static class MainMenuPrefabBuilder
     private static RectTransform BuildHangarCosmeticPrefab()
     {
         var root = CreateRect("HangarCosmeticItemCard", null, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        ApplyLayoutElement(root, preferredWidth: 300f, preferredHeight: 140f);
         var component = root.gameObject.AddComponent<HangarCosmeticItemView>();
         var icon = CreateImage("IconImage", root, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(100, 100));
         var nameText = CreateText("NameText", root, "Item", 24);
@@ -407,6 +504,7 @@ public static class MainMenuPrefabBuilder
     private static RectTransform BuildShopItemPrefab()
     {
         var root = CreateRect("ShopItemCard", null, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        ApplyLayoutElement(root, preferredWidth: 300f, preferredHeight: 140f);
         var component = root.gameObject.AddComponent<ShopItemCardView>();
         var icon = CreateImage("IconImage", root, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(100, 100));
         var nameText = CreateText("NameText", root, "Item", 24);
@@ -428,21 +526,25 @@ public static class MainMenuPrefabBuilder
     private static RectTransform BuildProgressionTaskRowPrefab()
     {
         var root = CreateRect("ProgressionTaskRow", null, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-        root.sizeDelta = new Vector2(0, 120);
+        ApplyLayoutElement(root, preferredHeight: 110f);
         var layout = root.gameObject.AddComponent<HorizontalLayoutGroup>();
         layout.childAlignment = TextAnchor.MiddleLeft;
-        layout.spacing = 16f;
-        layout.padding = new RectOffset(16, 16, 12, 12);
+        layout.spacing = GetSpacing();
+        layout.padding = GetPadding();
         layout.childForceExpandHeight = false;
         layout.childForceExpandWidth = false;
+        layout.childControlHeight = true;
+        layout.childControlWidth = true;
 
         var component = root.gameObject.AddComponent<ProgressionTaskRowView>();
         var icon = CreateImage("Icon", root, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(72, 72));
         icon.color = new Color(1f, 1f, 1f, 0.9f);
+        ApplyLayoutElement(icon.rectTransform, preferredWidth: 72f, preferredHeight: 72f);
 
         var description = CreateText("DescriptionText", root, "Complete 3 runs", 26, TextAlignmentOptions.Left);
         var descriptionLayout = description.gameObject.AddComponent<LayoutElement>();
         descriptionLayout.preferredWidth = 360f;
+        descriptionLayout.flexibleWidth = 1f;
 
         var progressText = CreateText("ProgressText", root, "1/3", 22, TextAlignmentOptions.Center);
         progressText.gameObject.AddComponent<LayoutElement>().preferredWidth = 80f;
@@ -456,8 +558,10 @@ public static class MainMenuPrefabBuilder
 
         var rewardRoot = CreateRect("Reward", root, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
         rewardRoot.sizeDelta = new Vector2(120, 90);
+        ApplyLayoutElement(rewardRoot, preferredWidth: 120f, preferredHeight: 90f);
         var rewardImage = rewardRoot.gameObject.AddComponent<Image>();
         rewardImage.color = new Color(1f, 1f, 1f, 0.12f);
+        ApplyPanelSprite(rewardImage);
         var rewardIcon = CreateImage("RewardIcon", rewardRoot, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(48, 48));
         rewardIcon.color = new Color(1f, 1f, 1f, 0.95f);
         var rewardText = CreateText("RewardText", rewardRoot, "50", 20, TextAlignmentOptions.Center);
@@ -541,16 +645,19 @@ public static class MainMenuPrefabBuilder
     private static RectTransform BuildProgressionRewardNodePrefab()
     {
         var root = CreateRect("ProgressionRewardNode", null, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-        root.sizeDelta = new Vector2(100, 120);
+        ApplyLayoutElement(root, preferredWidth: 100f, preferredHeight: 120f);
         var background = root.gameObject.AddComponent<Image>();
         background.color = new Color(1f, 1f, 1f, 0.08f);
+        ApplyPanelSprite(background);
         var component = root.gameObject.AddComponent<ProgressionRewardNodeView>();
         var layout = root.gameObject.AddComponent<VerticalLayoutGroup>();
         layout.childAlignment = TextAnchor.MiddleCenter;
-        layout.spacing = 6f;
-        layout.padding = new RectOffset(8, 8, 8, 8);
+        layout.spacing = Mathf.Max(4f, GetSpacing() * 0.5f);
+        layout.padding = GetPadding();
         layout.childForceExpandWidth = false;
         layout.childForceExpandHeight = false;
+        layout.childControlHeight = true;
+        layout.childControlWidth = true;
         var icon = CreateImage("RewardIcon", root, new Vector2(0.5f, 0.6f), new Vector2(0.5f, 0.6f), new Vector2(0.5f, 0.6f), Vector2.zero, new Vector2(52, 52));
         icon.color = new Color(1f, 1f, 1f, 0.95f);
         var iconLayout = icon.gameObject.AddComponent<LayoutElement>();
@@ -596,31 +703,37 @@ public static class MainMenuPrefabBuilder
         var hubView = root.gameObject.AddComponent<ProgressionTasksHubView>();
         var hubController = root.gameObject.AddComponent<ProgressionTasksController>();
         var layout = root.gameObject.AddComponent<VerticalLayoutGroup>();
-        layout.spacing = 20f;
-        layout.padding = new RectOffset(24, 24, 24, 24);
+        layout.spacing = GetSpacing();
+        layout.padding = GetPadding();
         layout.childAlignment = TextAnchor.UpperCenter;
         layout.childForceExpandWidth = true;
         layout.childForceExpandHeight = false;
+        layout.childControlHeight = true;
+        layout.childControlWidth = true;
 
         var tabBar = CreateRect("TabBar", root, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
-        tabBar.sizeDelta = new Vector2(0, 100);
+        ApplyLayoutElement(tabBar, preferredHeight: 90f);
         var tabLayout = tabBar.gameObject.AddComponent<HorizontalLayoutGroup>();
-        tabLayout.spacing = 16f;
+        tabLayout.spacing = GetSpacing();
         tabLayout.childAlignment = TextAnchor.MiddleCenter;
         tabLayout.childForceExpandWidth = false;
         tabLayout.childForceExpandHeight = false;
+        tabLayout.childControlHeight = true;
+        tabLayout.childControlWidth = true;
         var tabConfigs = BuildProgressionTabConfigMap(pageConfig);
         var dailyTab = BuildTabButton(tabBar, tabConfigs[ProgressionCadence.Daily]);
         var weeklyTab = BuildTabButton(tabBar, tabConfigs[ProgressionCadence.Weekly]);
         var monthlyTab = BuildTabButton(tabBar, tabConfigs[ProgressionCadence.Monthly]);
 
         var contentRoot = CreateRect("ContentRoot", root, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
-        contentRoot.sizeDelta = new Vector2(0, 1100);
+        ApplyLayoutElement(contentRoot, flexibleHeight: 1f);
         var contentLayout = contentRoot.gameObject.AddComponent<VerticalLayoutGroup>();
-        contentLayout.spacing = 20f;
+        contentLayout.spacing = GetSpacing();
         contentLayout.childAlignment = TextAnchor.UpperCenter;
         contentLayout.childForceExpandWidth = true;
         contentLayout.childForceExpandHeight = false;
+        contentLayout.childControlHeight = true;
+        contentLayout.childControlWidth = true;
 
         var dailyContent = BuildProgressionContentContainer(contentRoot, "DailyContent", ProgressionCadence.Daily, taskRowPrefab, taskRowVariants, rewardNodePrefab, config);
         var weeklyContent = BuildProgressionContentContainer(contentRoot, "WeeklyContent", ProgressionCadence.Weekly, taskRowPrefab, taskRowVariants, rewardNodePrefab, config);
@@ -691,18 +804,20 @@ public static class MainMenuPrefabBuilder
         var contentRoot = CreateRect(name, parent, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
         var contentView = contentRoot.gameObject.AddComponent<ProgressionTasksContentView>();
         var layout = contentRoot.gameObject.AddComponent<VerticalLayoutGroup>();
-        layout.spacing = 20f;
+        layout.spacing = GetSpacing();
         layout.childAlignment = TextAnchor.UpperCenter;
         layout.childForceExpandWidth = true;
         layout.childForceExpandHeight = false;
+        layout.childControlHeight = true;
+        layout.childControlWidth = true;
 
         var group = config != null ? config.GetGroup(cadence) : null;
         var rewardTrack = BuildRewardTrack(contentRoot, rewardNodePrefab, group);
 
         var timeText = CreateText("TimeRemainingText", contentRoot, group != null ? FormatDuration(group.TimeRemainingSeconds) : "Time remaining: 00:00", 22, TextAlignmentOptions.Center);
-        timeText.gameObject.AddComponent<LayoutElement>().preferredHeight = 36f;
+        timeText.gameObject.AddComponent<LayoutElement>().preferredHeight = 32f;
 
-        var taskList = BuildVerticalScroll(contentRoot, "TaskList", 720f);
+        var taskList = BuildVerticalScroll(contentRoot, "TaskList", 620f, 1f);
         PopulateTaskList(taskList, taskRowPrefab, taskRowVariants, group);
 
         SetSerializedReference(contentView, "cadence", cadence);
@@ -718,12 +833,14 @@ public static class MainMenuPrefabBuilder
     private static ProgressionRewardTrackElements BuildRewardTrack(Transform parent, RectTransform rewardNodePrefab, ProgressionTaskGroupDefinition group)
     {
         var rewardTrack = CreateRect("RewardTrack", parent, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
-        rewardTrack.sizeDelta = new Vector2(0, 240);
+        ApplyLayoutElement(rewardTrack, preferredHeight: 210f);
         var rewardLayout = rewardTrack.gameObject.AddComponent<VerticalLayoutGroup>();
-        rewardLayout.spacing = 12f;
+        rewardLayout.spacing = Mathf.Max(4f, GetSpacing() * 0.75f);
         rewardLayout.childAlignment = TextAnchor.UpperCenter;
         rewardLayout.childForceExpandWidth = true;
         rewardLayout.childForceExpandHeight = false;
+        rewardLayout.childControlHeight = true;
+        rewardLayout.childControlWidth = true;
 
         var pointsLabel = group != null ? group.PointsLabel : "Progress Points";
         var pointsValue = group != null ? $"{group.CurrentPoints} / {group.TargetPoints}" : "0 / 0";
@@ -734,14 +851,17 @@ public static class MainMenuPrefabBuilder
             progressBar.fillAmount = Mathf.Clamp01(group.CurrentPoints / (float)group.TargetPoints);
         else
             progressBar.fillAmount = 0f;
+        ApplyLayoutElement(progressBar.rectTransform, preferredHeight: 20f);
 
         var rewardRow = CreateRect("RewardRow", rewardTrack, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
-        rewardRow.sizeDelta = new Vector2(0, 150);
+        ApplyLayoutElement(rewardRow, preferredHeight: 120f);
         var rewardRowLayout = rewardRow.gameObject.AddComponent<HorizontalLayoutGroup>();
-        rewardRowLayout.spacing = 24f;
+        rewardRowLayout.spacing = GetSpacing();
         rewardRowLayout.childAlignment = TextAnchor.MiddleCenter;
         rewardRowLayout.childForceExpandHeight = false;
         rewardRowLayout.childForceExpandWidth = false;
+        rewardRowLayout.childControlHeight = true;
+        rewardRowLayout.childControlWidth = true;
 
         if (rewardNodePrefab == null)
             return new ProgressionRewardTrackElements(pointsValueText, progressBar, rewardRow);
@@ -877,11 +997,12 @@ public static class MainMenuPrefabBuilder
         return null;
     }
 
-    private static RectTransform BuildHorizontalScroll(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 anchoredPosition, float height)
+    private static RectTransform BuildHorizontalScroll(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 anchoredPosition, float height, float flexibleHeight = 0f)
     {
         var scrollRoot = CreateRect(name, parent, anchorMin, anchorMax, pivot, pivot);
         scrollRoot.anchoredPosition = anchoredPosition;
         scrollRoot.sizeDelta = new Vector2(0, height);
+        ApplyLayoutElement(scrollRoot, preferredHeight: height, flexibleHeight: flexibleHeight);
 
         var scrollRect = scrollRoot.gameObject.AddComponent<ScrollRect>();
         scrollRect.horizontal = true;
@@ -895,8 +1016,12 @@ public static class MainMenuPrefabBuilder
 
         var content = CreateRect("Content", viewport, Vector2.zero, Vector2.one, new Vector2(0, 0.5f), new Vector2(0, 0.5f));
         var layout = content.gameObject.AddComponent<HorizontalLayoutGroup>();
-        layout.spacing = 16f;
+        layout.spacing = GetSpacing();
         layout.childAlignment = TextAnchor.MiddleLeft;
+        layout.childControlHeight = true;
+        layout.childControlWidth = true;
+        layout.childForceExpandHeight = false;
+        layout.childForceExpandWidth = false;
         content.gameObject.AddComponent<ContentSizeFitter>().horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
 
         scrollRect.viewport = viewport;
@@ -905,10 +1030,11 @@ public static class MainMenuPrefabBuilder
         return scrollRoot;
     }
 
-    private static RectTransform BuildVerticalScroll(Transform parent, string name, float height)
+    private static RectTransform BuildVerticalScroll(Transform parent, string name, float height, float flexibleHeight = 0f)
     {
         var scrollRoot = CreateRect(name, parent, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
         scrollRoot.sizeDelta = new Vector2(0, height);
+        ApplyLayoutElement(scrollRoot, preferredHeight: height, flexibleHeight: flexibleHeight);
 
         var scrollRect = scrollRoot.gameObject.AddComponent<ScrollRect>();
         scrollRect.horizontal = false;
@@ -922,10 +1048,12 @@ public static class MainMenuPrefabBuilder
 
         var content = CreateRect("Content", viewport, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
         var layout = content.gameObject.AddComponent<VerticalLayoutGroup>();
-        layout.spacing = 12f;
+        layout.spacing = GetSpacing();
         layout.childAlignment = TextAnchor.UpperCenter;
         layout.childForceExpandWidth = true;
         layout.childForceExpandHeight = false;
+        layout.childControlHeight = true;
+        layout.childControlWidth = true;
         content.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
         scrollRect.viewport = viewport;
@@ -937,7 +1065,7 @@ public static class MainMenuPrefabBuilder
     private static RectTransform BuildStatRow(Transform parent, ShipStatType statType)
     {
         var row = CreateRect($"{statType}StatRow", parent, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-        row.sizeDelta = new Vector2(0, 40);
+        ApplyLayoutElement(row, preferredHeight: 32f);
         var view = row.gameObject.AddComponent<HangarStatRowView>();
         SetSerializedReference(view, "statType", statType);
         var fill = CreateImage("Fill", row, new Vector2(0, 0.5f), new Vector2(1, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 20));
@@ -964,7 +1092,15 @@ public static class MainMenuPrefabBuilder
 
             var page = CreateRect(pageConfig.Name, parent, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             page.gameObject.AddComponent<CanvasGroup>();
-            CreateText("Title", page, pageConfig.Label, 36);
+            var pageLayout = page.gameObject.AddComponent<VerticalLayoutGroup>();
+            pageLayout.childAlignment = TextAnchor.MiddleCenter;
+            pageLayout.childControlWidth = true;
+            pageLayout.childControlHeight = true;
+            pageLayout.childForceExpandWidth = true;
+            pageLayout.childForceExpandHeight = true;
+            ApplyLayoutSpacing(pageLayout, _style);
+            var title = CreateText("Title", page, pageConfig.Label, 36);
+            ApplyLayoutElement(title.rectTransform, flexibleHeight: 1f);
             return;
         }
     }
@@ -976,7 +1112,13 @@ public static class MainMenuPrefabBuilder
 
         var pill = CreateButton(config.Name, parent, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
         var layout = pill.gameObject.AddComponent<HorizontalLayoutGroup>();
-        layout.spacing = 8f;
+        layout.spacing = Mathf.Max(4f, GetSpacing() * 0.5f);
+        layout.childAlignment = TextAnchor.MiddleCenter;
+        layout.childControlHeight = true;
+        layout.childControlWidth = true;
+        layout.childForceExpandHeight = false;
+        layout.childForceExpandWidth = false;
+        ApplyLayoutElement(pill, preferredWidth: 180f, preferredHeight: 64f);
         var label = pill.GetComponentInChildren<TMP_Text>();
         if (label != null)
             label.text = GetLabelOrFallback(config.Label, config.Name);
@@ -996,6 +1138,7 @@ public static class MainMenuPrefabBuilder
             return;
 
         var button = CreateButton(config.Name, parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        ApplyLayoutElement(button, preferredWidth: 180f, preferredHeight: 64f);
         var label = button.GetComponentInChildren<TMP_Text>();
         if (label != null)
             label.text = GetLabelOrFallback(config.Label, config.Name);
@@ -1017,6 +1160,7 @@ public static class MainMenuPrefabBuilder
             return;
 
         var button = CreateButton(config.Name, parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        ApplyLayoutElement(button, preferredWidth: 140f, preferredHeight: 70f, flexibleWidth: 1f);
         var label = button.GetComponentInChildren<TMP_Text>();
         if (label != null)
             label.text = GetLabelOrFallback(config.Label, config.Name);
@@ -1059,6 +1203,7 @@ public static class MainMenuPrefabBuilder
         tmp.text = text;
         tmp.fontSize = fontSize;
         tmp.alignment = alignment;
+        ApplyTextStyle(tmp);
         return tmp;
     }
 
@@ -1068,6 +1213,7 @@ public static class MainMenuPrefabBuilder
         root.sizeDelta = sizeDelta;
         var background = root.gameObject.AddComponent<Image>();
         background.color = new Color(1f, 1f, 1f, 0.2f);
+        ApplyPanelSprite(background);
 
         var fillArea = CreateRect("FillArea", root, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         var fill = CreateImage("Fill", fillArea, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0, 0.5f), new Vector2(0, 0), new Vector2(0, 0));
@@ -1075,6 +1221,7 @@ public static class MainMenuPrefabBuilder
         fill.type = Image.Type.Filled;
         fill.fillMethod = Image.FillMethod.Horizontal;
         fill.fillAmount = 1f;
+        ApplyProgressFillSprite(fill);
 
         var slider = root.gameObject.AddComponent<Slider>();
         slider.fillRect = fill.rectTransform;
@@ -1091,24 +1238,28 @@ public static class MainMenuPrefabBuilder
         var background = root.gameObject.AddComponent<Image>();
         background.color = new Color(1f, 1f, 1f, 0.15f);
         background.type = Image.Type.Sliced;
+        ApplyPanelSprite(background);
 
         var fill = CreateImage("Fill", root, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0, 0.5f), Vector2.zero, Vector2.zero);
         fill.color = new Color(0.3f, 0.8f, 0.2f, 1f);
         fill.type = Image.Type.Filled;
         fill.fillMethod = Image.FillMethod.Horizontal;
         fill.fillAmount = 0f;
+        ApplyProgressFillSprite(fill);
         return fill;
     }
 
     private static TMP_Text BuildProgressPointsSummary(Transform parent, string label, string value)
     {
         var summary = CreateRect("PointsSummary", parent, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
-        summary.sizeDelta = new Vector2(0, 40);
+        ApplyLayoutElement(summary, preferredHeight: 32f);
         var layout = summary.gameObject.AddComponent<HorizontalLayoutGroup>();
         layout.childAlignment = TextAnchor.MiddleCenter;
-        layout.spacing = 16f;
-        layout.childForceExpandWidth = true;
+        layout.spacing = GetSpacing();
+        layout.childForceExpandWidth = false;
         layout.childForceExpandHeight = false;
+        layout.childControlHeight = true;
+        layout.childControlWidth = true;
 
         var labelText = CreateText("LabelText", summary, label, 22, TextAlignmentOptions.Left);
         labelText.gameObject.AddComponent<LayoutElement>().preferredWidth = 320f;
@@ -1153,9 +1304,10 @@ public static class MainMenuPrefabBuilder
     {
         var rect = CreateRect(name, parent, anchorMin, anchorMax, pivot, anchoredPosition);
         var image = rect.gameObject.AddComponent<Image>();
-        image.color = new Color(1f, 1f, 1f, 0.2f);
+        ApplyButtonSprite(image);
         var button = rect.gameObject.AddComponent<Button>();
         var handler = rect.gameObject.AddComponent<UiInteractionHandler>();
+        ApplyClickSfx(handler);
         button.onClick.AddListener(handler.HandleClick);
         var label = CreateText("Label", rect, name, 24);
         label.raycastTarget = false;
@@ -1169,6 +1321,7 @@ public static class MainMenuPrefabBuilder
         image.color = new Color(1f, 1f, 1f, 0f);
         var button = rect.gameObject.AddComponent<Button>();
         var handler = rect.gameObject.AddComponent<UiInteractionHandler>();
+        ApplyClickSfx(handler);
         button.onClick.AddListener(handler.HandleClick);
         return rect;
     }
@@ -1181,7 +1334,110 @@ public static class MainMenuPrefabBuilder
         button.onClick.AddListener(action);
     }
 
-    private static void AssignMenuController(MainMenuController menu, RectTransform pageContainer, RectTransform bottomNav, MainMenuBuilderConfig config)
+    private static void ApplyLayoutElement(RectTransform rectTransform, float preferredWidth = -1f, float preferredHeight = -1f, float flexibleWidth = -1f, float flexibleHeight = -1f)
+    {
+        if (rectTransform == null)
+            return;
+
+        var element = rectTransform.GetComponent<LayoutElement>();
+        if (element == null)
+            element = rectTransform.gameObject.AddComponent<LayoutElement>();
+
+        if (preferredWidth >= 0f)
+            element.preferredWidth = preferredWidth;
+        if (preferredHeight >= 0f)
+            element.preferredHeight = preferredHeight;
+        if (flexibleWidth >= 0f)
+            element.flexibleWidth = flexibleWidth;
+        if (flexibleHeight >= 0f)
+            element.flexibleHeight = flexibleHeight;
+    }
+
+    private static void ApplyTextStyle(TMP_Text text)
+    {
+        if (text == null || _style == null)
+            return;
+
+        if (_style.Font != null)
+            text.font = _style.Font;
+        text.color = _style.TextColor;
+    }
+
+    private static void ApplyPanelSprite(Image image)
+    {
+        if (image == null || _style?.PanelSprite == null)
+            return;
+
+        image.sprite = _style.PanelSprite;
+        image.type = Image.Type.Sliced;
+        image.color = Color.white;
+    }
+
+    private static void ApplyButtonSprite(Image image)
+    {
+        if (image == null)
+            return;
+
+        if (_style?.ButtonSprite != null)
+        {
+            image.sprite = _style.ButtonSprite;
+            image.type = Image.Type.Sliced;
+            image.color = Color.white;
+        }
+        else
+        {
+            image.color = new Color(1f, 1f, 1f, 0.2f);
+        }
+    }
+
+    private static void ApplyProgressFillSprite(Image image)
+    {
+        if (image == null || _style?.ProgressFillSprite == null)
+            return;
+
+        image.sprite = _style.ProgressFillSprite;
+        image.type = Image.Type.Filled;
+    }
+
+    private static void ApplyClickSfx(UiInteractionHandler handler)
+    {
+        if (handler == null || _style?.ClickSfx == null)
+            return;
+
+        SetSerializedReference(handler, "clickSfxOverride", _style.ClickSfx);
+    }
+
+    private static void ApplyLayoutSpacing(LayoutGroup layout, MainMenuStyleConfig style)
+    {
+        if (layout == null || style == null)
+            return;
+
+        layout.spacing = style.Spacing;
+        layout.padding = new RectOffset(style.Padding, style.Padding, style.Padding, style.Padding);
+    }
+
+    private static RectOffset GetPadding()
+    {
+        var padding = _style?.Padding ?? 8;
+        return new RectOffset(padding, padding, padding, padding);
+    }
+
+    private static float GetSpacing()
+    {
+        return _style?.Spacing ?? 12f;
+    }
+
+    private static float GetTopBarHeight()
+    {
+        return _style?.TopBarHeight ?? 160f;
+    }
+
+    private static float GetBottomBarHeight()
+    {
+        return _style?.BottomBarHeight ?? 150f;
+    }
+
+    private static void AssignMenuController(MainMenuController menu, RectTransform pageContainer, BottomNavBarController bottomNav, MainMenuBuilderConfig config)
     {
         var hangarName = config?.HangarPage?.Name ?? "HangarPage";
         var shopName = config?.ShopPage?.Name ?? "ShopPage";
@@ -1194,14 +1450,14 @@ public static class MainMenuPrefabBuilder
         SetSerializedReference(menu, "shopPage", pageContainer.Find(shopName));
         SetSerializedReference(menu, "challengesPage", pageContainer.Find(challengesName));
         SetSerializedReference(menu, "progressionPage", pageContainer.Find(progressionName));
-        SetSerializedReference(menu, "bottomNavBar", bottomNav.GetComponent<BottomNavBarController>());
+        SetSerializedReference(menu, "bottomNavBar", bottomNav);
     }
 
     private static void AssignTopBar(TopBarController controller, MainMenuController menu, RectTransform topBar, TopBarConfig config)
     {
         SetSerializedReference(controller, "menuController", menu);
-        SetSerializedReference(controller, "levelText", topBar.Find("ProfileArea/LevelText").GetComponent<TMP_Text>());
-        SetSerializedReference(controller, "xpProgressBar", topBar.Find("ProfileArea/XpProgressBar").GetComponent<Image>());
+        SetSerializedReference(controller, "levelText", topBar.Find("ProfileArea/ProfileInfo/LevelText").GetComponent<TMP_Text>());
+        SetSerializedReference(controller, "xpProgressBar", topBar.Find("ProfileArea/ProfileInfo/XpProgressBar").GetComponent<Image>());
 
         var softPill = FindCurrencyPill(config, "SoftCurrencyPill");
         var premiumPill = FindCurrencyPill(config, "PremiumCurrencyPill");

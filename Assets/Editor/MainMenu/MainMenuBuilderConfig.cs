@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public sealed class MainMenuBuilderConfig
@@ -10,6 +11,7 @@ public sealed class MainMenuBuilderConfig
     public IReadOnlyList<PlaceholderPageConfig> PlaceholderPages { get; }
     public ProgressionPageConfig ProgressionPage { get; }
     public IReadOnlyList<PageKind> PageOrder { get; }
+    public MainMenuStyleConfig Style { get; }
 
     private MainMenuBuilderConfig(
         TopBarConfig topBar,
@@ -18,7 +20,8 @@ public sealed class MainMenuBuilderConfig
         ShopPageConfig shopPage,
         IReadOnlyList<PlaceholderPageConfig> placeholderPages,
         ProgressionPageConfig progressionPage,
-        IReadOnlyList<PageKind> pageOrder)
+        IReadOnlyList<PageKind> pageOrder,
+        MainMenuStyleConfig style)
     {
         TopBar = topBar;
         BottomNavButtons = bottomNavButtons;
@@ -27,6 +30,7 @@ public sealed class MainMenuBuilderConfig
         PlaceholderPages = placeholderPages;
         ProgressionPage = progressionPage;
         PageOrder = pageOrder;
+        Style = style;
     }
 
     public static MainMenuBuilderConfig CreateDefault()
@@ -106,7 +110,24 @@ public sealed class MainMenuBuilderConfig
             PageKind.Progression
         };
 
-        return new MainMenuBuilderConfig(topBar, bottomNavButtons, hangarPage, shopPage, placeholderPages, progressionPage, pageOrder);
+        var style = new MainMenuStyleConfig(
+            null,
+            null,
+            null,
+            null,
+            Color.white,
+            8,
+            12,
+            null,
+            160f,
+            150f);
+
+        return new MainMenuBuilderConfig(topBar, bottomNavButtons, hangarPage, shopPage, placeholderPages, progressionPage, pageOrder, style);
+    }
+
+    public static MainMenuBuilderConfig CreateStyleOverrides(MainMenuStyleConfig style)
+    {
+        return new MainMenuBuilderConfig(null, null, null, null, null, null, null, style);
     }
 
     public static MainMenuBuilderConfig Merge(MainMenuBuilderConfig overrides, MainMenuBuilderConfig defaults)
@@ -124,7 +145,8 @@ public sealed class MainMenuBuilderConfig
             MergeShopPage(overrides.ShopPage, defaults.ShopPage),
             overrides.PlaceholderPages ?? defaults.PlaceholderPages,
             MergeProgressionPage(overrides.ProgressionPage, defaults.ProgressionPage),
-            overrides.PageOrder ?? defaults.PageOrder);
+            overrides.PageOrder ?? defaults.PageOrder,
+            MergeStyle(overrides.Style, defaults.Style));
     }
 
     private static TopBarConfig MergeTopBar(TopBarConfig overrides, TopBarConfig defaults)
@@ -175,9 +197,65 @@ public sealed class MainMenuBuilderConfig
             overrides.Tabs ?? defaults.Tabs);
     }
 
+    private static MainMenuStyleConfig MergeStyle(MainMenuStyleConfig overrides, MainMenuStyleConfig defaults)
+    {
+        if (overrides == null)
+            return defaults;
+
+        return new MainMenuStyleConfig(
+            overrides.PanelSprite ?? defaults?.PanelSprite,
+            overrides.ButtonSprite ?? defaults?.ButtonSprite,
+            overrides.ProgressFillSprite ?? defaults?.ProgressFillSprite,
+            overrides.Font ?? defaults?.Font,
+            overrides.TextColor == default ? defaults?.TextColor ?? Color.white : overrides.TextColor,
+            overrides.Padding <= 0 ? defaults?.Padding ?? 8 : overrides.Padding,
+            overrides.Spacing <= 0 ? defaults?.Spacing ?? 12 : overrides.Spacing,
+            overrides.ClickSfx ?? defaults?.ClickSfx,
+            overrides.TopBarHeight <= 0f ? defaults?.TopBarHeight ?? 160f : overrides.TopBarHeight,
+            overrides.BottomBarHeight <= 0f ? defaults?.BottomBarHeight ?? 150f : overrides.BottomBarHeight);
+    }
+
     private static string GetStringOrDefault(string value, string fallback)
     {
         return string.IsNullOrWhiteSpace(value) ? fallback : value;
+    }
+}
+
+public sealed class MainMenuStyleConfig
+{
+    public Sprite PanelSprite { get; }
+    public Sprite ButtonSprite { get; }
+    public Sprite ProgressFillSprite { get; }
+    public TMP_FontAsset Font { get; }
+    public Color TextColor { get; }
+    public int Padding { get; }
+    public int Spacing { get; }
+    public AudioClip ClickSfx { get; }
+    public float TopBarHeight { get; }
+    public float BottomBarHeight { get; }
+
+    public MainMenuStyleConfig(
+        Sprite panelSprite,
+        Sprite buttonSprite,
+        Sprite progressFillSprite,
+        TMP_FontAsset font,
+        Color textColor,
+        int padding,
+        int spacing,
+        AudioClip clickSfx,
+        float topBarHeight,
+        float bottomBarHeight)
+    {
+        PanelSprite = panelSprite;
+        ButtonSprite = buttonSprite;
+        ProgressFillSprite = progressFillSprite;
+        Font = font;
+        TextColor = textColor;
+        Padding = padding;
+        Spacing = spacing;
+        ClickSfx = clickSfx;
+        TopBarHeight = topBarHeight;
+        BottomBarHeight = bottomBarHeight;
     }
 }
 
