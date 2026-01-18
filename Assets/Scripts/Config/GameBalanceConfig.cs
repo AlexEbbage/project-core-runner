@@ -45,9 +45,15 @@ public class GameBalanceConfig : ScriptableObject
     public float coinMultiplierDuration = 6f;
     public float scoreMultiplierValue = 2f;
     public float scoreMultiplierDuration = 6f;
+    public float magnetDuration = 6f;
+    public float magnetRadiusMultiplier = 2f;
     public float shieldDuration = 5f;
     public float coinBonanzaSpawnMultiplier = 2.5f;
     public float coinBonanzaDuration = 6f;
+    public float speedBoostMultiplier = 1.4f;
+    public float speedBoostDuration = 5f;
+    public float slowMoTimeScale = 0.6f;
+    public float slowMoDuration = 4f;
 
     [Header("Continues")]
     public int maxContinuesPerRun = 3;

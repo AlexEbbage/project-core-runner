@@ -24,6 +24,7 @@ public class PlayerPowerupController : MonoBehaviour
     [SerializeField] private PlayerController playerController;
     [SerializeField] private PlayerHealth playerHealth;
     [SerializeField] private RunScoreManager runScoreManager;
+    [SerializeField] private RunSpeedController runSpeedController;
     [SerializeField] private ObstacleRingGenerator obstacleRingGenerator;
     [SerializeField] private AudioManager audioManager;
     [SerializeField] private VfxManager vfxManager;
@@ -34,9 +35,15 @@ public class PlayerPowerupController : MonoBehaviour
     [SerializeField] private float coinMultiplierDuration = 6f;
     [SerializeField] private float scoreMultiplierValue = 2f;
     [SerializeField] private float scoreMultiplierDuration = 6f;
+    [SerializeField] private float magnetDuration = 6f;
+    [SerializeField] private float magnetRadiusMultiplier = 2f;
     [SerializeField] private float shieldDuration = 5f;
     [SerializeField] private float coinBonanzaSpawnMultiplier = 2.5f;
     [SerializeField] private float coinBonanzaDuration = 6f;
+    [SerializeField] private float speedBoostMultiplier = 1.4f;
+    [SerializeField] private float speedBoostDuration = 5f;
+    [SerializeField] private float slowMoTimeScale = 0.6f;
+    [SerializeField] private float slowMoDuration = 4f;
 
     [Header("Powerup VFX/SFX")]
     [SerializeField] private PowerupEffects[] powerupEffects;
@@ -51,8 +58,17 @@ public class PlayerPowerupController : MonoBehaviour
     private Coroutine _autoPilotRoutine;
     private Coroutine _coinMultiplierRoutine;
     private Coroutine _scoreMultiplierRoutine;
+    private Coroutine _magnetRoutine;
     private Coroutine _shieldRoutine;
     private Coroutine _coinBonanzaRoutine;
+    private Coroutine _speedBoostRoutine;
+    private Coroutine _slowMoRoutine;
+    private float _defaultFixedDeltaTime;
+    private bool _slowMoActive;
+    private float _defaultMagnetMultiplier = 1f;
+    private float _defaultSpeedMultiplier = 1f;
+    private float _previousTimeScale = 1f;
+    private float _previousFixedDeltaTime;
 
     private readonly System.Collections.Generic.Dictionary<PowerupType, float> _powerupEndTimes =
         new System.Collections.Generic.Dictionary<PowerupType, float>();
@@ -69,6 +85,9 @@ public class PlayerPowerupController : MonoBehaviour
         if (playerHealth == null)
             playerHealth = GetComponent<PlayerHealth>();
 
+        if (runSpeedController == null)
+            runSpeedController = FindFirstObjectByType<RunSpeedController>();
+
         if (audioManager == null)
             audioManager = FindFirstObjectByType<AudioManager>();
 
@@ -82,10 +101,20 @@ public class PlayerPowerupController : MonoBehaviour
             coinMultiplierDuration = balanceConfig.coinMultiplierDuration;
             scoreMultiplierValue = balanceConfig.scoreMultiplierValue;
             scoreMultiplierDuration = balanceConfig.scoreMultiplierDuration;
+            magnetDuration = balanceConfig.magnetDuration;
+            magnetRadiusMultiplier = balanceConfig.magnetRadiusMultiplier;
             shieldDuration = balanceConfig.shieldDuration;
             coinBonanzaSpawnMultiplier = balanceConfig.coinBonanzaSpawnMultiplier;
             coinBonanzaDuration = balanceConfig.coinBonanzaDuration;
+            speedBoostMultiplier = balanceConfig.speedBoostMultiplier;
+            speedBoostDuration = balanceConfig.speedBoostDuration;
+            slowMoTimeScale = balanceConfig.slowMoTimeScale;
+            slowMoDuration = balanceConfig.slowMoDuration;
         }
+
+        _defaultFixedDeltaTime = Time.fixedDeltaTime;
+        _defaultMagnetMultiplier = Pickup.MagnetRadiusMultiplier;
+        _defaultSpeedMultiplier = runSpeedController != null ? runSpeedController.PowerupSpeedMultiplier : 1f;
     }
 
     private void OnEnable()
@@ -102,6 +131,8 @@ public class PlayerPowerupController : MonoBehaviour
         {
             playerHealth.OnShieldBroken -= HandleShieldBroken;
         }
+
+        ResetTemporaryEffects();
     }
 
     public void ActivatePowerup(PowerupType powerupType)
@@ -119,11 +150,20 @@ public class PlayerPowerupController : MonoBehaviour
             case PowerupType.ScoreMultiplier:
                 RestartRoutine(ref _scoreMultiplierRoutine, ScoreMultiplierRoutine());
                 break;
+            case PowerupType.Magnet:
+                RestartRoutine(ref _magnetRoutine, MagnetRoutine());
+                break;
             case PowerupType.Shield:
                 RestartRoutine(ref _shieldRoutine, ShieldRoutine());
                 break;
             case PowerupType.CoinBonanza:
                 RestartRoutine(ref _coinBonanzaRoutine, CoinBonanzaRoutine());
+                break;
+            case PowerupType.SpeedBoost:
+                RestartRoutine(ref _speedBoostRoutine, SpeedBoostRoutine());
+                break;
+            case PowerupType.SlowMo:
+                RestartRoutine(ref _slowMoRoutine, SlowMoRoutine());
                 break;
         }
     }
@@ -198,6 +238,19 @@ public class PlayerPowerupController : MonoBehaviour
         EndPowerup(PowerupType.ScoreMultiplier);
     }
 
+    private IEnumerator MagnetRoutine()
+    {
+        BeginPowerup(PowerupType.Magnet, magnetDuration);
+
+        Pickup.SetMagnetRadiusMultiplier(magnetRadiusMultiplier);
+
+        yield return new WaitForSeconds(magnetDuration);
+
+        Pickup.SetMagnetRadiusMultiplier(1f);
+
+        EndPowerup(PowerupType.Magnet);
+    }
+
     private IEnumerator ShieldRoutine()
     {
         BeginPowerup(PowerupType.Shield, shieldDuration);
@@ -228,6 +281,32 @@ public class PlayerPowerupController : MonoBehaviour
         EndPowerup(PowerupType.CoinBonanza);
     }
 
+    private IEnumerator SpeedBoostRoutine()
+    {
+        BeginPowerup(PowerupType.SpeedBoost, speedBoostDuration);
+
+        runSpeedController?.SetPowerupSpeedMultiplier(speedBoostMultiplier);
+
+        yield return new WaitForSeconds(speedBoostDuration);
+
+        runSpeedController?.SetPowerupSpeedMultiplier(1f);
+
+        EndPowerup(PowerupType.SpeedBoost);
+    }
+
+    private IEnumerator SlowMoRoutine()
+    {
+        BeginPowerup(PowerupType.SlowMo, slowMoDuration);
+
+        ApplyTimeScale(slowMoTimeScale);
+
+        yield return new WaitForSecondsRealtime(slowMoDuration);
+
+        ResetTimeScale();
+
+        EndPowerup(PowerupType.SlowMo);
+    }
+
     private void HandleShieldBroken()
     {
         if (_shieldRoutine != null)
@@ -237,6 +316,39 @@ public class PlayerPowerupController : MonoBehaviour
         }
 
         EndPowerup(PowerupType.Shield);
+    }
+
+    private void ResetTemporaryEffects()
+    {
+        Pickup.SetMagnetRadiusMultiplier(_defaultMagnetMultiplier);
+        runSpeedController?.SetPowerupSpeedMultiplier(_defaultSpeedMultiplier);
+        ResetTimeScale();
+    }
+
+    private void ApplyTimeScale(float timeScale)
+    {
+        if (!_slowMoActive)
+        {
+            _previousTimeScale = Time.timeScale;
+            _previousFixedDeltaTime = Time.fixedDeltaTime;
+        }
+
+        _slowMoActive = true;
+        Time.timeScale = Mathf.Clamp(timeScale, 0.01f, 10f);
+        float baseFixedDelta = _previousTimeScale > 0f
+            ? _previousFixedDeltaTime / _previousTimeScale
+            : _defaultFixedDeltaTime;
+        Time.fixedDeltaTime = baseFixedDelta * Time.timeScale;
+    }
+
+    private void ResetTimeScale()
+    {
+        if (!_slowMoActive)
+            return;
+
+        _slowMoActive = false;
+        Time.timeScale = _previousTimeScale;
+        Time.fixedDeltaTime = _previousFixedDeltaTime;
     }
 
     private void BeginPowerup(PowerupType type, float duration)

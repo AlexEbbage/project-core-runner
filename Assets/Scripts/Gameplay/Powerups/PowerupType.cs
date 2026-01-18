@@ -2,7 +2,10 @@ public enum PowerupType
 {
     AutoPilot,
     CoinMultiplier,
+    Magnet,
     Shield,
     CoinBonanza,
-    ScoreMultiplier
+    ScoreMultiplier,
+    SpeedBoost,
+    SlowMo
 }

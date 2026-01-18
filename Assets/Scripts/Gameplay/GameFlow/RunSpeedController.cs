@@ -40,8 +40,10 @@ public class RunSpeedController : MonoBehaviour
     private float _nextSpeedMilestone;
 
     private float _lastAppliedSpeed;
+    private float _powerupSpeedMultiplier = 1f;
 
     public float CurrentSpeed => _lastAppliedSpeed;
+    public float PowerupSpeedMultiplier => _powerupSpeedMultiplier;
 
     private void Awake()
     {
@@ -154,6 +156,7 @@ public class RunSpeedController : MonoBehaviour
         comboBonus = Mathf.Clamp(comboBonus, 0f, speedConfig.comboMaxSpeedBonus);
 
         float speed = baseSpeed + timeBasedIncrease + comboBonus;
+        speed *= _powerupSpeedMultiplier;
         speed = Mathf.Clamp(speed, 0f, speedConfig.maxForwardSpeed);
 
         return speed;
@@ -194,6 +197,11 @@ public class RunSpeedController : MonoBehaviour
     {
         if (newConfig == null) return;
         speedConfig = newConfig;
+    }
+
+    public void SetPowerupSpeedMultiplier(float multiplier)
+    {
+        _powerupSpeedMultiplier = Mathf.Max(0f, multiplier);
     }
 
     private void CheckSpeedMilestone(float newSpeed)
