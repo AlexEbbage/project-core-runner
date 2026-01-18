@@ -151,6 +151,12 @@ public partial class ObstacleRingGenerator
             laser.SetSideCount(sideCount);
             ConfigureLaserSettings(laser);
         }
+
+        var door = instance.GetComponent<DoorObstacle>();
+        if (door != null)
+        {
+            door.ResetCycle();
+        }
     }
 
     private void ConfigureLaserSettings(LaserObstacle laser)
