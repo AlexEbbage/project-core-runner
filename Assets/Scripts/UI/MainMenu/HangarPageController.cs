@@ -6,6 +6,7 @@ public class HangarPageController : MonoBehaviour
     [Header("Data")]
     [SerializeField] private PlayerProfile profile;
     [SerializeField] private ShipDatabase shipDatabase;
+    [SerializeField] private PowerupUpgradeConfig powerupUpgradeConfig;
     [SerializeField] private string currentShipId;
 
     [Header("Stats")]
@@ -55,7 +56,16 @@ public class HangarPageController : MonoBehaviour
 
     public void OnUpgradeButtonClicked(HangarUpgradeItemView itemView)
     {
-        if (itemView == null || itemView.Definition == null || profile == null)
+        if (itemView == null || profile == null)
+            return;
+
+        if (itemView.IsPowerupUpgrade)
+        {
+            HandlePowerupUpgrade(itemView);
+            return;
+        }
+
+        if (itemView.Definition == null)
             return;
 
         int currentLevel = GetUpgradeLevel(itemView.Definition);
@@ -121,22 +131,27 @@ public class HangarPageController : MonoBehaviour
 
     private void BuildUpgrades()
     {
-        if (shipDatabase == null || shipDatabase.upgrades == null || upgradeItemPrefab == null)
+        if (upgradeItemPrefab == null)
             return;
 
-        foreach (var upgrade in shipDatabase.upgrades)
+        if (shipDatabase != null && shipDatabase.upgrades != null)
         {
-            if (upgrade == null)
-                continue;
+            foreach (var upgrade in shipDatabase.upgrades)
+            {
+                if (upgrade == null)
+                    continue;
 
-            int currentLevel = GetUpgradeLevel(upgrade);
-            int cost = upgrade.GetCostForLevel(currentLevel);
-            bool canUpgrade = profile != null && currentLevel < upgrade.maxLevel && profile.softCurrency >= cost;
+                int currentLevel = GetUpgradeLevel(upgrade);
+                int cost = upgrade.GetCostForLevel(currentLevel);
+                bool canUpgrade = profile != null && currentLevel < upgrade.maxLevel && profile.softCurrency >= cost;
 
-            var instance = Instantiate(upgradeItemPrefab, contentRoot);
-            instance.Initialize(upgrade, currentLevel, cost, canUpgrade);
-            _spawnedItems.Add(instance.gameObject);
+                var instance = Instantiate(upgradeItemPrefab, contentRoot);
+                instance.Initialize(upgrade, currentLevel, cost, canUpgrade);
+                _spawnedItems.Add(instance.gameObject);
+            }
         }
+
+        BuildPowerupUpgrades();
     }
 
     private void BuildSkins()
@@ -213,5 +228,53 @@ public class HangarPageController : MonoBehaviour
             return 0;
 
         return profile != null ? profile.GetUpgradeLevel(upgrade.upgradeType) : 0;
+    }
+
+    private void BuildPowerupUpgrades()
+    {
+        if (powerupUpgradeConfig == null || powerupUpgradeConfig.upgrades == null || upgradeItemPrefab == null)
+            return;
+
+        foreach (var upgrade in powerupUpgradeConfig.upgrades)
+        {
+            if (upgrade == null)
+                continue;
+
+            int currentLevel = GetPowerupUpgradeLevel(upgrade);
+            int maxLevel = upgrade.MaxLevel;
+            int cost = upgrade.GetCostForLevel(currentLevel);
+            bool canUpgrade = profile != null && currentLevel < maxLevel && profile.softCurrency >= cost;
+
+            var instance = Instantiate(upgradeItemPrefab, contentRoot);
+            instance.InitializePowerupUpgrade(upgrade, currentLevel, cost, canUpgrade);
+            _spawnedItems.Add(instance.gameObject);
+        }
+    }
+
+    private int GetPowerupUpgradeLevel(PowerupUpgradeConfig.PowerupUpgradeEntry upgrade)
+    {
+        if (upgrade == null)
+            return 0;
+
+        return profile != null ? profile.GetPowerupUpgradeLevel(upgrade.powerupType) : 0;
+    }
+
+    private void HandlePowerupUpgrade(HangarUpgradeItemView itemView)
+    {
+        var upgradeEntry = itemView.PowerupUpgradeEntry;
+        if (upgradeEntry == null)
+            return;
+
+        int currentLevel = GetPowerupUpgradeLevel(upgradeEntry);
+        int maxLevel = upgradeEntry.MaxLevel;
+        if (currentLevel >= maxLevel)
+            return;
+
+        int cost = upgradeEntry.GetCostForLevel(currentLevel);
+        if (!profile.TrySpend(ShopCurrencyType.Soft, cost))
+            return;
+
+        profile.SetPowerupUpgradeLevel(upgradeEntry.powerupType, currentLevel + 1);
+        SelectTab(selectedTab);
     }
 }

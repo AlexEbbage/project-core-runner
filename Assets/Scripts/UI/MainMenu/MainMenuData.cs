@@ -245,6 +245,7 @@ public class PlayerProfile : ScriptableObject
 
     [SerializeField] private List<string> unlockedItemIds = new();
     [SerializeField] private List<UpgradeLevelEntry> upgradeLevels = new();
+    [SerializeField] private List<PowerupUpgradeLevelEntry> powerupUpgradeLevels = new();
 
     private void OnEnable()
     {
@@ -281,6 +282,7 @@ public class PlayerProfile : ScriptableObject
         selectedCoreFxId = data.selectedCoreFxId;
         unlockedItemIds = data.unlockedItemIds ?? new List<string>();
         upgradeLevels = data.upgradeLevels ?? new List<UpgradeLevelEntry>();
+        powerupUpgradeLevels = data.powerupUpgradeLevels ?? new List<PowerupUpgradeLevelEntry>();
     }
 
     public void Save()
@@ -294,6 +296,7 @@ public class PlayerProfile : ScriptableObject
             selectedShipId = selectedShipId,
             unlockedItemIds = new List<string>(unlockedItemIds),
             upgradeLevels = new List<UpgradeLevelEntry>(upgradeLevels),
+            powerupUpgradeLevels = new List<PowerupUpgradeLevelEntry>(powerupUpgradeLevels),
             selectedSkinId = selectedSkinId,
             selectedTrailId = selectedTrailId,
             selectedCoreFxId = selectedCoreFxId
@@ -455,6 +458,52 @@ public class PlayerProfile : ScriptableObject
         UpgradeLevelChanged?.Invoke(upgradeType, clampedLevel);
     }
 
+    public int GetPowerupUpgradeLevel(PowerupType powerupType)
+    {
+        for (int i = 0; i < powerupUpgradeLevels.Count; i++)
+        {
+            if (powerupUpgradeLevels[i].powerupType == powerupType)
+                return powerupUpgradeLevels[i].level;
+        }
+
+        return 0;
+    }
+
+    public void SetPowerupUpgradeLevel(PowerupType powerupType, int levelValue)
+    {
+        int clampedLevel = Mathf.Max(0, levelValue);
+        int previousLevel = GetPowerupUpgradeLevel(powerupType);
+
+        if (previousLevel == clampedLevel)
+            return;
+
+        bool updated = false;
+        for (int i = 0; i < powerupUpgradeLevels.Count; i++)
+        {
+            if (powerupUpgradeLevels[i].powerupType == powerupType)
+            {
+                powerupUpgradeLevels[i] = new PowerupUpgradeLevelEntry
+                {
+                    powerupType = powerupType,
+                    level = clampedLevel
+                };
+                updated = true;
+                break;
+            }
+        }
+
+        if (!updated)
+        {
+            powerupUpgradeLevels.Add(new PowerupUpgradeLevelEntry
+            {
+                powerupType = powerupType,
+                level = clampedLevel
+            });
+        }
+
+        Save();
+    }
+
     public void SetSelectedShip(string shipId)
     {
         selectedShipId = shipId;
@@ -475,6 +524,13 @@ public class PlayerProfile : ScriptableObject
     }
 
     [System.Serializable]
+    private struct PowerupUpgradeLevelEntry
+    {
+        public PowerupType powerupType;
+        public int level;
+    }
+
+    [System.Serializable]
     private class PlayerProfileData
     {
         public int level;
@@ -484,6 +540,7 @@ public class PlayerProfile : ScriptableObject
         public string selectedShipId;
         public List<string> unlockedItemIds;
         public List<UpgradeLevelEntry> upgradeLevels;
+        public List<PowerupUpgradeLevelEntry> powerupUpgradeLevels;
         public string selectedSkinId;
         public string selectedTrailId;
         public string selectedCoreFxId;
