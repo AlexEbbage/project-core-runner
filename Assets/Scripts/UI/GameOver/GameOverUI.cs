@@ -16,6 +16,9 @@ public class GameOverUI : MonoBehaviour
     [Header("Text Fields")]
     [SerializeField] private TMP_Text finalScoreText;
     [SerializeField] private TMP_Text bestScoreText;
+    [SerializeField] private TMP_Text elapsedTimeText;
+    [SerializeField] private TMP_Text continuesUsedText;
+    [SerializeField] private TMP_Text continuesRemainingText;
 
     [Header("Buttons")]
     [SerializeField] private Button continueButton;
@@ -25,6 +28,10 @@ public class GameOverUI : MonoBehaviour
     private bool _hasContinueRemaining;
     private float _lastFinalScore;
     private float _lastBestScore;
+    private float _lastElapsedTime;
+    private int _lastContinuesUsed;
+    private int _lastContinuesRemaining;
+    private int _lastMaxContinues;
 
     private void Awake()
     {
@@ -73,14 +80,18 @@ public class GameOverUI : MonoBehaviour
         LocalizationService.LanguageChanged -= HandleLanguageChanged;
     }
 
-    public void Show(float finalScore, float bestScore, int continuesUsed, int continuesRemaining, int maxContinues)
+    public void Show(float finalScore, float bestScore, float elapsedTime, int continuesUsed, int continuesRemaining, int maxContinues)
     {
         if (rootPanel != null)
             rootPanel.SetActive(true);
 
         _lastFinalScore = finalScore;
         _lastBestScore = bestScore;
-        UpdateScoreLabels();
+        _lastElapsedTime = elapsedTime;
+        _lastContinuesUsed = continuesUsed;
+        _lastContinuesRemaining = continuesRemaining;
+        _lastMaxContinues = maxContinues;
+        UpdateLabels();
 
         _hasContinueRemaining = continuesRemaining > 0;
         if (continueButton != null)
@@ -121,10 +132,31 @@ public class GameOverUI : MonoBehaviour
         }
     }
 
+    private void UpdateLabels()
+    {
+        UpdateScoreLabels();
+
+        if (elapsedTimeText != null)
+        {
+            string formattedTime = TimeFormatUtility.FormatElapsedTime(_lastElapsedTime);
+            elapsedTimeText.text = LocalizationService.Format("ui.elapsed_time", formattedTime);
+        }
+
+        if (continuesUsedText != null)
+        {
+            continuesUsedText.text = LocalizationService.Format("ui.continues_used", _lastContinuesUsed, _lastMaxContinues);
+        }
+
+        if (continuesRemainingText != null)
+        {
+            continuesRemainingText.text = LocalizationService.Format("ui.continues_remaining", _lastContinuesRemaining, _lastMaxContinues);
+        }
+    }
+
     private void HandleLanguageChanged()
     {
         if (rootPanel != null && rootPanel.activeInHierarchy)
-            UpdateScoreLabels();
+            UpdateLabels();
     }
 
     private void OnContinuePressed()

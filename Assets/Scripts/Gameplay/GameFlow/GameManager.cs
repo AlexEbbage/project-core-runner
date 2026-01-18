@@ -558,7 +558,7 @@ public class GameManager : MonoBehaviour
         float bestScore = scoreManager.BestScore;
         int remainingContinues = Mathf.Max(0, maxContinuesPerRun - continuesUsed);
 
-        gameOverUI.Show(finalScore, bestScore, continuesUsed, remainingContinues, maxContinuesPerRun);
+        gameOverUI.Show(finalScore, bestScore, _elapsedTime, continuesUsed, remainingContinues, maxContinuesPerRun);
 
         mainMenuUI?.Hide();
         hudController?.Hide();

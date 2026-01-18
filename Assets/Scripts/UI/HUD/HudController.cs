@@ -91,25 +91,10 @@ public class HudController : MonoBehaviour
                 : $"x{mult:0.0}";
         }
 
-        if(timeText != null)
+        if (timeText != null)
         {
             var _elapsed = gameManager.GetElapsedGameTime;
-
-            if (_elapsed < 3600f)
-            {
-                int totalSeconds = Mathf.FloorToInt(_elapsed);
-                int minutes = totalSeconds / 60;
-                int seconds = totalSeconds % 60;
-                timeText.text = $"{minutes:00}:{seconds:00}";
-            }
-            else
-            {
-                int totalSeconds = Mathf.FloorToInt(_elapsed);
-                int hours = totalSeconds / 3600;
-                int minutes = (totalSeconds % 3600) / 60;
-                int seconds = totalSeconds % 60;
-                timeText.text = $"{hours:00}:{minutes:00}:{seconds:00}";
-            }
+            timeText.text = TimeFormatUtility.FormatElapsedTime(_elapsed);
         }
 
         UpdateBestScoreDisplay();
