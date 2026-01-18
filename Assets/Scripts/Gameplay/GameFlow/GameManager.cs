@@ -44,6 +44,7 @@ public class GameManager : MonoBehaviour
 
     [Header("References - Services")]
     [SerializeField] private MonoBehaviour rewardedAdServiceBehaviour;
+    [SerializeField] private MonoBehaviour interstitialAdServiceBehaviour;
     [SerializeField] private MonoBehaviour analyticsServiceBehaviour;
     [SerializeField] private MonoBehaviour pushNotificationServiceBehaviour;
     [SerializeField] private AudioManager audioManager;
@@ -66,9 +67,12 @@ public class GameManager : MonoBehaviour
     [SerializeField] private bool logStateChanges = false;
 
     private IRewardedAdService _rewardedAdService;
+    private IInterstitialAdService _interstitialAdService;
     private IAnalyticsService _analytics;
     private IPushNotificationService _pushNotifications;
     private bool _adInProgress;
+    private bool _interstitialInProgress;
+    private bool _interstitialShownThisRun;
     private float _elapsedTime;
     private bool _gameTimerEnabled;
     private GameStateMachine _stateMachine;
@@ -161,6 +165,15 @@ public class GameManager : MonoBehaviour
             }
         }
 
+        if (interstitialAdServiceBehaviour != null)
+        {
+            _interstitialAdService = interstitialAdServiceBehaviour as IInterstitialAdService;
+            if (_interstitialAdService == null)
+            {
+                Debug.LogWarning("GameManager: interstitialAdServiceBehaviour does not implement IInterstitialAdService.");
+            }
+        }
+
         if (analyticsServiceBehaviour != null)
         {
             _analytics = analyticsServiceBehaviour as IAnalyticsService;
@@ -179,7 +192,7 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        _services = new GameServicesFacade(audioManager, vfxManager, _rewardedAdService, _analytics);
+        _services = new GameServicesFacade(audioManager, vfxManager, _rewardedAdService, _interstitialAdService, _analytics);
     }
 
     private void OnEnable()
@@ -254,12 +267,12 @@ public class GameManager : MonoBehaviour
 
         _services?.Audio?.PlayButtonClick();
         AwardRunCurrencyOnce();
-        ReturnToMenuWithFade(() =>
+        TryShowInterstitial("menu_return", () => ReturnToMenuWithFade(() =>
         {
             _services?.Audio?.PlayMenuMusic();
             runZoneManager?.OnRunEnded();
             GoToMenu();
-        });
+        }));
     }
 
     public void OnPauseButtonPressed()
@@ -287,13 +300,13 @@ public class GameManager : MonoBehaviour
 
         _services?.Audio?.PlayButtonClick();
         AwardRunCurrencyOnce();
-        ReturnToMenuWithFade(() =>
+        TryShowInterstitial("menu_return", () => ReturnToMenuWithFade(() =>
         {
             _services?.Audio?.PlayMenuMusic();
             runZoneManager?.OnRunEnded();
             statsTracker?.EndRun();
             GoToMenu();
-        });
+        }));
     }
 
     public void OnContinueButtonPressed()
@@ -391,6 +404,8 @@ public class GameManager : MonoBehaviour
 
         continuesUsed = 0;
         _adInProgress = false;
+        _interstitialInProgress = false;
+        _interstitialShownThisRun = false;
         _gameTimerEnabled = false;
 
         // We WANT the background to fly, so keep movement running
@@ -478,6 +493,7 @@ public class GameManager : MonoBehaviour
         _elapsedTime = 0;
         _gameTimerEnabled = false;
         _runCurrencyAwarded = false;
+        _interstitialShownThisRun = false;
 
         // Show and enable the player now we're playing
         SetPlayerVisible(true);
@@ -607,6 +623,10 @@ public class GameManager : MonoBehaviour
         }
 
         ShowGameOverUI();
+        if (continuesUsed >= maxContinuesPerRun)
+        {
+            TryShowInterstitial("run_end");
+        }
     }
 
     private void ShowGameOverUI()
@@ -797,15 +817,130 @@ public class GameManager : MonoBehaviour
         public AudioManager Audio { get; }
         public VfxManager Vfx { get; }
         public IRewardedAdService RewardedAds { get; }
+        public IInterstitialAdService InterstitialAds { get; }
         public IAnalyticsService Analytics { get; }
 
-        public GameServicesFacade(AudioManager audio, VfxManager vfx, IRewardedAdService rewardedAds, IAnalyticsService analytics)
+        public GameServicesFacade(AudioManager audio, VfxManager vfx, IRewardedAdService rewardedAds, IInterstitialAdService interstitialAds, IAnalyticsService analytics)
         {
             Audio = audio;
             Vfx = vfx;
             RewardedAds = rewardedAds;
+            InterstitialAds = interstitialAds;
             Analytics = analytics;
         }
+    }
+
+    private void TryShowInterstitial(string source, System.Action onCompleted = null)
+    {
+        if (_interstitialInProgress)
+        {
+            onCompleted?.Invoke();
+            return;
+        }
+
+        if (_adInProgress)
+        {
+            onCompleted?.Invoke();
+            return;
+        }
+
+        if (_interstitialShownThisRun)
+        {
+            onCompleted?.Invoke();
+            return;
+        }
+
+        if (AdsConfig.RemoveAds)
+        {
+            if (logStateChanges)
+            {
+                Debug.Log("GameManager: Remove Ads active, skipping interstitial.");
+            }
+
+            LogAnalyticsEvent("ad_bypassed", new Dictionary<string, object>
+            {
+                { "source", source },
+                { "reason", "remove_ads" },
+                { "ad_type", "interstitial" }
+            });
+
+            onCompleted?.Invoke();
+            return;
+        }
+
+        if (_services?.InterstitialAds == null)
+        {
+            if (logStateChanges)
+            {
+                Debug.LogWarning("GameManager: No IInterstitialAdService assigned. Cannot show interstitial.");
+            }
+
+            LogAnalyticsEvent("ad_not_ready", new Dictionary<string, object>
+            {
+                { "source", source },
+                { "reason", "service_missing" },
+                { "ad_type", "interstitial" }
+            });
+
+            onCompleted?.Invoke();
+            return;
+        }
+
+        if (!_services.InterstitialAds.IsInterstitialAdReady())
+        {
+            if (logStateChanges)
+            {
+                Debug.Log("GameManager: Interstitial ad not ready.");
+            }
+
+            LogAnalyticsEvent("ad_not_ready", new Dictionary<string, object>
+            {
+                { "source", source },
+                { "ad_type", "interstitial" }
+            });
+
+            onCompleted?.Invoke();
+            return;
+        }
+
+        _interstitialInProgress = true;
+        _interstitialShownThisRun = true;
+
+        if (logStateChanges)
+        {
+            Debug.Log("GameManager: Showing interstitial ad.");
+        }
+
+        LogAnalyticsEvent("ad_shown", new Dictionary<string, object>
+        {
+            { "source", source },
+            { "ad_type", "interstitial" }
+        });
+
+        _services.InterstitialAds.ShowInterstitialAd(result =>
+        {
+            _interstitialInProgress = false;
+
+            if (result == InterstitialAdResult.Completed)
+            {
+                LogAnalyticsEvent("ad_completed", new Dictionary<string, object>
+                {
+                    { "source", source },
+                    { "ad_type", "interstitial" }
+                });
+            }
+            else
+            {
+                LogAnalyticsEvent("ad_skipped", new Dictionary<string, object>
+                {
+                    { "source", source },
+                    { "ad_type", "interstitial" },
+                    { "result", result.ToString() }
+                });
+            }
+
+            onCompleted?.Invoke();
+        });
     }
 
     // --- Analytics ---
