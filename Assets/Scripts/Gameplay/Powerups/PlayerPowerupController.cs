@@ -19,8 +19,10 @@ public class PlayerPowerupController : MonoBehaviour
 
     [Header("Config (optional)")]
     [SerializeField] private GameBalanceConfig balanceConfig;
+    [SerializeField] private PowerupUpgradeConfig powerupUpgradeConfig;
 
     [Header("References")]
+    [SerializeField] private PlayerProfile playerProfile;
     [SerializeField] private PlayerController playerController;
     [SerializeField] private PlayerHealth playerHealth;
     [SerializeField] private RunScoreManager runScoreManager;
@@ -77,8 +79,27 @@ public class PlayerPowerupController : MonoBehaviour
 
     public event System.Action<PowerupType> OnPowerupCollected;
 
+    private readonly struct PowerupTuning
+    {
+        public PowerupTuning(float duration, float strength)
+        {
+            Duration = duration;
+            Strength = strength;
+        }
+
+        public float Duration { get; }
+        public float Strength { get; }
+    }
+
     private void Awake()
     {
+        if (playerProfile == null)
+        {
+            var profiles = Resources.FindObjectsOfTypeAll<PlayerProfile>();
+            if (profiles != null && profiles.Length > 0)
+                playerProfile = profiles[0];
+        }
+
         if (playerController == null)
             playerController = GetComponent<PlayerController>();
 
@@ -190,12 +211,13 @@ public class PlayerPowerupController : MonoBehaviour
 
     private IEnumerator AutoPilotRoutine()
     {
-        BeginPowerup(PowerupType.AutoPilot, autoPilotDuration);
+        var tuning = GetPowerupTuning(PowerupType.AutoPilot);
+        BeginPowerup(PowerupType.AutoPilot, tuning.Duration);
 
         if (playerController != null)
             playerController.SetAutoPilotActive(true, 0f);
 
-        float endTime = Time.time + autoPilotDuration;
+        float endTime = Time.time + tuning.Duration;
         while (Time.time < endTime)
         {
             UpdateAutoPilotInput();
@@ -210,12 +232,13 @@ public class PlayerPowerupController : MonoBehaviour
 
     private IEnumerator CoinMultiplierRoutine()
     {
-        BeginPowerup(PowerupType.CoinMultiplier, coinMultiplierDuration);
+        var tuning = GetPowerupTuning(PowerupType.CoinMultiplier);
+        BeginPowerup(PowerupType.CoinMultiplier, tuning.Duration);
 
         if (runScoreManager != null)
-            runScoreManager.SetPowerupPickupMultiplier(coinMultiplierValue);
+            runScoreManager.SetPowerupPickupMultiplier(tuning.Strength);
 
-        yield return new WaitForSeconds(coinMultiplierDuration);
+        yield return new WaitForSeconds(tuning.Duration);
 
         if (runScoreManager != null)
             runScoreManager.SetPowerupPickupMultiplier(1f);
@@ -225,12 +248,13 @@ public class PlayerPowerupController : MonoBehaviour
 
     private IEnumerator ScoreMultiplierRoutine()
     {
-        BeginPowerup(PowerupType.ScoreMultiplier, scoreMultiplierDuration);
+        var tuning = GetPowerupTuning(PowerupType.ScoreMultiplier);
+        BeginPowerup(PowerupType.ScoreMultiplier, tuning.Duration);
 
         if (runScoreManager != null)
-            runScoreManager.SetPowerupScoreMultiplier(scoreMultiplierValue);
+            runScoreManager.SetPowerupScoreMultiplier(tuning.Strength);
 
-        yield return new WaitForSeconds(scoreMultiplierDuration);
+        yield return new WaitForSeconds(tuning.Duration);
 
         if (runScoreManager != null)
             runScoreManager.SetPowerupScoreMultiplier(1f);
@@ -240,11 +264,12 @@ public class PlayerPowerupController : MonoBehaviour
 
     private IEnumerator MagnetRoutine()
     {
-        BeginPowerup(PowerupType.Magnet, magnetDuration);
+        var tuning = GetPowerupTuning(PowerupType.Magnet);
+        BeginPowerup(PowerupType.Magnet, tuning.Duration);
 
-        Pickup.SetMagnetRadiusMultiplier(magnetRadiusMultiplier);
+        Pickup.SetMagnetRadiusMultiplier(tuning.Strength);
 
-        yield return new WaitForSeconds(magnetDuration);
+        yield return new WaitForSeconds(tuning.Duration);
 
         Pickup.SetMagnetRadiusMultiplier(1f);
 
@@ -253,12 +278,13 @@ public class PlayerPowerupController : MonoBehaviour
 
     private IEnumerator ShieldRoutine()
     {
-        BeginPowerup(PowerupType.Shield, shieldDuration);
+        var tuning = GetPowerupTuning(PowerupType.Shield);
+        BeginPowerup(PowerupType.Shield, tuning.Duration);
 
         if (playerHealth != null)
             playerHealth.SetShieldActive(true);
 
-        yield return new WaitForSeconds(shieldDuration);
+        yield return new WaitForSeconds(tuning.Duration);
 
         if (playerHealth != null)
             playerHealth.SetShieldActive(false);
@@ -268,12 +294,13 @@ public class PlayerPowerupController : MonoBehaviour
 
     private IEnumerator CoinBonanzaRoutine()
     {
-        BeginPowerup(PowerupType.CoinBonanza, coinBonanzaDuration);
+        var tuning = GetPowerupTuning(PowerupType.CoinBonanza);
+        BeginPowerup(PowerupType.CoinBonanza, tuning.Duration);
 
         if (obstacleRingGenerator != null)
-            obstacleRingGenerator.SetPickupSpawnChanceMultiplier(coinBonanzaSpawnMultiplier);
+            obstacleRingGenerator.SetPickupSpawnChanceMultiplier(tuning.Strength);
 
-        yield return new WaitForSeconds(coinBonanzaDuration);
+        yield return new WaitForSeconds(tuning.Duration);
 
         if (obstacleRingGenerator != null)
             obstacleRingGenerator.SetPickupSpawnChanceMultiplier(1f);
@@ -283,11 +310,12 @@ public class PlayerPowerupController : MonoBehaviour
 
     private IEnumerator SpeedBoostRoutine()
     {
-        BeginPowerup(PowerupType.SpeedBoost, speedBoostDuration);
+        var tuning = GetPowerupTuning(PowerupType.SpeedBoost);
+        BeginPowerup(PowerupType.SpeedBoost, tuning.Duration);
 
-        runSpeedController?.SetPowerupSpeedMultiplier(speedBoostMultiplier);
+        runSpeedController?.SetPowerupSpeedMultiplier(tuning.Strength);
 
-        yield return new WaitForSeconds(speedBoostDuration);
+        yield return new WaitForSeconds(tuning.Duration);
 
         runSpeedController?.SetPowerupSpeedMultiplier(1f);
 
@@ -296,11 +324,12 @@ public class PlayerPowerupController : MonoBehaviour
 
     private IEnumerator SlowMoRoutine()
     {
-        BeginPowerup(PowerupType.SlowMo, slowMoDuration);
+        var tuning = GetPowerupTuning(PowerupType.SlowMo);
+        BeginPowerup(PowerupType.SlowMo, tuning.Duration);
 
-        ApplyTimeScale(slowMoTimeScale);
+        ApplyTimeScale(tuning.Strength);
 
-        yield return new WaitForSecondsRealtime(slowMoDuration);
+        yield return new WaitForSecondsRealtime(tuning.Duration);
 
         ResetTimeScale();
 
@@ -576,6 +605,48 @@ public class PlayerPowerupController : MonoBehaviour
         float input = Mathf.Clamp(delta / (angularSpeed * Time.deltaTime), -1f, 1f);
         playerController.SetAutoPilotInput(input);
         return true;
+    }
+
+    private PowerupTuning GetPowerupTuning(PowerupType powerupType)
+    {
+        PowerupTuning tuning = GetDefaultPowerupTuning(powerupType);
+
+        if (powerupUpgradeConfig == null || playerProfile == null)
+            return tuning;
+
+        if (!powerupUpgradeConfig.TryGetUpgrade(powerupType, out var upgradeEntry) || upgradeEntry == null)
+            return tuning;
+
+        int level = Mathf.Clamp(playerProfile.GetPowerupUpgradeLevel(powerupType), 0, upgradeEntry.MaxLevel);
+        if (!upgradeEntry.TryGetLevel(level, out var upgradeLevel))
+            return tuning;
+
+        return new PowerupTuning(upgradeLevel.duration, upgradeLevel.strength);
+    }
+
+    private PowerupTuning GetDefaultPowerupTuning(PowerupType powerupType)
+    {
+        switch (powerupType)
+        {
+            case PowerupType.AutoPilot:
+                return new PowerupTuning(autoPilotDuration, 0f);
+            case PowerupType.CoinMultiplier:
+                return new PowerupTuning(coinMultiplierDuration, coinMultiplierValue);
+            case PowerupType.ScoreMultiplier:
+                return new PowerupTuning(scoreMultiplierDuration, scoreMultiplierValue);
+            case PowerupType.Magnet:
+                return new PowerupTuning(magnetDuration, magnetRadiusMultiplier);
+            case PowerupType.Shield:
+                return new PowerupTuning(shieldDuration, 0f);
+            case PowerupType.CoinBonanza:
+                return new PowerupTuning(coinBonanzaDuration, coinBonanzaSpawnMultiplier);
+            case PowerupType.SpeedBoost:
+                return new PowerupTuning(speedBoostDuration, speedBoostMultiplier);
+            case PowerupType.SlowMo:
+                return new PowerupTuning(slowMoDuration, slowMoTimeScale);
+            default:
+                return new PowerupTuning(0f, 0f);
+        }
     }
 
     public readonly struct PowerupStatus
