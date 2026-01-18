@@ -21,6 +21,13 @@ public class HangarPageController : MonoBehaviour
     [SerializeField] private HangarCosmeticItemView cosmeticItemPrefab;
 
     private readonly List<GameObject> _spawnedItems = new();
+    [SerializeField] private GameManager gameManager;
+
+    private void Awake()
+    {
+        if (gameManager == null)
+            gameManager = FindFirstObjectByType<GameManager>();
+    }
 
     public void Initialize(PlayerProfile playerProfile, ShipDatabase database)
     {
@@ -68,6 +75,12 @@ public class HangarPageController : MonoBehaviour
 
         if (profile != null)
             profile.SetUpgradeLevel(itemView.Definition.upgradeType, currentLevel + 1);
+
+        gameManager?.LogAnalyticsEvent(AnalyticsEventNames.UpgradePurchased, new Dictionary<string, object>
+        {
+            { AnalyticsEventNames.Params.Type, itemView.Definition.upgradeType.ToString() },
+            { AnalyticsEventNames.Params.Price, cost }
+        });
         SelectTab(selectedTab);
         RefreshStats();
     }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -12,6 +13,14 @@ public class ObstacleController : MonoBehaviour
     [Tooltip("If the alignment between player's forward and collision normal is above this, treat as head-on.")]
     [Range(0f, 1f)]
     [SerializeField] private float headOnThreshold = 0.7f;
+
+    [SerializeField] private GameManager gameManager;
+
+    private void Awake()
+    {
+        if (gameManager == null)
+            gameManager = FindFirstObjectByType<GameManager>();
+    }
 
     private void OnCollisionEnter(Collision collision)
     {
@@ -39,6 +48,11 @@ public class ObstacleController : MonoBehaviour
         {
             health.HandleSideScrapeHit(hitPoint, normal, obstacleType);
         }
+
+        gameManager?.LogAnalyticsEvent(AnalyticsEventNames.ObstacleHit, new Dictionary<string, object>
+        {
+            { AnalyticsEventNames.Params.Type, obstacleType }
+        });
     }
 
     private string GetObstacleTypeName()

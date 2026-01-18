@@ -778,7 +778,7 @@ public class GameManager : MonoBehaviour
 
     // --- Analytics ---
 
-    private void LogAnalyticsEvent(string eventName, Dictionary<string, object> parameters = null)
+    public void LogAnalyticsEvent(string eventName, Dictionary<string, object> parameters = null)
     {
         if (_services?.Analytics == null)
             return;
