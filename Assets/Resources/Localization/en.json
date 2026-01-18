@@ -8,6 +8,9 @@
     {"key": "ui.score", "value": "Score: {0:0}"},
     {"key": "ui.highscore", "value": "Highscore: {0:0}"},
     {"key": "ui.best", "value": "BEST: {0:0}"},
-    {"key": "ui.countdown_go", "value": "GO!"}
+    {"key": "ui.countdown_go", "value": "GO!"},
+    {"key": "ui.elapsed_time", "value": "Time: {0}"},
+    {"key": "ui.continues_used", "value": "Continues Used: {0}/{1}"},
+    {"key": "ui.continues_remaining", "value": "Continues Remaining: {0}/{1}"}
   ]
 }
