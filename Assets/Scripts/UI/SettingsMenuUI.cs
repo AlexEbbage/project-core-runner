@@ -6,6 +6,7 @@ public class SettingsMenuUI : MonoBehaviour
     [SerializeField] private Slider musicSlider;
     [SerializeField] private Slider sfxSlider;
     [SerializeField] private Slider sensitivitySlider;
+    [SerializeField] private Slider runSensitivitySlider;
     [SerializeField] private Toggle vibrateToggle;
     [SerializeField] private Toggle touchInputToggle;
 
@@ -26,6 +27,12 @@ public class SettingsMenuUI : MonoBehaviour
             sensitivitySlider.minValue = SettingsData.TouchSensitivityMin;
             sensitivitySlider.maxValue = SettingsData.TouchSensitivityMax;
             sensitivitySlider.value = SettingsData.TouchSensitivity;
+        }
+        if (runSensitivitySlider != null)
+        {
+            runSensitivitySlider.minValue = SettingsData.RunSensitivityMin;
+            runSensitivitySlider.maxValue = SettingsData.RunSensitivityMax;
+            runSensitivitySlider.value = SettingsData.RunSensitivity;
         }
         if (vibrateToggle != null)
             vibrateToggle.isOn = SettingsData.VibrateEnabled;
@@ -50,6 +57,11 @@ public class SettingsMenuUI : MonoBehaviour
     public void OnSensitivitySliderChanged(float value)
     {
         SettingsData.TouchSensitivity = value;
+    }
+
+    public void OnRunSensitivitySliderChanged(float value)
+    {
+        SettingsData.RunSensitivity = value;
     }
 
     public void OnVibrateToggleChanged(bool on)
