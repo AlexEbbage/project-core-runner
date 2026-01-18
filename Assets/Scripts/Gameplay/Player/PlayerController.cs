@@ -57,6 +57,7 @@ public class PlayerController : MonoBehaviour
     private bool _autoPilotActive;
     private float _autoPilotInput;
     private float _baseAngularSpeedDegrees;
+    private float _handlingAdjustedAngularSpeedDegrees;
     private float _baseTouchInputSensitivity;
 
     // Angular position around the tube, in degrees.
@@ -64,7 +65,6 @@ public class PlayerController : MonoBehaviour
     private float _zPosition;
 
     private Rigidbody _rigidbody;
-    private float _baseAngularSpeedDegrees;
     private float _baseInputSmoothingTime;
 
     private void Awake()
@@ -76,12 +76,11 @@ public class PlayerController : MonoBehaviour
         _rigidbody.isKinematic = true;        // move via transform
         _rigidbody.collisionDetectionMode = CollisionDetectionMode.Continuous;
 
-        _baseAngularSpeedDegrees = angularSpeedDegrees;
-        _baseInputSmoothingTime = inputSmoothingTime;
-
         _currentForwardSpeed = defaultForwardSpeed;
         _baseAngularSpeedDegrees = angularSpeedDegrees;
+        _handlingAdjustedAngularSpeedDegrees = _baseAngularSpeedDegrees;
         _baseTouchInputSensitivity = touchInputSensitivity;
+        _baseInputSmoothingTime = inputSmoothingTime;
         ApplySensitivitySettings(SettingsData.TouchSensitivity);
 
         Vector3 pos = transform.position;
@@ -101,8 +100,8 @@ public class PlayerController : MonoBehaviour
         }
 
         SettingsData.TouchSensitivityChanged += HandleSensitivityChanged;
+        SettingsData.RunSensitivityChanged += HandleRunSensitivityChanged;
         ApplyHandlingUpgrade();
-        ApplySensitivitySettings(SettingsData.TouchSensitivity);
     }
 
     private void OnDisable()
@@ -113,6 +112,7 @@ public class PlayerController : MonoBehaviour
         }
 
         SettingsData.TouchSensitivityChanged -= HandleSensitivityChanged;
+        SettingsData.RunSensitivityChanged -= HandleRunSensitivityChanged;
     }
 
     private void Start()
@@ -203,10 +203,16 @@ public class PlayerController : MonoBehaviour
         ApplySensitivitySettings(sensitivity);
     }
 
+    private void HandleRunSensitivityChanged(float _)
+    {
+        ApplySensitivitySettings(SettingsData.TouchSensitivity);
+    }
+
     private void ApplySensitivitySettings(float sensitivity)
     {
-        angularSpeedDegrees = _baseAngularSpeedDegrees * sensitivity;
-        touchInputSensitivity = _baseTouchInputSensitivity * sensitivity;
+        float runSensitivity = SettingsData.RunSensitivity;
+        angularSpeedDegrees = _handlingAdjustedAngularSpeedDegrees * sensitivity * runSensitivity;
+        touchInputSensitivity = _baseTouchInputSensitivity * sensitivity * runSensitivity;
     }
     
     public void RefreshHandlingFromProfile()
@@ -338,9 +344,10 @@ public class PlayerController : MonoBehaviour
     private void ApplyHandlingUpgrade(int? upgradeOverride = null)
     {
         int level = upgradeOverride ?? (profile != null ? profile.GetUpgradeLevel(UpgradeType.Handling) : 0);
-        angularSpeedDegrees = _baseAngularSpeedDegrees + handlingAngularSpeedBonusPerLevel * Mathf.Max(0, level);
+        _handlingAdjustedAngularSpeedDegrees = _baseAngularSpeedDegrees + handlingAngularSpeedBonusPerLevel * Mathf.Max(0, level);
         float smoothingOffset = handlingInputSmoothingReductionPerLevel * Mathf.Max(0, level);
         inputSmoothingTime = Mathf.Max(minInputSmoothingTime, _baseInputSmoothingTime - smoothingOffset);
+        ApplySensitivitySettings(SettingsData.TouchSensitivity);
     }
 
     private void HandleUpgradeLevelChanged(UpgradeType upgradeType, int level)

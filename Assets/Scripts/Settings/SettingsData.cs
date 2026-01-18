@@ -8,9 +8,13 @@ public static class SettingsData
     private const string VibrateKey = "settings_vibrate";
     private const string TouchInputModeKey = "settings_touch_input_mode";
     private const string TouchSensitivityKey = "settings_touch_sensitivity";
+    private const string RunSensitivityKey = "settings_run_sensitivity";
     public const float TouchSensitivityMin = 0.5f;
     public const float TouchSensitivityMax = 2f;
     public const float TouchSensitivityDefault = 1f;
+    public const float RunSensitivityMin = 0.5f;
+    public const float RunSensitivityMax = 2f;
+    public const float RunSensitivityDefault = 1f;
 
     public enum TouchInputMode
     {
@@ -68,7 +72,24 @@ public static class SettingsData
         }
     }
 
+    public static float RunSensitivity
+    {
+        get => PlayerPrefs.GetFloat(RunSensitivityKey, RunSensitivityDefault);
+        set
+        {
+            float clamped = Mathf.Clamp(value, RunSensitivityMin, RunSensitivityMax);
+            float current = RunSensitivity;
+            if (Mathf.Approximately(current, clamped))
+                return;
+
+            PlayerPrefs.SetFloat(RunSensitivityKey, clamped);
+            PlayerPrefs.Save();
+            RunSensitivityChanged?.Invoke(clamped);
+        }
+    }
+
     public static event System.Action<float> TouchSensitivityChanged;
+    public static event System.Action<float> RunSensitivityChanged;
 
     private static bool _initialized;
 
@@ -99,6 +120,14 @@ public static class SettingsData
         if (!Mathf.Approximately(savedSensitivity, clampedSensitivity))
         {
             PlayerPrefs.SetFloat(TouchSensitivityKey, clampedSensitivity);
+            needsSave = true;
+        }
+
+        float savedRunSensitivity = PlayerPrefs.GetFloat(RunSensitivityKey, RunSensitivityDefault);
+        float clampedRunSensitivity = Mathf.Clamp(savedRunSensitivity, RunSensitivityMin, RunSensitivityMax);
+        if (!Mathf.Approximately(savedRunSensitivity, clampedRunSensitivity))
+        {
+            PlayerPrefs.SetFloat(RunSensitivityKey, clampedRunSensitivity);
             needsSave = true;
         }
 
