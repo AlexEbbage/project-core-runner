@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
+    private const string RunEventName = "run_end";
+
     public enum GameState
     {
         Menu,
@@ -445,7 +447,10 @@ public class GameManager : MonoBehaviour
         statsTracker?.ResetRunStats();
         runZoneManager?.OnResetRun();
 
-        LogAnalyticsEvent("run_start");
+        LogAnalyticsEvent(RunEventName, new Dictionary<string, object>
+        {
+            { "phase", "start" }
+        });
 
         obstacleRingGenerator.DissolveNextRings(startClearRings, dissolveDuration);
         playerController?.RefreshHandlingFromProfile();
@@ -538,8 +543,9 @@ public class GameManager : MonoBehaviour
         playerController?.StopRun();
         playerVisual.SetVisible(false);
 
-        LogAnalyticsEvent("run_ended", new Dictionary<string, object>
+        LogAnalyticsEvent(RunEventName, new Dictionary<string, object>
         {
+            { "phase", "end" },
             { "score", scoreManager != null ? scoreManager.CurrentScore : 0 },
             { "time", _elapsedTime },
             { "continues_used", continuesUsed }
@@ -731,22 +737,6 @@ public class GameManager : MonoBehaviour
     }
 
     // --- Analytics ---
-
-    private void LogRunEndAnalytics(string reason)
-    {
-        if (_services?.Analytics == null || scoreManager == null)
-            return;
-
-        var data = new Dictionary<string, object>
-        {
-            { "reason", reason },
-            { "score", scoreManager.CurrentScore },
-            { "best_score", scoreManager.BestScore },
-            { "continues_used", continuesUsed }
-        };
-
-        _services.Analytics.LogEvent("run_end", data);
-    }
 
     private void LogAnalyticsEvent(string eventName, Dictionary<string, object> parameters = null)
     {
