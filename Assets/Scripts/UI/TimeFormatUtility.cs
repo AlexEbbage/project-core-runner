@@ -16,7 +16,6 @@ public static class TimeFormatUtility
         int hours = totalSecondsLong / 3600;
         int remainingSeconds = totalSecondsLong % 3600;
         int minutesLong = remainingSeconds / 60;
-        int secondsLong = remainingSeconds % 60;
-        return $"{hours:00}:{minutesLong:00}:{secondsLong:00}";
+        return $"{hours:00}:{minutesLong:00}";
     }
 }
