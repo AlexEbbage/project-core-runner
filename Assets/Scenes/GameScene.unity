@@ -2482,7 +2482,6 @@ GameObject:
   - component: {fileID: 440793607}
   - component: {fileID: 440793606}
   - component: {fileID: 440793605}
-  - component: {fileID: 440793604}
   m_Layer: 5
   m_Name: FeaturePanel
   m_TagString: Untagged
@@ -2510,40 +2509,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &440793604
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 440793602}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9d3b3416bf6a2e24282441a945c4ee44, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MainMenuUI
-  gameManager: {fileID: 273529347}
-  rootPanel: {fileID: 440793602}
-  bestScoreText: {fileID: 0}
-  levelNameText: {fileID: 0}
-  levelShapeImage: {fileID: 0}
-  leftArrowButton: {fileID: 0}
-  rightArrowButton: {fileID: 0}
-  levels:
-  - displayName: HEXAGON
-    sides: 6
-    shapeSprite: {fileID: 0}
-  obstacleRingGenerator: {fileID: 0}
-  tunnelWallGenerator: {fileID: 806837119}
-  runSpeedController: {fileID: 273529348}
-  defaultSpeedConfig: {fileID: 11400000, guid: 4dfa3040d7c096845a7fcc563094ac2b, type: 2}
-  removeAdsIAPManager: {fileID: 889387551}
-  removeAdsButtonRoot: {fileID: 2100000001}
-  restorePurchasesButtonRoot: {fileID: 2100000100}
-  premiumBadgeRoot: {fileID: 2100000200}
-  thankYouPopup: {fileID: 1689040174}
-  hidePremiumUserIAPButton: 0
-  hideRestorePurchasesButton: 0
 --- !u!114 &440793605
 MonoBehaviour:
   m_ObjectHideFlags: 0
