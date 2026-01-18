@@ -28,7 +28,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private PlayerVisual playerVisual;
     [SerializeField] private Collider playerCollider;
 
-    [Header("References - UI")]
+    [Header("References - UI (GameManager-driven)")]
+    // Run UI controller stack removed; use HUD/GameOver/Pause components wired here.
     [SerializeField] private MainMenuUI mainMenuUI;
     [SerializeField] private GameOverUI gameOverUI;
     [SerializeField] private HudController hudController;
