@@ -220,6 +220,8 @@ public partial class ObstacleRingGenerator : MonoBehaviour
     private int _wedgeRotationDirectionSign; // +1, -1, or 0 (0 = free both directions)
     private MaterialPropertyBlock _colorPropertyBlock;
     private static readonly int ColorProperty = Shader.PropertyToID("_Color");
+    private float _baseDarkenFactor;
+    private float _baseColorCycleSpeed;
 
     public event System.Action<ObstacleRingType> OnObstacleRingPassed;
 
@@ -266,6 +268,8 @@ public partial class ObstacleRingGenerator : MonoBehaviour
             : new System.Random(Random.Range(int.MinValue, int.MaxValue));
 
         _startZ = player != null ? player.position.z : 0f;
+        _baseDarkenFactor = darkenFactor;
+        _baseColorCycleSpeed = colorCycleSpeed;
     }
 
     private void Start()
@@ -440,6 +444,23 @@ public partial class ObstacleRingGenerator : MonoBehaviour
     {
         if (gradient == null) return;
         obstacleColorGradient = gradient;
+    }
+
+    public void SetColorStyle(float contrastMultiplier, float colorCycleSpeedMultiplier)
+    {
+        darkenFactor = Mathf.Clamp01(_baseDarkenFactor * NormalizeMultiplier(contrastMultiplier));
+        colorCycleSpeed = Mathf.Max(0f, _baseColorCycleSpeed * NormalizeMultiplier(colorCycleSpeedMultiplier));
+    }
+
+    public void SetColorStyle(Gradient gradient, float contrastMultiplier, float colorCycleSpeedMultiplier)
+    {
+        SetColorGradient(gradient);
+        SetColorStyle(contrastMultiplier, colorCycleSpeedMultiplier);
+    }
+
+    private static float NormalizeMultiplier(float value)
+    {
+        return value > 0f ? value : 1f;
     }
 
     /// <summary>
