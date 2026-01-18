@@ -22,6 +22,15 @@ public class PlayerController : MonoBehaviour
     [Tooltip("Degrees per second of rotation around the tube at full input.")]
     [SerializeField] private float angularSpeedDegrees = 260f;
 
+    [Header("Handling Upgrade")]
+    [SerializeField] private PlayerProfile profile;
+    [Tooltip("Extra degrees per second per handling upgrade level.")]
+    [SerializeField] private float handlingAngularSpeedBonusPerLevel = 10f;
+    [Tooltip("Reduce input smoothing time per handling upgrade level.")]
+    [SerializeField] private float handlingInputSmoothingReductionPerLevel = 0f;
+    [Tooltip("Minimum input smoothing time when applying handling upgrades.")]
+    [SerializeField] private float minInputSmoothingTime = 0.02f;
+
     [Header("Input")]
     [Tooltip("If true AND legacy input is enabled, Horizontal axis (A/D, arrows) is used in editor.")]
     [SerializeField] private bool allowKeyboardInputInEditor = true;
@@ -53,6 +62,8 @@ public class PlayerController : MonoBehaviour
     private float _zPosition;
 
     private Rigidbody _rigidbody;
+    private float _baseAngularSpeedDegrees;
+    private float _baseInputSmoothingTime;
 
     private void Awake()
     {
@@ -60,6 +71,9 @@ public class PlayerController : MonoBehaviour
         _rigidbody.useGravity = false;
         _rigidbody.isKinematic = true;        // move via transform
         _rigidbody.collisionDetectionMode = CollisionDetectionMode.Continuous;
+
+        _baseAngularSpeedDegrees = angularSpeedDegrees;
+        _baseInputSmoothingTime = inputSmoothingTime;
 
         _currentForwardSpeed = defaultForwardSpeed;
 
@@ -70,6 +84,24 @@ public class PlayerController : MonoBehaviour
             _angleDegrees = Mathf.Atan2(pos.y, pos.x) * Mathf.Rad2Deg;
         else
             _angleDegrees = 0f;
+    }
+
+    private void OnEnable()
+    {
+        if (profile != null)
+        {
+            profile.UpgradeLevelChanged += HandleUpgradeLevelChanged;
+        }
+
+        ApplyHandlingUpgrade();
+    }
+
+    private void OnDisable()
+    {
+        if (profile != null)
+        {
+            profile.UpgradeLevelChanged -= HandleUpgradeLevelChanged;
+        }
     }
 
     private void Start()
@@ -148,6 +180,11 @@ public class PlayerController : MonoBehaviour
     }
 
     public float AngularSpeedDegrees => angularSpeedDegrees;
+
+    public void RefreshHandlingFromProfile()
+    {
+        ApplyHandlingUpgrade();
+    }
 
     // ---- Core movement ----
 
@@ -268,6 +305,22 @@ public class PlayerController : MonoBehaviour
     {
         _moveInputVelocity = 0f;
         _smoothedMoveInput = value;
+    }
+
+    private void ApplyHandlingUpgrade(int? upgradeOverride = null)
+    {
+        int level = upgradeOverride ?? (profile != null ? profile.GetUpgradeLevel(UpgradeType.Handling) : 0);
+        angularSpeedDegrees = _baseAngularSpeedDegrees + handlingAngularSpeedBonusPerLevel * Mathf.Max(0, level);
+        float smoothingOffset = handlingInputSmoothingReductionPerLevel * Mathf.Max(0, level);
+        inputSmoothingTime = Mathf.Max(minInputSmoothingTime, _baseInputSmoothingTime - smoothingOffset);
+    }
+
+    private void HandleUpgradeLevelChanged(UpgradeType upgradeType, int level)
+    {
+        if (upgradeType != UpgradeType.Handling)
+            return;
+
+        ApplyHandlingUpgrade(level);
     }
 
 #if UNITY_EDITOR

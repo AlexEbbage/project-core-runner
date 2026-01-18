@@ -448,6 +448,7 @@ public class GameManager : MonoBehaviour
         LogAnalyticsEvent("run_start");
 
         obstacleRingGenerator.DissolveNextRings(startClearRings, dissolveDuration);
+        playerController?.RefreshHandlingFromProfile();
         playerController?.StartRun();
 
         countdownUIController.BeginCountdown(3, OnStartCountdownComplete);
@@ -468,6 +469,7 @@ public class GameManager : MonoBehaviour
         _gameTimerEnabled = false;
 
         obstacleRingGenerator.DissolveNextRings(startClearRings, dissolveDuration);
+        playerController?.RefreshHandlingFromProfile();
         playerController?.StartRun();
         playerVisual.SetVisible(true);
 
