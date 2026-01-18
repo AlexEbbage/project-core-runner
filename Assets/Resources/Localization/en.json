@@ -11,6 +11,13 @@
     {"key": "ui.countdown_go", "value": "GO!"},
     {"key": "ui.elapsed_time", "value": "Time: {0}"},
     {"key": "ui.continues_used", "value": "Continues Used: {0}/{1}"},
-    {"key": "ui.continues_remaining", "value": "Continues Remaining: {0}/{1}"}
+    {"key": "ui.continues_remaining", "value": "Continues Remaining: {0}/{1}"},
+    {"key": "ui.rewarded_run_title", "value": "Boost your run!"},
+    {"key": "ui.rewarded_run_body", "value": "Watch a rewarded ad to claim a bonus."},
+    {"key": "ui.rewarded_run_accept", "value": "Watch Ad"},
+    {"key": "ui.rewarded_run_decline", "value": "No Thanks"},
+    {"key": "ui.rewarded_run_reward_coin_multiplier", "value": "Reward: Coin Multiplier"},
+    {"key": "ui.rewarded_run_reward_score_multiplier", "value": "Reward: Score Multiplier"},
+    {"key": "ui.rewarded_run_reward_coins", "value": "Reward: +{0} Coins"}
   ]
 }
