@@ -26,6 +26,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private RunZoneManager runZoneManager;
     [SerializeField] private ObstacleRingGenerator obstacleRingGenerator;
     [SerializeField] private RunStatsTracker statsTracker;
+    [SerializeField] private PlayerPowerupController powerupController;
     [SerializeField] private PlayerProfile playerProfile;
 
     [Header("Player Visuals (optional)")]
@@ -110,6 +111,7 @@ public class GameManager : MonoBehaviour
         if (runZoneManager == null) runZoneManager = FindFirstObjectByType<RunZoneManager>();
         if (statsTracker == null) statsTracker = FindFirstObjectByType<RunStatsTracker>();
         if (obstacleRingGenerator == null) obstacleRingGenerator = FindFirstObjectByType<ObstacleRingGenerator>();
+        if (powerupController == null) powerupController = FindFirstObjectByType<PlayerPowerupController>();
         if (playerProfile == null)
         {
             var profiles = Resources.FindObjectsOfTypeAll<PlayerProfile>();
@@ -440,6 +442,35 @@ public class GameManager : MonoBehaviour
         menuAction?.Invoke();
     }
 
+    private void ApplyRunUpgrades()
+    {
+        if (playerProfile == null)
+            return;
+
+        int comboLevel = playerProfile.GetUpgradeLevel(UpgradeType.ComboMultiplier);
+        int pickupLevel = playerProfile.GetUpgradeLevel(UpgradeType.PickupRadius);
+        int shieldLevel = playerProfile.GetUpgradeLevel(UpgradeType.ShieldRecharge);
+
+        float comboBase = balanceConfig != null
+            ? balanceConfig.comboToMultiplierFactor
+            : (scoreManager != null ? scoreManager.ComboToMultiplierFactor : 0f);
+        float comboIncrement = balanceConfig != null ? balanceConfig.comboMultiplierFactorPerLevel : 0f;
+        float comboFactor = Mathf.Max(0f, comboBase + comboIncrement * comboLevel);
+        scoreManager?.SetComboMultiplierFactor(comboFactor);
+
+        float pickupIncrement = balanceConfig != null ? balanceConfig.pickupRadiusMultiplierPerLevel : 0f;
+        float pickupMultiplier = Mathf.Max(0f, 1f + pickupIncrement * pickupLevel);
+        obstacleRingGenerator?.SetPickupRadiusMultiplier(pickupMultiplier);
+
+        float shieldBase = balanceConfig != null
+            ? balanceConfig.shieldRechargeSeconds
+            : (powerupController != null ? powerupController.ShieldRechargeSeconds : 0f);
+        float shieldIncrement = balanceConfig != null ? balanceConfig.shieldRechargeSecondsPerLevel : 0f;
+        float shieldRecharge = Mathf.Max(0f, shieldBase + shieldIncrement * shieldLevel);
+        powerupController?.SetShieldRechargeSeconds(shieldRecharge);
+        powerupController?.ResetShieldRechargeCooldown();
+    }
+
     private void StartNewRun()
     {
         TransitionToState(GameState.Playing, 1f);
@@ -464,6 +495,7 @@ public class GameManager : MonoBehaviour
         speedController?.ResetForNewRun();
         statsTracker?.ResetRunStats();
         runZoneManager?.OnResetRun();
+        ApplyRunUpgrades();
 
         LogAnalyticsEvent(RunEventName, new Dictionary<string, object>
         {

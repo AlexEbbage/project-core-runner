@@ -58,6 +58,7 @@ public partial class ObstacleRingGenerator
             float angleStep = 360f / slotCount;
             float angleDeg = slotIndex * angleStep;
             float radius = pickupSlotRadiusOverride > 0f ? pickupSlotRadiusOverride : GetDefaultPickupRadius();
+            radius *= _pickupRadiusMultiplier;
 
             float angleRad = angleDeg * Mathf.Deg2Rad;
             Vector3 localPos = new Vector3(Mathf.Cos(angleRad) * radius, Mathf.Sin(angleRad) * radius, 0f);
@@ -161,7 +162,8 @@ public partial class ObstacleRingGenerator
 
     private float GetDefaultPickupRadius()
     {
-        return playerController != null ? playerController.TubeRadius : 5f;
+        float baseRadius = playerController != null ? playerController.TubeRadius : 5f;
+        return baseRadius;
     }
 
     private void ClearPickups(RingInstance ring)
@@ -188,6 +190,11 @@ public partial class ObstacleRingGenerator
     public void SetPickupSpawnChanceMultiplier(float multiplier)
     {
         _pickupSpawnChanceMultiplier = Mathf.Max(0f, multiplier);
+    }
+
+    public void SetPickupRadiusMultiplier(float multiplier)
+    {
+        _pickupRadiusMultiplier = Mathf.Max(0f, multiplier);
     }
 
     public void SetPickupFloatHeight(float height)

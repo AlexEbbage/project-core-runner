@@ -42,6 +42,7 @@ public class RunScoreManager : MonoBehaviour
     public float CurrentMultiplier => 1f + _comboValue * comboToMultiplierFactor;
     public float PowerupScoreMultiplier => _powerupScoreMultiplier;
     public float PowerupPickupMultiplier => _powerupPickupMultiplier;
+    public float ComboToMultiplierFactor => comboToMultiplierFactor;
 
     private void Awake()
     {
@@ -201,5 +202,10 @@ public class RunScoreManager : MonoBehaviour
     public void SetPowerupPickupMultiplier(float multiplier)
     {
         _powerupPickupMultiplier = Mathf.Max(1f, multiplier);
+    }
+
+    public void SetComboMultiplierFactor(float factor)
+    {
+        comboToMultiplierFactor = Mathf.Max(0f, factor);
     }
 }

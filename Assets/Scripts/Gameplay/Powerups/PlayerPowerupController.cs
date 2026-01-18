@@ -41,6 +41,7 @@ public class PlayerPowerupController : MonoBehaviour
     [SerializeField] private float magnetDuration = 6f;
     [SerializeField] private float magnetRadiusMultiplier = 2f;
     [SerializeField] private float shieldDuration = 5f;
+    [SerializeField] private float shieldRechargeSeconds = 5f;
     [SerializeField] private float coinBonanzaSpawnMultiplier = 2.5f;
     [SerializeField] private float coinBonanzaDuration = 6f;
     [SerializeField] private float speedBoostMultiplier = 1.4f;
@@ -72,6 +73,7 @@ public class PlayerPowerupController : MonoBehaviour
     private float _defaultSpeedMultiplier = 1f;
     private float _previousTimeScale = 1f;
     private float _previousFixedDeltaTime;
+    private float _nextShieldAvailableTime;
     [SerializeField] private GameManager gameManager;
 
     private readonly System.Collections.Generic.Dictionary<PowerupType, float> _powerupEndTimes =
@@ -80,6 +82,7 @@ public class PlayerPowerupController : MonoBehaviour
         new System.Collections.Generic.Dictionary<PowerupType, GameObject>();
 
     public event System.Action<PowerupType> OnPowerupCollected;
+    public float ShieldRechargeSeconds => shieldRechargeSeconds;
 
     private readonly struct PowerupTuning
     {
@@ -130,6 +133,7 @@ public class PlayerPowerupController : MonoBehaviour
             magnetDuration = balanceConfig.magnetDuration;
             magnetRadiusMultiplier = balanceConfig.magnetRadiusMultiplier;
             shieldDuration = balanceConfig.shieldDuration;
+            shieldRechargeSeconds = balanceConfig.shieldRechargeSeconds;
             coinBonanzaSpawnMultiplier = balanceConfig.coinBonanzaSpawnMultiplier;
             coinBonanzaDuration = balanceConfig.coinBonanzaDuration;
             speedBoostMultiplier = balanceConfig.speedBoostMultiplier;
@@ -185,6 +189,8 @@ public class PlayerPowerupController : MonoBehaviour
                 RestartRoutine(ref _magnetRoutine, MagnetRoutine());
                 break;
             case PowerupType.Shield:
+                if (Time.time < _nextShieldAvailableTime)
+                    return;
                 RestartRoutine(ref _shieldRoutine, ShieldRoutine());
                 break;
             case PowerupType.CoinBonanza:
@@ -299,6 +305,7 @@ public class PlayerPowerupController : MonoBehaviour
         if (playerHealth != null)
             playerHealth.SetShieldActive(false);
 
+        SetShieldRechargeCooldown();
         EndPowerup(PowerupType.Shield);
     }
 
@@ -354,6 +361,7 @@ public class PlayerPowerupController : MonoBehaviour
             _shieldRoutine = null;
         }
 
+        SetShieldRechargeCooldown();
         EndPowerup(PowerupType.Shield);
     }
 
@@ -362,6 +370,25 @@ public class PlayerPowerupController : MonoBehaviour
         Pickup.SetMagnetRadiusMultiplier(_defaultMagnetMultiplier);
         runSpeedController?.SetPowerupSpeedMultiplier(_defaultSpeedMultiplier);
         ResetTimeScale();
+        _nextShieldAvailableTime = 0f;
+    }
+
+    public void SetShieldRechargeSeconds(float seconds)
+    {
+        shieldRechargeSeconds = Mathf.Max(0f, seconds);
+    }
+
+    public void ResetShieldRechargeCooldown()
+    {
+        _nextShieldAvailableTime = 0f;
+    }
+
+    private void SetShieldRechargeCooldown()
+    {
+        if (shieldRechargeSeconds <= 0f)
+            return;
+
+        _nextShieldAvailableTime = Time.time + shieldRechargeSeconds;
     }
 
     private void ApplyTimeScale(float timeScale)

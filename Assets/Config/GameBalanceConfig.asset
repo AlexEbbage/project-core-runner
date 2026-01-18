@@ -46,6 +46,10 @@ MonoBehaviour:
   speedBoostDuration: 5
   slowMoTimeScale: 0.6
   slowMoDuration: 4
+  comboMultiplierFactorPerLevel: 0.02
+  pickupRadiusMultiplierPerLevel: 0.05
+  shieldRechargeSeconds: 5
+  shieldRechargeSecondsPerLevel: -0.5
   maxContinuesPerRun: 3
   continueRespawnBackDistance: 0
   continueRespawnHeightOffset: 0.5
