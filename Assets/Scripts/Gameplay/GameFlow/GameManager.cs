@@ -41,6 +41,13 @@ public class GameManager : MonoBehaviour
     [SerializeField] private PauseMenuUI pauseMenuUI;
     [SerializeField] private CountdownUIController countdownUIController;
     [SerializeField] private LoadingScreenManager loadingScreenManager;
+    [SerializeField] private RewardedRunPromptUI rewardedRunPromptUI;
+
+    [Header("Rewarded Run Prompt")]
+    [SerializeField] private bool rewardedRunPromptEnabled = true;
+    [SerializeField] private float rewardedRunPromptDelaySeconds = 45f;
+    [SerializeField] private RewardedRunRewardType rewardedRunRewardType = RewardedRunRewardType.CoinMultiplier;
+    [SerializeField] private int rewardedRunCoinReward = 100;
 
     [Header("References - Services")]
     [SerializeField] private MonoBehaviour rewardedAdServiceBehaviour;
@@ -75,6 +82,9 @@ public class GameManager : MonoBehaviour
     private bool _interstitialShownThisRun;
     private float _elapsedTime;
     private bool _gameTimerEnabled;
+    private bool _rewardedRunPromptShownThisRun;
+    private bool _rewardedRunPromptActive;
+    private float _rewardedRunPromptPrevTimeScale;
     private GameStateMachine _stateMachine;
     private GameServicesFacade _services;
     private bool _runCurrencyAwarded;
@@ -91,6 +101,13 @@ public class GameManager : MonoBehaviour
     public int MaxContinuesPerRun => maxContinuesPerRun;
 
     public bool GameTimerEnabled => _gameTimerEnabled;
+
+    private enum RewardedRunRewardType
+    {
+        CoinMultiplier,
+        ScoreMultiplier,
+        Coins
+    }
 
     public bool IsContinueAdReady()
     {
@@ -152,6 +169,7 @@ public class GameManager : MonoBehaviour
         if (hudController == null) hudController = FindFirstObjectByType<HudController>();
         if (pauseMenuUI == null) pauseMenuUI = FindFirstObjectByType<PauseMenuUI>();
         if (loadingScreenManager == null) loadingScreenManager = FindFirstObjectByType<LoadingScreenManager>();
+        if (rewardedRunPromptUI == null) rewardedRunPromptUI = FindFirstObjectByType<RewardedRunPromptUI>();
 
         if (audioManager == null) audioManager = FindFirstObjectByType<AudioManager>();
         if (vfxManager == null) vfxManager = VfxManager.Instance;
@@ -193,6 +211,7 @@ public class GameManager : MonoBehaviour
         }
 
         _services = new GameServicesFacade(audioManager, vfxManager, _rewardedAdService, _interstitialAdService, _analytics);
+        EnsureRewardedRunPrompt();
     }
 
     private void OnEnable()
@@ -224,6 +243,11 @@ public class GameManager : MonoBehaviour
         if (_stateMachine.CurrentState == GameState.Playing && _gameTimerEnabled)
         {
             _elapsedTime += Time.deltaTime;
+        }
+
+        if (ShouldTriggerRewardedRunPrompt())
+        {
+            ShowRewardedRunPrompt();
         }
     }
 
@@ -407,6 +431,8 @@ public class GameManager : MonoBehaviour
         _interstitialInProgress = false;
         _interstitialShownThisRun = false;
         _gameTimerEnabled = false;
+        _rewardedRunPromptShownThisRun = false;
+        _rewardedRunPromptActive = false;
 
         // We WANT the background to fly, so keep movement running
         playerController?.StartRun();
@@ -421,6 +447,7 @@ public class GameManager : MonoBehaviour
         gameOverUI?.Hide();
         hudController?.Hide();
         pauseMenuUI?.Hide();
+        rewardedRunPromptUI?.Hide();
     }
 
     private void StartNewRunFromMenu()
@@ -494,6 +521,8 @@ public class GameManager : MonoBehaviour
         _gameTimerEnabled = false;
         _runCurrencyAwarded = false;
         _interstitialShownThisRun = false;
+        _rewardedRunPromptShownThisRun = false;
+        _rewardedRunPromptActive = false;
 
         // Show and enable the player now we're playing
         SetPlayerVisible(true);
@@ -503,6 +532,7 @@ public class GameManager : MonoBehaviour
         gameOverUI?.Hide();
         pauseMenuUI?.Hide();
         hudController?.Show();
+        rewardedRunPromptUI?.Hide();
 
         playerHealth?.ResetHealth();
         playerVisual.SetVisible(true);
@@ -597,6 +627,11 @@ public class GameManager : MonoBehaviour
         if (_stateMachine.CurrentState != GameState.Playing)
             return;
 
+        if (_rewardedRunPromptActive)
+        {
+            HideRewardedRunPrompt();
+        }
+
         if (playerController != null)
         {
             Transform t = playerController.transform;
@@ -627,6 +662,204 @@ public class GameManager : MonoBehaviour
         {
             TryShowInterstitial("run_end");
         }
+    }
+
+    private void EnsureRewardedRunPrompt()
+    {
+        if (rewardedRunPromptUI != null)
+            return;
+
+        RewardedRunPromptUI prefab = Resources.Load<RewardedRunPromptUI>("UI/RewardedRunPrompt");
+        if (prefab == null)
+        {
+            Debug.LogWarning("GameManager: RewardedRunPrompt prefab not found at Resources/UI/RewardedRunPrompt.");
+            return;
+        }
+
+        Canvas canvas = FindFirstObjectByType<Canvas>();
+        if (canvas == null)
+        {
+            Debug.LogWarning("GameManager: No Canvas found for rewarded run prompt.");
+            return;
+        }
+
+        rewardedRunPromptUI = Instantiate(prefab, canvas.transform);
+        rewardedRunPromptUI.Hide();
+    }
+
+    private bool ShouldTriggerRewardedRunPrompt()
+    {
+        if (!rewardedRunPromptEnabled)
+            return false;
+
+        if (_rewardedRunPromptShownThisRun || _rewardedRunPromptActive)
+            return false;
+
+        if (_stateMachine.CurrentState != GameState.Playing)
+            return false;
+
+        if (!_gameTimerEnabled || rewardedRunPromptDelaySeconds <= 0f)
+            return false;
+
+        if (_elapsedTime < rewardedRunPromptDelaySeconds)
+            return false;
+
+        if (_adInProgress || _interstitialInProgress)
+            return false;
+
+        return rewardedRunPromptUI != null;
+    }
+
+    private void ShowRewardedRunPrompt()
+    {
+        _rewardedRunPromptShownThisRun = true;
+        _rewardedRunPromptActive = true;
+
+        PauseRunForRewardedPrompt();
+
+        bool adReady = _services?.RewardedAds != null && _services.RewardedAds.IsRewardedAdReady();
+        string title = LocalizationService.Get("ui.rewarded_run_title", "Boost your run!");
+        string body = LocalizationService.Get("ui.rewarded_run_body", "Watch a rewarded ad to claim a bonus.");
+        string reward = GetRewardedRunRewardLabel();
+        string acceptLabel = LocalizationService.Get("ui.rewarded_run_accept", "Watch Ad");
+        string declineLabel = LocalizationService.Get("ui.rewarded_run_decline", "No Thanks");
+
+        rewardedRunPromptUI.Show(title, body, reward, acceptLabel, declineLabel, HandleRewardedRunAccept, HandleRewardedRunDecline, adReady);
+    }
+
+    private void HandleRewardedRunAccept()
+    {
+        if (_services?.RewardedAds == null)
+        {
+            LogAnalyticsEvent("ad_not_ready", new Dictionary<string, object>
+            {
+                { "source", "rewarded_run" },
+                { "reason", "service_missing" }
+            });
+
+            HideRewardedRunPrompt();
+            ResumeRunAfterRewardedPrompt();
+            return;
+        }
+
+        if (!_services.RewardedAds.IsRewardedAdReady())
+        {
+            LogAnalyticsEvent("ad_not_ready", new Dictionary<string, object>
+            {
+                { "source", "rewarded_run" }
+            });
+
+            HideRewardedRunPrompt();
+            ResumeRunAfterRewardedPrompt();
+            return;
+        }
+
+        _adInProgress = true;
+        Time.timeScale = 1f;
+
+        LogAnalyticsEvent("ad_shown", new Dictionary<string, object>
+        {
+            { "source", "rewarded_run" }
+        });
+
+        _services.RewardedAds.ShowRewardedAd(result =>
+        {
+            _adInProgress = false;
+
+            if (result == RewardedAdResult.Rewarded)
+            {
+                LogAnalyticsEvent("ad_completed", new Dictionary<string, object>
+                {
+                    { "source", "rewarded_run" }
+                });
+
+                GrantRewardedRunReward();
+            }
+            else
+            {
+                LogAnalyticsEvent("ad_skipped", new Dictionary<string, object>
+                {
+                    { "source", "rewarded_run" },
+                    { "result", result.ToString() }
+                });
+            }
+
+            HideRewardedRunPrompt();
+            ResumeRunAfterRewardedPrompt();
+        });
+    }
+
+    private void HandleRewardedRunDecline()
+    {
+        LogAnalyticsEvent("ad_skipped", new Dictionary<string, object>
+        {
+            { "source", "rewarded_run" },
+            { "result", "declined" }
+        });
+
+        HideRewardedRunPrompt();
+        ResumeRunAfterRewardedPrompt();
+    }
+
+    private void GrantRewardedRunReward()
+    {
+        switch (rewardedRunRewardType)
+        {
+            case RewardedRunRewardType.CoinMultiplier:
+                powerupController?.ActivatePowerup(PowerupType.CoinMultiplier);
+                break;
+            case RewardedRunRewardType.ScoreMultiplier:
+                powerupController?.ActivatePowerup(PowerupType.ScoreMultiplier);
+                break;
+            case RewardedRunRewardType.Coins:
+                currencyManager?.AddCoins(rewardedRunCoinReward);
+                break;
+        }
+    }
+
+    private string GetRewardedRunRewardLabel()
+    {
+        switch (rewardedRunRewardType)
+        {
+            case RewardedRunRewardType.CoinMultiplier:
+                return LocalizationService.Get("ui.rewarded_run_reward_coin_multiplier", "Reward: Coin Multiplier");
+            case RewardedRunRewardType.ScoreMultiplier:
+                return LocalizationService.Get("ui.rewarded_run_reward_score_multiplier", "Reward: Score Multiplier");
+            case RewardedRunRewardType.Coins:
+                return LocalizationService.Format("ui.rewarded_run_reward_coins", rewardedRunCoinReward);
+            default:
+                return LocalizationService.Get("ui.rewarded_run_reward_coin_multiplier", "Reward: Coin Multiplier");
+        }
+    }
+
+    private void PauseRunForRewardedPrompt()
+    {
+        _rewardedRunPromptPrevTimeScale = Time.timeScale;
+        Time.timeScale = 0f;
+        _gameTimerEnabled = false;
+
+        scoreManager?.StopRun();
+        speedController?.StopRun();
+        playerController?.StopRun();
+        statsTracker?.PauseRun();
+    }
+
+    private void ResumeRunAfterRewardedPrompt()
+    {
+        Time.timeScale = _rewardedRunPromptPrevTimeScale <= 0f ? 1f : _rewardedRunPromptPrevTimeScale;
+        _gameTimerEnabled = true;
+
+        scoreManager?.StartRun();
+        speedController?.StartRun();
+        playerController?.StartRun();
+        runZoneManager?.StartRun();
+        statsTracker?.ResumeRun();
+    }
+
+    private void HideRewardedRunPrompt()
+    {
+        _rewardedRunPromptActive = false;
+        rewardedRunPromptUI?.Hide();
     }
 
     private void ShowGameOverUI()

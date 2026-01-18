@@ -11,6 +11,13 @@
     {"key": "ui.countdown_go", "value": "¡YA!"},
     {"key": "ui.elapsed_time", "value": "Tiempo: {0}"},
     {"key": "ui.continues_used", "value": "Continuaciones usadas: {0}/{1}"},
-    {"key": "ui.continues_remaining", "value": "Continuaciones restantes: {0}/{1}"}
+    {"key": "ui.continues_remaining", "value": "Continuaciones restantes: {0}/{1}"},
+    {"key": "ui.rewarded_run_title", "value": "¡Potencia tu carrera!"},
+    {"key": "ui.rewarded_run_body", "value": "Mira un anuncio recompensado para obtener un bonus."},
+    {"key": "ui.rewarded_run_accept", "value": "Ver anuncio"},
+    {"key": "ui.rewarded_run_decline", "value": "No, gracias"},
+    {"key": "ui.rewarded_run_reward_coin_multiplier", "value": "Recompensa: Multiplicador de monedas"},
+    {"key": "ui.rewarded_run_reward_score_multiplier", "value": "Recompensa: Multiplicador de puntuación"},
+    {"key": "ui.rewarded_run_reward_coins", "value": "Recompensa: +{0} Monedas"}
   ]
 }
