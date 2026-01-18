@@ -23,11 +23,24 @@ public class Pickup : MonoBehaviour
     private Vector3 _baseLocalPosition;
     private Quaternion _baseLocalRotation;
     private float _bobPhaseOffset;
+    private Collider _pickupCollider;
+    private Transform _playerTransform;
+    private float _baseMagnetRadius = 0.5f;
+    private bool _isCollected;
+
+    public static float MagnetRadiusMultiplier { get; private set; } = 1f;
 
     private void Awake()
     {
-        var collider = GetComponent<Collider>();
-        collider.isTrigger = true;
+        _pickupCollider = GetComponent<Collider>();
+        _pickupCollider.isTrigger = true;
+        _baseMagnetRadius = GetColliderRadius(_pickupCollider);
+
+        var playerController = FindFirstObjectByType<PlayerController>();
+        if (playerController != null)
+        {
+            _playerTransform = playerController.transform;
+        }
 
         if (audioManager == null)
             audioManager = FindFirstObjectByType<AudioManager>();
@@ -55,6 +68,11 @@ public class Pickup : MonoBehaviour
         {
             transform.Rotate(Vector3.forward, spinDegreesPerSecond * Time.deltaTime, Space.Self);
         }
+
+        if (!_isCollected && MagnetRadiusMultiplier > 1f)
+        {
+            TryMagnetCollect();
+        }
     }
 
     private void OnTriggerEnter(Collider other)
@@ -62,9 +80,50 @@ public class Pickup : MonoBehaviour
         if (!other.CompareTag("Player"))
             return;
 
+        Collect(other.gameObject);
+    }
+
+    public void Configure(PickupType newType, PowerupType newPowerupType)
+    {
+        pickupType = newType;
+        powerupType = newPowerupType;
+    }
+
+    public static void SetMagnetRadiusMultiplier(float multiplier)
+    {
+        MagnetRadiusMultiplier = Mathf.Max(1f, multiplier);
+    }
+
+    private void TryMagnetCollect()
+    {
+        if (_playerTransform == null)
+        {
+            var playerController = FindFirstObjectByType<PlayerController>();
+            if (playerController != null)
+                _playerTransform = playerController.transform;
+        }
+
+        if (_playerTransform == null)
+            return;
+
+        float magnetRadius = _baseMagnetRadius * MagnetRadiusMultiplier;
+        float sqrDistance = (transform.position - _playerTransform.position).sqrMagnitude;
+        if (sqrDistance > magnetRadius * magnetRadius)
+            return;
+
+        Collect(_playerTransform.gameObject);
+    }
+
+    private void Collect(GameObject playerObject)
+    {
+        if (_isCollected)
+            return;
+
+        _isCollected = true;
+
         var scoreManager = FindFirstObjectByType<RunScoreManager>();
         var currencyManager = FindFirstObjectByType<RunCurrencyManager>();
-        var powerupController = other.GetComponent<PlayerPowerupController>();
+        var powerupController = playerObject != null ? playerObject.GetComponent<PlayerPowerupController>() : null;
 
         if (pickupType == PickupType.Coin)
         {
@@ -83,9 +142,13 @@ public class Pickup : MonoBehaviour
         Destroy(gameObject);
     }
 
-    public void Configure(PickupType newType, PowerupType newPowerupType)
+    private static float GetColliderRadius(Collider collider)
     {
-        pickupType = newType;
-        powerupType = newPowerupType;
+        if (collider == null)
+            return 0.5f;
+
+        Vector3 extents = collider.bounds.extents;
+        float radius = Mathf.Max(extents.x, extents.y, extents.z);
+        return Mathf.Max(radius, 0.1f);
     }
 }

@@ -4578,7 +4578,23 @@ MonoBehaviour:
   pickupSlotSpawnChance: 0.8
   obstacleRingPickupChance: 0.35
   powerupSpawnChance: 0.15
-  powerupEntries: []
+  powerupEntries:
+  - type: 0
+    weight: 1
+  - type: 1
+    weight: 1
+  - type: 2
+    weight: 1
+  - type: 3
+    weight: 1
+  - type: 4
+    weight: 1
+  - type: 5
+    weight: 1
+  - type: 6
+    weight: 1
+  - type: 7
+    weight: 1
   pickupClearanceRadius: 0.35
   pickupPlacementAttempts: 3
   obstacleOverlapMask:
