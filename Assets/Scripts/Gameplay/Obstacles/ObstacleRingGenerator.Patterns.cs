@@ -143,6 +143,7 @@ public partial class ObstacleRingGenerator
         if (fan != null)
         {
             fan.SetSideCount(sideCount);
+            fan.ApplyDifficulty(GetDifficulty01());
         }
 
         var laser = instance.GetComponent<LaserObstacle>();
