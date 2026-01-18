@@ -213,7 +213,22 @@ public partial class ObstacleRingGenerator
             }
 
             _inWedgeRun = true;
-            _wedgeRunRingsRemaining = RandomRange(_currentWedgeSet.minRings, _currentWedgeSet.maxRings + 1);
+            int minRings = _currentWedgeSet.minRings;
+            int maxRings = _currentWedgeSet.maxRings;
+            if (enableDifficultyScaling)
+            {
+                float difficulty = GetDifficulty01();
+                int minTarget = _currentWedgeSet.minRingsAtMaxDifficulty >= 0
+                    ? _currentWedgeSet.minRingsAtMaxDifficulty
+                    : minRings;
+                int maxTarget = _currentWedgeSet.maxRingsAtMaxDifficulty >= 0
+                    ? _currentWedgeSet.maxRingsAtMaxDifficulty
+                    : maxRings;
+                minRings = Mathf.RoundToInt(Mathf.Lerp(minRings, minTarget, difficulty));
+                maxRings = Mathf.RoundToInt(Mathf.Lerp(maxRings, maxTarget, difficulty));
+            }
+            maxRings = Mathf.Max(maxRings, minRings);
+            _wedgeRunRingsRemaining = RandomRange(minRings, maxRings + 1);
             _wedgeCurrentRotationStep = RandomRange(0, Mathf.Max(1, sideCount));
 
             if (_currentWedgeSet.oneDirectionOnly)
@@ -263,6 +278,10 @@ public partial class ObstacleRingGenerator
             if (enableDifficultyScaling)
             {
                 float difficulty = GetDifficulty01();
+                int maxStepTarget = _currentWedgeSet.maxRotationStepPerRingAtMaxDifficulty >= 0
+                    ? _currentWedgeSet.maxRotationStepPerRingAtMaxDifficulty
+                    : maxStep;
+                maxStep = Mathf.RoundToInt(Mathf.Lerp(maxStep, maxStepTarget, difficulty));
                 float multiplier = Mathf.Lerp(1f, wedgeRotationStepMultiplierAtMaxDifficulty, difficulty);
                 maxStep = Mathf.RoundToInt(maxStep * multiplier);
             }
@@ -300,7 +319,14 @@ public partial class ObstacleRingGenerator
         foreach (var set in wedgePatternSets)
         {
             if (set == null) continue;
-            totalWeight += Mathf.Max(0, set.weight);
+            int baseWeight = Mathf.Max(0, set.weight);
+            int bonus = 0;
+            if (enableDifficultyScaling)
+            {
+                float difficulty = GetDifficulty01();
+                bonus = Mathf.RoundToInt(Mathf.Max(0f, set.weightBonusAtMaxDifficulty) * difficulty);
+            }
+            totalWeight += Mathf.Max(0, baseWeight + bonus);
         }
 
         if (totalWeight <= 0)
@@ -317,7 +343,14 @@ public partial class ObstacleRingGenerator
         foreach (var set in wedgePatternSets)
         {
             if (set == null) continue;
-            int w = Mathf.Max(0, set.weight);
+            int baseWeight = Mathf.Max(0, set.weight);
+            int bonus = 0;
+            if (enableDifficultyScaling)
+            {
+                float difficulty = GetDifficulty01();
+                bonus = Mathf.RoundToInt(Mathf.Max(0f, set.weightBonusAtMaxDifficulty) * difficulty);
+            }
+            int w = Mathf.Max(0, baseWeight + bonus);
             cumulative += w;
             if (roll < cumulative)
                 return set;

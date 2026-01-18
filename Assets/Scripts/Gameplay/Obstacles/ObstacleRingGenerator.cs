@@ -77,14 +77,26 @@ public partial class ObstacleRingGenerator : MonoBehaviour
         [Tooltip("Maximum rings in this wedge run.")]
         public int maxRings = 7;
 
+        [Tooltip("Minimum rings at max difficulty (uses minRings when negative).")]
+        public int minRingsAtMaxDifficulty = -1;
+
+        [Tooltip("Maximum rings at max difficulty (uses maxRings when negative).")]
+        public int maxRingsAtMaxDifficulty = -1;
+
         [Tooltip("Max side steps pattern can rotate per subsequent ring.")]
         public int maxRotationStepPerRing = 1;
+
+        [Tooltip("Max side steps at max difficulty (uses maxRotationStepPerRing when negative).")]
+        public int maxRotationStepPerRingAtMaxDifficulty = -1;
 
         [Tooltip("If true, rotation only moves in one direction; otherwise can move left or right.")]
         public bool oneDirectionOnly = false;
 
         [Tooltip("Relative weight for picking this set among all wedge sets.")]
         public int weight = 1;
+
+        [Tooltip("Extra weight added when difficulty ramps to 1.")]
+        [Min(0f)] public float weightBonusAtMaxDifficulty = 0f;
     }
 
     [System.Serializable]
