@@ -20,9 +20,11 @@ public class GameManager : MonoBehaviour
     [SerializeField] private PlayerHealth playerHealth;
     [SerializeField] private RunScoreManager scoreManager;
     [SerializeField] private RunSpeedController speedController;
+    [SerializeField] private RunCurrencyManager currencyManager;
     [SerializeField] private RunZoneManager runZoneManager;
     [SerializeField] private ObstacleRingGenerator obstacleRingGenerator;
     [SerializeField] private RunStatsTracker statsTracker;
+    [SerializeField] private PlayerProfile playerProfile;
 
     [Header("Player Visuals (optional)")]
     [SerializeField] private PlayerVisual playerVisual;
@@ -67,6 +69,7 @@ public class GameManager : MonoBehaviour
     private bool _gameTimerEnabled;
     private GameStateMachine _stateMachine;
     private GameServicesFacade _services;
+    private bool _runCurrencyAwarded;
 
     private Vector3 _lastDeathPosition;
     private Vector3 _lastDeathForward;
@@ -100,9 +103,18 @@ public class GameManager : MonoBehaviour
         if (playerHealth == null) playerHealth = FindFirstObjectByType<PlayerHealth>();
         if (scoreManager == null) scoreManager = FindFirstObjectByType<RunScoreManager>();
         if (speedController == null) speedController = FindFirstObjectByType<RunSpeedController>();
+        if (currencyManager == null) currencyManager = FindFirstObjectByType<RunCurrencyManager>();
         if (runZoneManager == null) runZoneManager = FindFirstObjectByType<RunZoneManager>();
         if (statsTracker == null) statsTracker = FindFirstObjectByType<RunStatsTracker>();
         if (obstacleRingGenerator == null) obstacleRingGenerator = FindFirstObjectByType<ObstacleRingGenerator>();
+        if (playerProfile == null)
+        {
+            var profiles = Resources.FindObjectsOfTypeAll<PlayerProfile>();
+            if (profiles != null && profiles.Length > 0)
+            {
+                playerProfile = profiles[0];
+            }
+        }
 
         if (balanceConfig != null)
         {
@@ -226,6 +238,7 @@ public class GameManager : MonoBehaviour
             return;
 
         _services?.Audio?.PlayButtonClick();
+        AwardRunCurrencyOnce();
         StartNewRunWithFade(StartNewRunFromGameOver);
     }
 
@@ -235,6 +248,7 @@ public class GameManager : MonoBehaviour
             return;
 
         _services?.Audio?.PlayButtonClick();
+        AwardRunCurrencyOnce();
         ReturnToMenuWithFade(() =>
         {
             _services?.Audio?.PlayMenuMusic();
@@ -267,6 +281,7 @@ public class GameManager : MonoBehaviour
             return;
 
         _services?.Audio?.PlayButtonClick();
+        AwardRunCurrencyOnce();
         ReturnToMenuWithFade(() =>
         {
             _services?.Audio?.PlayMenuMusic();
@@ -428,6 +443,7 @@ public class GameManager : MonoBehaviour
 
         _elapsedTime = 0;
         _gameTimerEnabled = false;
+        _runCurrencyAwarded = false;
 
         // Show and enable the player now we're playing
         SetPlayerVisible(true);
@@ -441,6 +457,7 @@ public class GameManager : MonoBehaviour
         playerHealth?.ResetHealth();
         playerVisual.SetVisible(true);
         scoreManager?.ResetRun();
+        currencyManager?.ResetRun();
         speedController?.ResetForNewRun();
         statsTracker?.ResetRunStats();
         runZoneManager?.OnResetRun();
@@ -545,6 +562,10 @@ public class GameManager : MonoBehaviour
             { "continues_used", continuesUsed }
         });
         statsTracker?.EndRun();
+        if (continuesUsed >= maxContinuesPerRun)
+        {
+            AwardRunCurrencyOnce();
+        }
 
         ShowGameOverUI();
     }
@@ -659,6 +680,24 @@ public class GameManager : MonoBehaviour
         {
             playerCollider.enabled = enabled;
         }
+    }
+
+    private void AwardRunCurrencyOnce()
+    {
+        if (_runCurrencyAwarded)
+            return;
+
+        _runCurrencyAwarded = true;
+
+        if (playerProfile == null || currencyManager == null)
+            return;
+
+        int coinsToAward = currencyManager.CurrentCoins;
+        if (coinsToAward <= 0)
+            return;
+
+        playerProfile.softCurrency += coinsToAward;
+        playerProfile.Save();
     }
 
     private sealed class GameStateMachine
