@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -50,6 +51,7 @@ public partial class ObstacleRingGenerator : MonoBehaviour
         public Transform root;
         public ObstacleRingType type;
         public bool isObstacleRing;
+        public bool isDissolving;
         public GameObject obstacleInstance;
         public Renderer[] renderers;
         public readonly List<GameObject> pickups = new List<GameObject>();
@@ -288,6 +290,11 @@ public partial class ObstacleRingGenerator : MonoBehaviour
         {
             RingInstance ring = _rings[i];
             if (ring == null || ring.root == null) continue;
+            if (ring.isDissolving)
+            {
+                ApplyColor(ring, i, _colorTime);
+                continue;
+            }
 
             float z = ring.root.position.z;
             if (playerZ - z > recycleBehindDistance)
@@ -419,30 +426,75 @@ public partial class ObstacleRingGenerator : MonoBehaviour
     /// </summary>
     public void DissolveNextRings(int ringCount, float dissolveDuration)
     {
-        foreach (var r in _rings)
+        if (player == null)
+            return;
+
+        int clampedCount = Mathf.Max(0, ringCount);
+        if (clampedCount == 0)
+            return;
+
+        float playerZ = player.position.z;
+        var ringsAhead = new List<RingInstance>();
+        foreach (var ring in _rings)
         {
-            if (r != null && r.root != null)
+            if (ring != null && ring.root != null && ring.root.position.z > playerZ)
             {
-                Destroy(r.root.gameObject);
+                ringsAhead.Add(ring);
             }
         }
-        _rings.Clear();
+        ringsAhead.Sort((a, b) => a.root.position.z.CompareTo(b.root.position.z));
 
-        _patternRingsRemaining = 0;
-        _nextSpawnZ = player.position.z + ringSpacing * 4.2f;
-        _ringSequenceIndex = 0;
-        _pickupChainRemaining = 0;
-        _pickupChainLength = 0;
-        _pickupChainGapRemaining = 0;
-        _pickupSpawnChanceMultiplier = 1f;
-
-        _inWedgeRun = false;
-        _currentWedgeSet = null;
-        _wedgeRunRingsRemaining = 0;
-
-        for (int i = 0; i < ringBufferCount; i++)
+        int dissolveCount = Mathf.Min(clampedCount, ringsAhead.Count);
+        for (int i = 0; i < dissolveCount; i++)
         {
-            SpawnRing();
+            RingInstance ring = ringsAhead[i];
+            if (ring == null || ring.isDissolving)
+                continue;
+
+            ring.isObstacleRing = false;
+            ring.isDissolving = true;
+            ClearPickups(ring);
+
+            if (ring.obstacleInstance == null)
+            {
+                ring.isDissolving = false;
+                continue;
+            }
+
+            var dissolvers = ring.obstacleInstance.GetComponentsInChildren<ObstacleDissolver>(true);
+            if (dissolvers.Length > 0)
+            {
+                foreach (var dissolver in dissolvers)
+                {
+                    if (dissolver != null)
+                        dissolver.Dissolve(dissolveDuration);
+                }
+            }
+            else
+            {
+                ring.obstacleInstance.SetActive(false);
+            }
+
+            StartCoroutine(FinalizeDissolvedRing(ring, ring.obstacleInstance, dissolveDuration));
+        }
+    }
+
+    private IEnumerator FinalizeDissolvedRing(RingInstance ring, GameObject obstacleInstance, float dissolveDuration)
+    {
+        if (dissolveDuration > 0f)
+            yield return new WaitForSeconds(dissolveDuration);
+
+        if (obstacleInstance == null)
+        {
+            if (ring != null)
+                ring.isDissolving = false;
+            yield break;
+        }
+
+        if (ring != null && ring.obstacleInstance == obstacleInstance)
+        {
+            ring.isDissolving = false;
+            obstacleInstance.SetActive(false);
         }
     }
 

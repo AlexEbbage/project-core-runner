@@ -124,6 +124,9 @@ public partial class ObstacleRingGenerator
 
         if (ring.obstacleInstance != null)
         {
+            if (!ring.obstacleInstance.activeSelf)
+                ring.obstacleInstance.SetActive(true);
+
             var t = ring.obstacleInstance.transform;
             t.localPosition = Vector3.zero;
             t.localRotation = Quaternion.Euler(0f, 0f, zAngle);
@@ -206,6 +209,9 @@ public partial class ObstacleRingGenerator
 
         if (ring.obstacleInstance != null)
         {
+            if (!ring.obstacleInstance.activeSelf)
+                ring.obstacleInstance.SetActive(true);
+
             Transform t = ring.obstacleInstance.transform;
             t.localPosition = Vector3.zero;
             t.localRotation = Quaternion.Euler(0f, 0f, zAngle);
