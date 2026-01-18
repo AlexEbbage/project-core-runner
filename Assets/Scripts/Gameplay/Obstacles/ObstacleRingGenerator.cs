@@ -87,6 +87,18 @@ public partial class ObstacleRingGenerator : MonoBehaviour
         public int weight = 1;
     }
 
+    [System.Serializable]
+    public class LaserBehaviorSettings
+    {
+        public bool enableRotation = false;
+        public float rotationSpeed = 45f;
+        public bool enableBeamCycling = false;
+        public float beamOnDuration = 1.25f;
+        public float beamOffDuration = 0.75f;
+        public bool startBeamsOn = true;
+        public bool randomizeBeamCyclePhase = false;
+    }
+
     [Header("References")]
     [SerializeField] private Transform player;
     [SerializeField] private PlayerController playerController;
@@ -158,6 +170,16 @@ public partial class ObstacleRingGenerator : MonoBehaviour
     [Tooltip("Chance to use shifted orientation vs random orientation for non-wedge types.")]
     [Range(0f, 1f)]
     [SerializeField] private float shiftedPatternChance = 0.5f;
+
+    [Header("Laser Behavior")]
+    [SerializeField] private LaserBehaviorSettings laserRandomOrientationSettings = new LaserBehaviorSettings();
+    [SerializeField] private LaserBehaviorSettings laserShiftedOrientationSettings = new LaserBehaviorSettings();
+
+    [Header("Laser Difficulty Scaling")]
+    [SerializeField] private bool scaleLaserWithDifficulty = true;
+    [SerializeField] private float laserRotationSpeedAtMaxDifficulty = 90f;
+    [SerializeField] private float laserBeamOnDurationAtMaxDifficulty = 0.6f;
+    [SerializeField] private float laserBeamOffDurationAtMaxDifficulty = 0.6f;
 
     [Header("Colors")]
     [SerializeField] private Gradient obstacleColorGradient;

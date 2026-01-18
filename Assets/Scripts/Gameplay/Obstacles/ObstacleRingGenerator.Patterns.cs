@@ -149,7 +149,37 @@ public partial class ObstacleRingGenerator
         if (laser != null)
         {
             laser.SetSideCount(sideCount);
+            ConfigureLaserSettings(laser);
         }
+    }
+
+    private void ConfigureLaserSettings(LaserObstacle laser)
+    {
+        if (laser == null) return;
+
+        LaserBehaviorSettings settings = _currentPatternMode == PatternMode.ShiftedOrientation
+            ? laserShiftedOrientationSettings
+            : laserRandomOrientationSettings;
+
+        float difficulty = enableDifficultyScaling ? GetDifficulty01() : 0f;
+        float rotationSpeed = settings.rotationSpeed;
+        float beamOn = settings.beamOnDuration;
+        float beamOff = settings.beamOffDuration;
+
+        if (scaleLaserWithDifficulty)
+        {
+            rotationSpeed = Mathf.Lerp(settings.rotationSpeed, laserRotationSpeedAtMaxDifficulty, difficulty);
+            beamOn = Mathf.Lerp(settings.beamOnDuration, laserBeamOnDurationAtMaxDifficulty, difficulty);
+            beamOff = Mathf.Lerp(settings.beamOffDuration, laserBeamOffDurationAtMaxDifficulty, difficulty);
+        }
+
+        laser.ConfigureRotation(settings.enableRotation, rotationSpeed);
+        laser.ConfigureBeamCycle(
+            settings.enableBeamCycling,
+            beamOn,
+            beamOff,
+            settings.startBeamsOn,
+            settings.randomizeBeamCyclePhase);
     }
 
     #endregion

@@ -11,24 +11,94 @@ public class LaserObstacle : MonoBehaviour
 {
     [SerializeField] private GameObject laserSegmentPrefab;
     [SerializeField] private int laserCount = 3;
+    [Header("Rotation")]
+    [SerializeField] private bool enableRotation = false;
+    [SerializeField] private float rotationSpeed = 45f;
+
+    [Header("Beam Cycling")]
+    [SerializeField] private bool enableBeamCycle = false;
+    [SerializeField] private float beamOnDuration = 1.25f;
+    [SerializeField] private float beamOffDuration = 0.75f;
+    [SerializeField] private bool startBeamsOn = true;
+    [SerializeField] private bool randomizeBeamCyclePhase = false;
 
     private int _sideCount = 6;
     private readonly List<GameObject> _spawnedLasers = new List<GameObject>();
+    private float _beamCycleTimer;
+    private bool _beamsOn = true;
 
     private void Start()
     {
         Regenerate();
     }
 
+    private void OnEnable()
+    {
+        ResetBeamCycle();
+    }
+
     private void OnValidate()
     {
         laserCount = Mathf.Max(1, laserCount);
+        rotationSpeed = Mathf.Max(0f, rotationSpeed);
+        beamOnDuration = Mathf.Max(0.05f, beamOnDuration);
+        beamOffDuration = Mathf.Max(0.05f, beamOffDuration);
         // No auto-regenerate: use context menu or runtime.
+    }
+
+    private void Update()
+    {
+        if (enableRotation && rotationSpeed > 0f)
+        {
+            transform.Rotate(0f, 0f, rotationSpeed * Time.deltaTime, Space.Self);
+        }
+
+        if (enableBeamCycle)
+        {
+            _beamCycleTimer += Time.deltaTime;
+            float duration = _beamsOn ? beamOnDuration : beamOffDuration;
+            if (_beamCycleTimer >= duration)
+            {
+                _beamCycleTimer = 0f;
+                _beamsOn = !_beamsOn;
+                SetBeamsActive(_beamsOn);
+            }
+        }
+        else if (!_beamsOn)
+        {
+            _beamsOn = true;
+            SetBeamsActive(true);
+        }
     }
 
     public void SetSideCount(int sides)
     {
         _sideCount = Mathf.Max(3, sides);
+    }
+
+    public void ConfigureRotation(bool enabled, float speed)
+    {
+        enableRotation = enabled;
+        rotationSpeed = Mathf.Max(0f, speed);
+    }
+
+    public void ConfigureBeamCycle(bool enabled, float onDuration, float offDuration, bool startOn, bool randomizePhase)
+    {
+        enableBeamCycle = enabled;
+        beamOnDuration = Mathf.Max(0.05f, onDuration);
+        beamOffDuration = Mathf.Max(0.05f, offDuration);
+        startBeamsOn = startOn;
+        randomizeBeamCyclePhase = randomizePhase;
+        if (!enableBeamCycle)
+        {
+            _beamsOn = true;
+            _beamCycleTimer = 0f;
+            SetBeamsActive(true);
+        }
+        else
+        {
+            ResetBeamCycle();
+        }
     }
 
     [ContextMenu("Regenerate Lasers")]
@@ -68,6 +138,8 @@ public class LaserObstacle : MonoBehaviour
 
             currentSideIndex = (currentSideIndex + stepSides) % sides;
         }
+
+        SetBeamsActive(_beamsOn || !enableBeamCycle);
     }
 
     private void ClearLasers()
@@ -87,5 +159,24 @@ public class LaserObstacle : MonoBehaviour
             }
         }
         _spawnedLasers.Clear();
+    }
+
+    private void SetBeamsActive(bool isActive)
+    {
+        foreach (var laser in _spawnedLasers)
+        {
+            if (laser != null)
+                laser.SetActive(isActive);
+        }
+    }
+
+    private void ResetBeamCycle()
+    {
+        _beamsOn = startBeamsOn || !enableBeamCycle;
+        float duration = _beamsOn ? beamOnDuration : beamOffDuration;
+        _beamCycleTimer = randomizeBeamCyclePhase && duration > 0f
+            ? Random.Range(0f, duration)
+            : 0f;
+        SetBeamsActive(_beamsOn);
     }
 }
