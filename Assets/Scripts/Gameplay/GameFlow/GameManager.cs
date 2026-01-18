@@ -868,6 +868,24 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        if (!AdsConfig.InterstitialsEnabled)
+        {
+            if (logStateChanges)
+            {
+                Debug.Log("GameManager: Interstitials disabled, skipping interstitial.");
+            }
+
+            LogAnalyticsEvent("ad_bypassed", new Dictionary<string, object>
+            {
+                { "source", source },
+                { "reason", "interstitials_disabled" },
+                { "ad_type", "interstitial" }
+            });
+
+            onCompleted?.Invoke();
+            return;
+        }
+
         if (_services?.InterstitialAds == null)
         {
             if (logStateChanges)
