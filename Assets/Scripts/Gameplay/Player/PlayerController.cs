@@ -56,6 +56,8 @@ public class PlayerController : MonoBehaviour
     private bool _isRunning;
     private bool _autoPilotActive;
     private float _autoPilotInput;
+    private float _baseAngularSpeedDegrees;
+    private float _baseTouchInputSensitivity;
 
     // Angular position around the tube, in degrees.
     private float _angleDegrees;
@@ -76,6 +78,9 @@ public class PlayerController : MonoBehaviour
         _baseInputSmoothingTime = inputSmoothingTime;
 
         _currentForwardSpeed = defaultForwardSpeed;
+        _baseAngularSpeedDegrees = angularSpeedDegrees;
+        _baseTouchInputSensitivity = touchInputSensitivity;
+        ApplySensitivitySettings();
 
         Vector3 pos = transform.position;
         _zPosition = pos.z;
@@ -110,6 +115,16 @@ public class PlayerController : MonoBehaviour
             StartRun();
         else
             StopRun();
+    }
+
+    private void OnEnable()
+    {
+        SettingsData.TouchSensitivityChanged += HandleSensitivityChanged;
+    }
+
+    private void OnDisable()
+    {
+        SettingsData.TouchSensitivityChanged -= HandleSensitivityChanged;
     }
 
     public void OnMove(InputAction.CallbackContext context)
@@ -149,6 +164,7 @@ public class PlayerController : MonoBehaviour
     public void StartRun()
     {
         _isRunning = true;
+        ApplySensitivitySettings();
         ResetSmoothedInput(_moveInputTarget);
     }
 
@@ -181,6 +197,22 @@ public class PlayerController : MonoBehaviour
 
     public float AngularSpeedDegrees => angularSpeedDegrees;
 
+    public void ApplySensitivitySettings()
+    {
+        ApplySensitivitySettings(SettingsData.TouchSensitivity);
+    }
+
+    private void HandleSensitivityChanged(float sensitivity)
+    {
+        ApplySensitivitySettings(sensitivity);
+    }
+
+    private void ApplySensitivitySettings(float sensitivity)
+    {
+        angularSpeedDegrees = _baseAngularSpeedDegrees * sensitivity;
+        touchInputSensitivity = _baseTouchInputSensitivity * sensitivity;
+    }
+    
     public void RefreshHandlingFromProfile()
     {
         ApplyHandlingUpgrade();

@@ -5,6 +5,7 @@ public class SettingsMenuUI : MonoBehaviour
 {
     [SerializeField] private Slider musicSlider;
     [SerializeField] private Slider sfxSlider;
+    [SerializeField] private Slider sensitivitySlider;
     [SerializeField] private Toggle vibrateToggle;
     [SerializeField] private Toggle touchInputToggle;
 
@@ -16,9 +17,18 @@ public class SettingsMenuUI : MonoBehaviour
             audioManager = FindFirstObjectByType<AudioManager>();
 
         // Load
-        musicSlider.value = SettingsData.MusicVolume;
-        sfxSlider.value = SettingsData.SfxVolume;
-        vibrateToggle.isOn = SettingsData.VibrateEnabled;
+        if (musicSlider != null)
+            musicSlider.value = SettingsData.MusicVolume;
+        if (sfxSlider != null)
+            sfxSlider.value = SettingsData.SfxVolume;
+        if (sensitivitySlider != null)
+        {
+            sensitivitySlider.minValue = SettingsData.TouchSensitivityMin;
+            sensitivitySlider.maxValue = SettingsData.TouchSensitivityMax;
+            sensitivitySlider.value = SettingsData.TouchSensitivity;
+        }
+        if (vibrateToggle != null)
+            vibrateToggle.isOn = SettingsData.VibrateEnabled;
         if (touchInputToggle != null)
             touchInputToggle.isOn = SettingsData.CurrentTouchInputMode == SettingsData.TouchInputMode.Buttons;
 
@@ -35,6 +45,11 @@ public class SettingsMenuUI : MonoBehaviour
     {
         SettingsData.SfxVolume = value;
         ApplyToAudio();
+    }
+
+    public void OnSensitivitySliderChanged(float value)
+    {
+        SettingsData.TouchSensitivity = value;
     }
 
     public void OnVibrateToggleChanged(bool on)

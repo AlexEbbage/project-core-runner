@@ -7,6 +7,10 @@ public static class SettingsData
     private const string SfxVolumeKey = "settings_sfx_volume";
     private const string VibrateKey = "settings_vibrate";
     private const string TouchInputModeKey = "settings_touch_input_mode";
+    private const string TouchSensitivityKey = "settings_touch_sensitivity";
+    public const float TouchSensitivityMin = 0.5f;
+    public const float TouchSensitivityMax = 2f;
+    public const float TouchSensitivityDefault = 1f;
 
     public enum TouchInputMode
     {
@@ -47,4 +51,22 @@ public static class SettingsData
             PlayerPrefs.Save();
         }
     }
+
+    public static float TouchSensitivity
+    {
+        get => PlayerPrefs.GetFloat(TouchSensitivityKey, TouchSensitivityDefault);
+        set
+        {
+            float clamped = Mathf.Clamp(value, TouchSensitivityMin, TouchSensitivityMax);
+            float current = TouchSensitivity;
+            if (Mathf.Approximately(current, clamped))
+                return;
+
+            PlayerPrefs.SetFloat(TouchSensitivityKey, clamped);
+            PlayerPrefs.Save();
+            TouchSensitivityChanged?.Invoke(clamped);
+        }
+    }
+
+    public static event System.Action<float> TouchSensitivityChanged;
 }
