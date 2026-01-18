@@ -19,6 +19,13 @@ public class ShopPageController : MonoBehaviour
     [SerializeField] private HangarPageController hangarPageController;
 
     private readonly List<GameObject> _spawnedItems = new();
+    [SerializeField] private GameManager gameManager;
+
+    private void Awake()
+    {
+        if (gameManager == null)
+            gameManager = FindFirstObjectByType<GameManager>();
+    }
 
     public void SelectTab(ShopTab tab)
     {
@@ -47,6 +54,12 @@ public class ShopPageController : MonoBehaviour
             return;
 
         profile.UnlockItem(item.id);
+        gameManager?.LogAnalyticsEvent(AnalyticsEventNames.ShopPurchase, new Dictionary<string, object>
+        {
+            { AnalyticsEventNames.Params.Type, item.tab.ToString() },
+            { AnalyticsEventNames.Params.Id, item.id },
+            { AnalyticsEventNames.Params.Price, item.price }
+        });
         detailsModal.Hide();
         BuildContent();
         hangarPageController?.RefreshContent();

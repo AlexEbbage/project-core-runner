@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -71,6 +72,7 @@ public class PlayerPowerupController : MonoBehaviour
     private float _defaultSpeedMultiplier = 1f;
     private float _previousTimeScale = 1f;
     private float _previousFixedDeltaTime;
+    [SerializeField] private GameManager gameManager;
 
     private readonly System.Collections.Generic.Dictionary<PowerupType, float> _powerupEndTimes =
         new System.Collections.Generic.Dictionary<PowerupType, float>();
@@ -93,6 +95,9 @@ public class PlayerPowerupController : MonoBehaviour
 
     private void Awake()
     {
+        if (gameManager == null)
+            gameManager = FindFirstObjectByType<GameManager>();
+            
         if (playerProfile == null)
         {
             var profiles = Resources.FindObjectsOfTypeAll<PlayerProfile>();
@@ -159,6 +164,11 @@ public class PlayerPowerupController : MonoBehaviour
     public void ActivatePowerup(PowerupType powerupType)
     {
         OnPowerupCollected?.Invoke(powerupType);
+
+        gameManager?.LogAnalyticsEvent(AnalyticsEventNames.PowerupPickup, new Dictionary<string, object>
+        {
+            { AnalyticsEventNames.Params.Type, powerupType.ToString() }
+        });
 
         switch (powerupType)
         {
