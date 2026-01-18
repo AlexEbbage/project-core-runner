@@ -16,6 +16,7 @@ public class ShopPageController : MonoBehaviour
 
     [Header("Modal")]
     [SerializeField] private ShopItemDetailsModal detailsModal;
+    [SerializeField] private HangarPageController hangarPageController;
 
     private readonly List<GameObject> _spawnedItems = new();
     [SerializeField] private GameManager gameManager;
@@ -37,12 +38,16 @@ public class ShopPageController : MonoBehaviour
         if (detailsModal == null || item == null)
             return;
 
-        detailsModal.Show(item, () => OnBuyConfirmed(item));
+        bool isUnlocked = IsItemUnlocked(item);
+        detailsModal.Show(item, isUnlocked, isUnlocked ? null : () => OnBuyConfirmed(item));
     }
 
     public void OnBuyConfirmed(ShopItemDefinition item)
     {
         if (profile == null || item == null)
+            return;
+
+        if (IsItemUnlocked(item))
             return;
 
         if (!profile.TrySpend(item.currencyType, item.price))
@@ -56,6 +61,8 @@ public class ShopPageController : MonoBehaviour
             { AnalyticsEventNames.Params.Price, item.price }
         });
         detailsModal.Hide();
+        BuildContent();
+        hangarPageController?.RefreshContent();
     }
 
     private void BuildContent()
@@ -71,7 +78,7 @@ public class ShopPageController : MonoBehaviour
                 continue;
 
             var instance = Instantiate(itemCardPrefab, contentRoot);
-            instance.Initialize(item);
+            instance.Initialize(item, IsItemUnlocked(item));
             _spawnedItems.Add(instance.gameObject);
         }
     }
@@ -85,5 +92,13 @@ public class ShopPageController : MonoBehaviour
         }
 
         _spawnedItems.Clear();
+    }
+
+    private bool IsItemUnlocked(ShopItemDefinition item)
+    {
+        if (profile == null || item == null || string.IsNullOrEmpty(item.id))
+            return false;
+
+        return profile.HasUnlocked(item.id);
     }
 }
