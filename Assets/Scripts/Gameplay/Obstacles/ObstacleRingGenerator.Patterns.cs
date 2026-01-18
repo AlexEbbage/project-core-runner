@@ -163,21 +163,21 @@ public partial class ObstacleRingGenerator
 
         float difficulty = enableDifficultyScaling ? GetDifficulty01() : 0f;
         float rotationSpeed = settings.rotationSpeed;
-        float beamOn = settings.beamOnDuration;
-        float beamOff = settings.beamOffDuration;
+        float pulseDuration = settings.pulseDuration;
+        float dutyCycle = settings.dutyCycle;
 
         if (scaleLaserWithDifficulty)
         {
             rotationSpeed = Mathf.Lerp(settings.rotationSpeed, laserRotationSpeedAtMaxDifficulty, difficulty);
-            beamOn = Mathf.Lerp(settings.beamOnDuration, laserBeamOnDurationAtMaxDifficulty, difficulty);
-            beamOff = Mathf.Lerp(settings.beamOffDuration, laserBeamOffDurationAtMaxDifficulty, difficulty);
+            pulseDuration = Mathf.Lerp(settings.pulseDuration, laserPulseDurationAtMaxDifficulty, difficulty);
+            dutyCycle = Mathf.Lerp(settings.dutyCycle, laserDutyCycleAtMaxDifficulty, difficulty);
         }
 
         laser.ConfigureRotation(settings.enableRotation, rotationSpeed);
         laser.ConfigureBeamCycle(
             settings.enableBeamCycling,
-            beamOn,
-            beamOff,
+            pulseDuration,
+            dutyCycle,
             settings.startBeamsOn,
             settings.randomizeBeamCyclePhase);
     }
