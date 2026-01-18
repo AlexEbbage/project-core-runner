@@ -235,6 +235,8 @@ public class PlayerProfile : ScriptableObject
     private const string ProfileHashKey = "PlayerProfileHash";
     private const string HashSalt = "profile_v1";
 
+    public event System.Action<UpgradeType, int> UpgradeLevelChanged;
+
     public int level = 1;
     public int xp;
     public int softCurrency = 1000;
@@ -419,6 +421,12 @@ public class PlayerProfile : ScriptableObject
 
     public void SetUpgradeLevel(UpgradeType upgradeType, int levelValue)
     {
+        int clampedLevel = Mathf.Max(0, levelValue);
+        int previousLevel = GetUpgradeLevel(upgradeType);
+
+        if (previousLevel == clampedLevel)
+            return;
+
         bool updated = false;
         for (int i = 0; i < upgradeLevels.Count; i++)
         {
@@ -427,7 +435,7 @@ public class PlayerProfile : ScriptableObject
                 upgradeLevels[i] = new UpgradeLevelEntry
                 {
                     upgradeType = upgradeType,
-                    level = Mathf.Max(0, levelValue)
+                    level = clampedLevel
                 };
                 updated = true;
                 break;
@@ -439,11 +447,12 @@ public class PlayerProfile : ScriptableObject
             upgradeLevels.Add(new UpgradeLevelEntry
             {
                 upgradeType = upgradeType,
-                level = Mathf.Max(0, levelValue)
+                level = clampedLevel
             });
         }
 
         Save();
+        UpgradeLevelChanged?.Invoke(upgradeType, clampedLevel);
     }
 
     public void SetSelectedShip(string shipId)
