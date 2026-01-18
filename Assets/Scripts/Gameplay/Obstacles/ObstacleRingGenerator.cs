@@ -8,7 +8,7 @@ using UnityEngine;
 /// centered at the tube origin and rotated around Z.
 ///
 /// Features:
-/// - Obstacle types: Laser, Fan, WedgeFull, Wedge75, Wedge50, Wedge25
+/// - Obstacle types: Laser, Fan, Door, WedgeFull, Wedge75, Wedge50, Wedge25
 /// - For non-wedge types:
 ///     * Type X for Y rings, random orientations or shifted orientations
 /// - For wedge types:
@@ -26,6 +26,7 @@ public partial class ObstacleRingGenerator : MonoBehaviour
     {
         Laser,
         Fan,
+        Door,
         Wedge
     }
 

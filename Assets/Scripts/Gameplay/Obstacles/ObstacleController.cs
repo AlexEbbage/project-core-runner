@@ -63,6 +63,8 @@ public class ObstacleController : MonoBehaviour
             return "Laser";
         if (GetComponent<WedgeObstacle>() != null)
             return "Wedge";
+        if (GetComponent<DoorObstacle>() != null)
+            return "Door";
 
         return gameObject.name;
     }
