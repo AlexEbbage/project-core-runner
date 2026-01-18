@@ -86,7 +86,7 @@ public static class MainMenuPrefabBuilder
         AssignBottomNav(bottomNavController, menuController, bottomNav, builderConfig.BottomNavButtons);
 
         AttachHangarController(pageContainer, builderConfig.HangarPage);
-        AttachShopController(pageContainer, modal, builderConfig.ShopPage);
+        AttachShopController(pageContainer, modal, builderConfig.ShopPage, builderConfig.HangarPage);
 
         PrefabUtility.SaveAsPrefabAsset(canvas, Path.Combine(PrefabRoot, "MainMenuCanvas.prefab"));
         Object.DestroyImmediate(canvas);
@@ -429,7 +429,7 @@ public static class MainMenuPrefabBuilder
         SetSerializedReference(hangarController, "cosmeticItemPrefab", cosmeticPrefab.GetComponent<HangarCosmeticItemView>());
     }
 
-    private static void AttachShopController(RectTransform pageContainer, RectTransform modal, ShopPageConfig config)
+    private static void AttachShopController(RectTransform pageContainer, RectTransform modal, ShopPageConfig config, HangarPageConfig hangarConfig)
     {
         if (config == null)
             return;
@@ -439,6 +439,14 @@ public static class MainMenuPrefabBuilder
             return;
 
         var shopController = shopPage.gameObject.AddComponent<ShopPageController>();
+        if (hangarConfig != null)
+        {
+            var hangarPage = pageContainer.Find(hangarConfig.Name);
+            if (hangarPage != null && hangarPage.TryGetComponent(out HangarPageController hangarController))
+            {
+                SetSerializedReference(shopController, "hangarPageController", hangarController);
+            }
+        }
         var scroll = shopPage.Find(config.ContentScrollName);
         if (scroll != null)
         {
