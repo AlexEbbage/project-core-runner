@@ -106,8 +106,8 @@ public partial class ObstacleRingGenerator : MonoBehaviour
         public bool enableRotation = false;
         public float rotationSpeed = 45f;
         public bool enableBeamCycling = false;
-        public float beamOnDuration = 1.25f;
-        public float beamOffDuration = 0.75f;
+        public float pulseDuration = 2f;
+        [Range(0f, 1f)] public float dutyCycle = 0.6f;
         public bool startBeamsOn = true;
         public bool randomizeBeamCyclePhase = false;
     }
@@ -191,8 +191,9 @@ public partial class ObstacleRingGenerator : MonoBehaviour
     [Header("Laser Difficulty Scaling")]
     [SerializeField] private bool scaleLaserWithDifficulty = true;
     [SerializeField] private float laserRotationSpeedAtMaxDifficulty = 90f;
-    [SerializeField] private float laserBeamOnDurationAtMaxDifficulty = 0.6f;
-    [SerializeField] private float laserBeamOffDurationAtMaxDifficulty = 0.6f;
+    [SerializeField] private float laserPulseDurationAtMaxDifficulty = 1.2f;
+    [Range(0f, 1f)]
+    [SerializeField] private float laserDutyCycleAtMaxDifficulty = 0.7f;
 
     [Header("Colors")]
     [SerializeField] private Gradient obstacleColorGradient;

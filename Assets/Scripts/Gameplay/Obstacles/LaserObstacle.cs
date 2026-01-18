@@ -17,8 +17,9 @@ public class LaserObstacle : MonoBehaviour
 
     [Header("Beam Cycling")]
     [SerializeField] private bool enableBeamCycle = false;
-    [SerializeField] private float beamOnDuration = 1.25f;
-    [SerializeField] private float beamOffDuration = 0.75f;
+    [SerializeField] private float pulseDuration = 2f;
+    [Range(0f, 1f)]
+    [SerializeField] private float dutyCycle = 0.6f;
     [SerializeField] private bool startBeamsOn = true;
     [SerializeField] private bool randomizeBeamCyclePhase = false;
 
@@ -41,8 +42,8 @@ public class LaserObstacle : MonoBehaviour
     {
         laserCount = Mathf.Max(1, laserCount);
         rotationSpeed = Mathf.Max(0f, rotationSpeed);
-        beamOnDuration = Mathf.Max(0.05f, beamOnDuration);
-        beamOffDuration = Mathf.Max(0.05f, beamOffDuration);
+        pulseDuration = Mathf.Max(0.05f, pulseDuration);
+        dutyCycle = Mathf.Clamp01(dutyCycle);
         // No auto-regenerate: use context menu or runtime.
     }
 
@@ -56,7 +57,7 @@ public class LaserObstacle : MonoBehaviour
         if (enableBeamCycle)
         {
             _beamCycleTimer += Time.deltaTime;
-            float duration = _beamsOn ? beamOnDuration : beamOffDuration;
+            float duration = _beamsOn ? GetBeamOnDuration() : GetBeamOffDuration();
             if (_beamCycleTimer >= duration)
             {
                 _beamCycleTimer = 0f;
@@ -82,11 +83,11 @@ public class LaserObstacle : MonoBehaviour
         rotationSpeed = Mathf.Max(0f, speed);
     }
 
-    public void ConfigureBeamCycle(bool enabled, float onDuration, float offDuration, bool startOn, bool randomizePhase)
+    public void ConfigureBeamCycle(bool enabled, float pulseLength, float duty, bool startOn, bool randomizePhase)
     {
         enableBeamCycle = enabled;
-        beamOnDuration = Mathf.Max(0.05f, onDuration);
-        beamOffDuration = Mathf.Max(0.05f, offDuration);
+        pulseDuration = Mathf.Max(0.05f, pulseLength);
+        dutyCycle = Mathf.Clamp01(duty);
         startBeamsOn = startOn;
         randomizeBeamCyclePhase = randomizePhase;
         if (!enableBeamCycle)
@@ -173,10 +174,20 @@ public class LaserObstacle : MonoBehaviour
     private void ResetBeamCycle()
     {
         _beamsOn = startBeamsOn || !enableBeamCycle;
-        float duration = _beamsOn ? beamOnDuration : beamOffDuration;
+        float duration = _beamsOn ? GetBeamOnDuration() : GetBeamOffDuration();
         _beamCycleTimer = randomizeBeamCyclePhase && duration > 0f
             ? Random.Range(0f, duration)
             : 0f;
         SetBeamsActive(_beamsOn);
+    }
+
+    private float GetBeamOnDuration()
+    {
+        return Mathf.Max(0.05f, pulseDuration * Mathf.Clamp01(dutyCycle));
+    }
+
+    private float GetBeamOffDuration()
+    {
+        return Mathf.Max(0.05f, pulseDuration * (1f - Mathf.Clamp01(dutyCycle)));
     }
 }
