@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 /// <summary>
 /// A "zone" in the run, defined by time:
@@ -26,6 +27,22 @@ public class RunZone
     [Header("Music")]
     [Tooltip("Index into AudioManager gameplay tracks.")]
     public int musicTrackIndex = 0;
+
+    [Header("Zone VFX + Intensity")]
+    public ZoneVfxSettings vfxSettings = new ZoneVfxSettings();
+
+    [System.Serializable]
+    public class ZoneVfxSettings
+    {
+        [Tooltip("Optional VFX objects to toggle when this zone becomes active.")]
+        public GameObject[] vfxObjects;
+        [Range(0.25f, 2f)]
+        [Tooltip("Multiplier for obstacle dark/light contrast.")]
+        public float obstacleContrastMultiplier = 1f;
+        [Range(0.25f, 3f)]
+        [Tooltip("Multiplier for obstacle color cycle speed.")]
+        public float obstacleColorCycleSpeedMultiplier = 1f;
+    }
 }
 
 public class RunZoneManager : MonoBehaviour
@@ -44,6 +61,7 @@ public class RunZoneManager : MonoBehaviour
     private bool _runActive;
     private float _runTime;
     private int _currentZoneIndex = -1;
+    private readonly HashSet<GameObject> _activeVfx = new HashSet<GameObject>();
 
     private void Awake()
     {
@@ -100,8 +118,22 @@ public class RunZoneManager : MonoBehaviour
         if (tunnelWalls != null && zone.tunnelGradient != null)
             tunnelWalls.SetColorGradient(zone.tunnelGradient);
 
-        if (obstacleRings != null && zone.obstacleGradient != null)
-            obstacleRings.SetColorGradient(zone.obstacleGradient);
+        var vfxSettings = zone.vfxSettings;
+        ApplyZoneVfx(zone);
+
+        if (obstacleRings != null)
+        {
+            float contrastMultiplier = vfxSettings != null ? vfxSettings.obstacleContrastMultiplier : 1f;
+            float colorCycleMultiplier = vfxSettings != null ? vfxSettings.obstacleColorCycleSpeedMultiplier : 1f;
+            if (zone.obstacleGradient != null)
+            {
+                obstacleRings.SetColorStyle(zone.obstacleGradient, contrastMultiplier, colorCycleMultiplier);
+            }
+            else
+            {
+                obstacleRings.SetColorStyle(contrastMultiplier, colorCycleMultiplier);
+            }
+        }
 
         // Fog
         //RenderSettings.fogColor = zone.fogColor;
@@ -126,6 +158,45 @@ public class RunZoneManager : MonoBehaviour
         Debug.Log($"Zone changed to: {zone.name}");
     }
 
+    private void ApplyZoneVfx(RunZone zone)
+    {
+        var nextActive = CollectZoneVfx(zone);
+
+        foreach (var vfx in _activeVfx)
+        {
+            if (vfx != null && !nextActive.Contains(vfx))
+                vfx.SetActive(false);
+        }
+
+        foreach (var vfx in nextActive)
+        {
+            if (vfx != null)
+                vfx.SetActive(true);
+        }
+
+        _activeVfx.Clear();
+        foreach (var vfx in nextActive)
+        {
+            if (vfx != null)
+                _activeVfx.Add(vfx);
+        }
+    }
+
+    private static HashSet<GameObject> CollectZoneVfx(RunZone zone)
+    {
+        var collected = new HashSet<GameObject>();
+        if (zone == null || zone.vfxSettings == null || zone.vfxSettings.vfxObjects == null)
+            return collected;
+
+        foreach (var vfx in zone.vfxSettings.vfxObjects)
+        {
+            if (vfx != null)
+                collected.Add(vfx);
+        }
+
+        return collected;
+    }
+
     public void StartRun()
     {
         _runActive = true;
@@ -148,6 +219,7 @@ public class RunZoneManager : MonoBehaviour
     public void OnRunEnded()
     {
         _runActive = false;
+        ApplyZoneVfx(null);
     }
 
     public string CurrentZoneName =>
