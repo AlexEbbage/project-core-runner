@@ -170,11 +170,11 @@ public class CountdownUIController : MonoBehaviour
         // Screen shake
         if (useScreenShake)
         {
-            float intensity = isGoStep ? goShakeIntensity : tickShakeIntensity;
-            float duration = isGoStep ? goShakeDuration : tickShakeDuration;
-            if (intensity > 0f && duration > 0f)
+            float shakeIntensity = isGoStep ? goShakeIntensity : tickShakeIntensity;
+            float shakeDuration = isGoStep ? goShakeDuration : tickShakeDuration;
+            if (shakeIntensity > 0f && shakeDuration > 0f)
             {
-                ScreenShakeHelper.Shake(intensity, duration);
+                ScreenShakeHelper.Shake(shakeIntensity, shakeDuration);
             }
         }
 
