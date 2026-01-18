@@ -396,6 +396,22 @@ public partial class ObstacleRingGenerator : MonoBehaviour
         ring.renderers = instance != null ? instance.GetComponentsInChildren<Renderer>() : null;
     }
 
+    private void ReactivateObstacleInstance(GameObject instance)
+    {
+        if (instance == null)
+            return;
+
+        if (!instance.activeSelf)
+            instance.SetActive(true);
+
+        var dissolvers = instance.GetComponentsInChildren<ObstacleDissolver>(true);
+        foreach (var dissolver in dissolvers)
+        {
+            if (dissolver != null && !dissolver.gameObject.activeSelf)
+                dissolver.gameObject.SetActive(true);
+        }
+    }
+
     #region Color / random / utility
 
     private int RandomRange(int minInclusive, int maxExclusive)

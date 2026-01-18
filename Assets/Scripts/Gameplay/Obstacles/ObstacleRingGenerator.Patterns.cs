@@ -124,8 +124,7 @@ public partial class ObstacleRingGenerator
 
         if (ring.obstacleInstance != null)
         {
-            if (!ring.obstacleInstance.activeSelf)
-                ring.obstacleInstance.SetActive(true);
+            ReactivateObstacleInstance(ring.obstacleInstance);
 
             var t = ring.obstacleInstance.transform;
             t.localPosition = Vector3.zero;
@@ -261,8 +260,7 @@ public partial class ObstacleRingGenerator
 
         if (ring.obstacleInstance != null)
         {
-            if (!ring.obstacleInstance.activeSelf)
-                ring.obstacleInstance.SetActive(true);
+            ReactivateObstacleInstance(ring.obstacleInstance);
 
             Transform t = ring.obstacleInstance.transform;
             t.localPosition = Vector3.zero;
