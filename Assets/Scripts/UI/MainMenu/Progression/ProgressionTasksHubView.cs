@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,6 +16,7 @@ public class ProgressionTasksHubView : MonoBehaviour
     [SerializeField] private GameObject dailyContent;
     [SerializeField] private GameObject weeklyContent;
     [SerializeField] private GameObject monthlyContent;
+    [SerializeField] private bool showDailyLoginPreview = true;
 
     private readonly Dictionary<ProgressionCadence, GameObject> _contentLookup = new();
 
@@ -31,6 +33,7 @@ public class ProgressionTasksHubView : MonoBehaviour
         if (monthlyTabButton != null)
             monthlyTabButton.onClick.AddListener(() => Show(ProgressionCadence.Monthly));
 
+        EnsureDailyLoginPreview();
         Show(ProgressionCadence.Daily);
     }
 
@@ -58,5 +61,17 @@ public class ProgressionTasksHubView : MonoBehaviour
             return;
 
         image.color = isSelected ? selectedTabColor : idleTabColor;
+    }
+
+    private void EnsureDailyLoginPreview()
+    {
+        if (!showDailyLoginPreview || dailyContent == null)
+            return;
+
+        if (dailyContent.GetComponentInChildren<DailyLoginRewardPreviewView>(true) != null)
+            return;
+
+        TMP_Text template = dailyContent.GetComponentInChildren<TMP_Text>(true);
+        DailyLoginRewardPreviewView.Create(dailyContent.transform, template);
     }
 }
