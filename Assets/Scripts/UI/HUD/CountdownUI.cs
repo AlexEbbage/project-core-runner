@@ -44,19 +44,22 @@ public class CountdownUIController : MonoBehaviour
     [Header("Audio")]
     [SerializeField] private AudioManager audioManager;
 
-    //[Header("Screen Shake")]
-    //[Tooltip("Optional screen shake helper for impact on each tick.")]
-    //[SerializeField] private ScreenShakeHelper screenShake;
-    //[SerializeField] private float tickShakeIntensity = 0.2f;
-    //[SerializeField] private float goShakeIntensity = 0.6f;
+    [Header("Screen Shake")]
+    [Tooltip("Trigger a camera shake on each countdown tick.")]
+    [SerializeField] private bool useScreenShake = true;
+    [SerializeField] private float tickShakeIntensity = 0.2f;
+    [SerializeField] private float tickShakeDuration = 0.1f;
+    [SerializeField] private float goShakeIntensity = 0.6f;
+    [SerializeField] private float goShakeDuration = 0.15f;
 
-    //[Header("Slow Motion")]
-    //[SerializeField] private bool useSlowMotion = true;
-    //[SerializeField] private float countdownTimeScale = 0.3f;
+    [Header("Slow Motion")]
+    [SerializeField] private bool useSlowMotion = true;
+    [SerializeField] private float countdownTimeScale = 0.3f;
 
     private Coroutine _routine;
-    //private float _originalTimeScale = 1f;
+    private float _originalTimeScale = 1f;
     private Action _onComplete;
+    private bool _slowMotionActive;
 
     private void Awake()
     {
@@ -81,6 +84,11 @@ public class CountdownUIController : MonoBehaviour
         }
     }
 
+    private void OnDisable()
+    {
+        RestoreTimeScale();
+    }
+
     /// <summary>
     /// Starts a countdown from startNumber down to 1, then GO.
     /// Example: BeginCountdown(3, OnCountdownFinished);
@@ -92,6 +100,7 @@ public class CountdownUIController : MonoBehaviour
         if (_routine != null)
         {
             StopCoroutine(_routine);
+            RestoreTimeScale();
         }
 
         root.SetActive(true);
@@ -104,12 +113,8 @@ public class CountdownUIController : MonoBehaviour
     {
         //if (canvasGroup != null) canvasGroup.alpha = 1f;
 
-        //// Slow motion (using unscaled time for the animation)
-        //if (useSlowMotion)
-        //{
-        //    _originalTimeScale = Time.timeScale;
-        //    Time.timeScale = countdownTimeScale;
-        //}
+        // Slow motion (using unscaled time for the animation)
+        ApplySlowMotion();
 
         // 3..2..1..
         for (int n = startNumber; n >= 1; n--)
@@ -121,11 +126,8 @@ public class CountdownUIController : MonoBehaviour
         var localizedGoText = LocalizationService.Get(goLocalizationKey, goText);
         yield return PlayOneStep(localizedGoText, isGoStep: true);
 
-        //// Restore time scale
-        //if (useSlowMotion)
-        //{
-        //    Time.timeScale = _originalTimeScale;
-        //}
+        // Restore time scale
+        RestoreTimeScale();
 
         // Hide UI
         root.SetActive(false);
@@ -165,15 +167,16 @@ public class CountdownUIController : MonoBehaviour
             StartCoroutine(PlayBeepDelayed(audioOffset, isGoStep));
         }
 
-        //// Screen shake
-        //if (screenShake != null)
-        //{
-        //    float intensity = isGoStep ? goShakeIntensity : tickShakeIntensity;
-        //    if (intensity > 0f)
-        //    {
-        //        screenShake.Shake(intensity);
-        //    }
-        //}
+        // Screen shake
+        if (useScreenShake)
+        {
+            float intensity = isGoStep ? goShakeIntensity : tickShakeIntensity;
+            float duration = isGoStep ? goShakeDuration : tickShakeDuration;
+            if (intensity > 0f && duration > 0f)
+            {
+                ScreenShakeHelper.Shake(intensity, duration);
+            }
+        }
 
         // Animate scale & alpha over unscaled time so slow-motion doesn't affect the UI
         float elapsed = 0f;
@@ -200,7 +203,7 @@ public class CountdownUIController : MonoBehaviour
 
     IEnumerator PlayBeepDelayed(float delay, bool isGoStep)
     {
-        yield return new WaitForSeconds(delay);
+        yield return new WaitForSecondsRealtime(delay);
 
         if (isGoStep)
         {
@@ -210,5 +213,28 @@ public class CountdownUIController : MonoBehaviour
         {
             audioManager.PlayCountdownTimer();
         }
+    }
+
+    private void ApplySlowMotion()
+    {
+        if (!useSlowMotion || _slowMotionActive)
+        {
+            return;
+        }
+
+        _originalTimeScale = Time.timeScale;
+        Time.timeScale = Mathf.Clamp(countdownTimeScale, 0.01f, 1f);
+        _slowMotionActive = true;
+    }
+
+    private void RestoreTimeScale()
+    {
+        if (!_slowMotionActive)
+        {
+            return;
+        }
+
+        Time.timeScale = _originalTimeScale;
+        _slowMotionActive = false;
     }
 }
