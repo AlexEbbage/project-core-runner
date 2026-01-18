@@ -4652,53 +4652,81 @@ MonoBehaviour:
   wedgePatternSets:
   - id: Every_Other_One_Direction
     localPattern: 0
-    minRings: 6
-    maxRings: 14
-    maxRotationStepPerRing: 2
+    minRings: 5
+    maxRings: 10
+    minRingsAtMaxDifficulty: 4
+    maxRingsAtMaxDifficulty: 7
+    maxRotationStepPerRing: 1
+    maxRotationStepPerRingAtMaxDifficulty: 2
     oneDirectionOnly: 1
-    weight: 1
+    weight: 2
+    weightBonusAtMaxDifficulty: 0
   - id: Every_Other_Both_Directions
     localPattern: 0
-    minRings: 6
-    maxRings: 14
-    maxRotationStepPerRing: 1
+    minRings: 4
+    maxRings: 9
+    minRingsAtMaxDifficulty: 3
+    maxRingsAtMaxDifficulty: 7
+    maxRotationStepPerRing: 2
+    maxRotationStepPerRingAtMaxDifficulty: 3
     oneDirectionOnly: 0
-    weight: 1
+    weight: 2
+    weightBonusAtMaxDifficulty: 0.5
   - id: Single_Gap_One_Drection
     localPattern: 1
-    minRings: 6
-    maxRings: 14
+    minRings: 4
+    maxRings: 9
+    minRingsAtMaxDifficulty: 3
+    maxRingsAtMaxDifficulty: 7
     maxRotationStepPerRing: 2
+    maxRotationStepPerRingAtMaxDifficulty: 3
     oneDirectionOnly: 1
-    weight: 1
+    weight: 2
+    weightBonusAtMaxDifficulty: 0.5
   - id: Single_Gap_Both_Directions
     localPattern: 1
-    minRings: 6
-    maxRings: 14
-    maxRotationStepPerRing: 1
+    minRings: 3
+    maxRings: 8
+    minRingsAtMaxDifficulty: 2
+    maxRingsAtMaxDifficulty: 6
+    maxRotationStepPerRing: 3
+    maxRotationStepPerRingAtMaxDifficulty: 4
     oneDirectionOnly: 0
-    weight: 1
+    weight: 2
+    weightBonusAtMaxDifficulty: 1.5
   - id: Double_Gap_One_Direction
     localPattern: 2
-    minRings: 4
-    maxRings: 12
+    minRings: 3
+    maxRings: 7
+    minRingsAtMaxDifficulty: 2
+    maxRingsAtMaxDifficulty: 6
     maxRotationStepPerRing: 2
+    maxRotationStepPerRingAtMaxDifficulty: 3
     oneDirectionOnly: 1
-    weight: 1
+    weight: 2
+    weightBonusAtMaxDifficulty: 1
   - id: Double_Gap_Both_Directions
     localPattern: 2
-    minRings: 4
-    maxRings: 12
+    minRings: 2
+    maxRings: 6
+    minRingsAtMaxDifficulty: 2
+    maxRingsAtMaxDifficulty: 5
     maxRotationStepPerRing: 3
+    maxRotationStepPerRingAtMaxDifficulty: 4
     oneDirectionOnly: 0
-    weight: 1
+    weight: 3
+    weightBonusAtMaxDifficulty: 2
   - id: Random
     localPattern: 3
     minRings: 1
-    maxRings: 6
-    maxRotationStepPerRing: 1
+    maxRings: 5
+    minRingsAtMaxDifficulty: 1
+    maxRingsAtMaxDifficulty: 4
+    maxRotationStepPerRing: 4
+    maxRotationStepPerRingAtMaxDifficulty: 5
     oneDirectionOnly: 0
-    weight: 4
+    weight: 2
+    weightBonusAtMaxDifficulty: 1.5
 --- !u!4 &883196104
 Transform:
   m_ObjectHideFlags: 0
