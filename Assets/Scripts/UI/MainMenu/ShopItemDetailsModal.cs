@@ -23,7 +23,7 @@ public class ShopItemDetailsModal : MonoBehaviour
             buyButton.onClick.AddListener(HandleBuyClicked);
     }
 
-    public void Show(ShopItemDefinition item, Action onBuyConfirmed)
+    public void Show(ShopItemDefinition item, bool isUnlocked, Action onBuyConfirmed)
     {
         _onBuyConfirmed = onBuyConfirmed;
         gameObject.SetActive(true);
@@ -35,7 +35,11 @@ public class ShopItemDetailsModal : MonoBehaviour
         if (descriptionText != null)
             descriptionText.text = item != null ? item.description : string.Empty;
         if (priceText != null)
-            priceText.text = item != null ? item.price.ToString() : "0";
+            priceText.text = item != null
+                ? (isUnlocked ? LocalizationService.Get("ui.unlocked", "Unlocked") : item.price.ToString())
+                : "0";
+        if (buyButton != null)
+            buyButton.interactable = !isUnlocked;
     }
 
     public void Hide()

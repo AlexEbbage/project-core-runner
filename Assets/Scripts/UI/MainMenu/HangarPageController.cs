@@ -109,6 +109,12 @@ public class HangarPageController : MonoBehaviour
             SelectTab(selectedTab);
     }
 
+    public void RefreshContent()
+    {
+        SelectTab(selectedTab);
+        RefreshStats();
+    }
+
     private void RefreshStats()
     {
         if (shipDatabase == null)

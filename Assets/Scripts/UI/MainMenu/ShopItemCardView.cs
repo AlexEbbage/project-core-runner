@@ -11,7 +11,7 @@ public class ShopItemCardView : MonoBehaviour
 
     public ShopItemDefinition Item { get; private set; }
 
-    public void Initialize(ShopItemDefinition item)
+    public void Initialize(ShopItemDefinition item, bool isUnlocked)
     {
         Item = item;
 
@@ -20,8 +20,10 @@ public class ShopItemCardView : MonoBehaviour
         if (nameText != null)
             nameText.text = item != null ? item.displayName : LocalizationService.Get("ui.item_default", "Item");
         if (priceText != null)
-            priceText.text = item != null ? item.price.ToString() : "0";
+            priceText.text = item != null
+                ? (isUnlocked ? LocalizationService.Get("ui.unlocked", "Unlocked") : item.price.ToString())
+                : "0";
         if (buyButton != null)
-            buyButton.interactable = item != null && item.price >= 0;
+            buyButton.interactable = item != null && item.price >= 0 && !isUnlocked;
     }
 }
