@@ -50,6 +50,10 @@ public class RunZoneManager : MonoBehaviour
     [Header("Zones (sorted by startTime ascending)")]
     [SerializeField] private RunZone[] zones;
 
+    [Header("Mode")]
+    [Tooltip("If enabled, only the first zone is used and no zone changes occur during a run.")]
+    [SerializeField] private bool lockToSingleZone = true;
+
     [Header("References")]
     [SerializeField] private TunnelWallGenerator tunnelWalls;
     [SerializeField] private ObstacleRingGenerator obstacleRings;
@@ -79,6 +83,13 @@ public class RunZoneManager : MonoBehaviour
     {
         if (!_runActive || zones == null || zones.Length == 0)
             return;
+
+        if (lockToSingleZone)
+        {
+            if (_currentZoneIndex != 0)
+                ApplyZone(0);
+            return;
+        }
 
         _runTime += Time.deltaTime;
 
@@ -114,6 +125,7 @@ public class RunZoneManager : MonoBehaviour
 
         _currentZoneIndex = index;
         var zone = zones[index];
+        if (zone == null) return;
 
         if (tunnelWalls != null && zone.tunnelGradient != null)
             tunnelWalls.SetColorGradient(zone.tunnelGradient);
@@ -200,6 +212,12 @@ public class RunZoneManager : MonoBehaviour
     public void StartRun()
     {
         _runActive = true;
+
+        if (lockToSingleZone && zones != null && zones.Length > 0)
+        {
+            ApplyZone(0);
+            _currentZoneIndex = 0;
+        }
     }
 
     // Called by GameManager when a new run starts
