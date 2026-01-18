@@ -24,19 +24,40 @@ public class FanObstacle : MonoBehaviour
     [SerializeField] private bool randomiseSpeedOnSpawn = true;
     [SerializeField] private float minRotationSpeed = 20f;
     [SerializeField] private float maxRotationSpeed = 100f;
+    [Range(0f, 1f)]
+    [SerializeField] private float clockwiseChance = 0.5f;
+
+    [Header("Difficulty Scaling")]
+    [SerializeField] private bool scaleWithDifficulty = true;
+    [SerializeField] private float rotationSpeedAtMaxDifficulty = 120f;
+    [SerializeField] private float minRotationSpeedAtMaxDifficulty = 40f;
+    [SerializeField] private float maxRotationSpeedAtMaxDifficulty = 140f;
+    [Range(0f, 1f)]
+    [SerializeField] private float clockwiseChanceAtMaxDifficulty = 0.5f;
 
     private readonly List<GameObject> _spawnedBlades = new List<GameObject>();
     private GameObject _hubInstance;
     private int _sideCount = 6;
+    private float _baseRotationSpeed;
+    private float _baseMinRotationSpeed;
+    private float _baseMaxRotationSpeed;
+    private float _baseClockwiseChance;
+    private bool _configuredExternally;
+
+    private void Awake()
+    {
+        _baseRotationSpeed = rotationSpeedDegreesPerSecond;
+        _baseMinRotationSpeed = minRotationSpeed;
+        _baseMaxRotationSpeed = maxRotationSpeed;
+        _baseClockwiseChance = clockwiseChance;
+    }
 
     private void Start()
     {
-        // Randomize direction & speed at runtime.
-        if (randomiseDirectionOnSpawn)
-            clockwise = Random.value > 0.5f;
-
-        if (randomiseSpeedOnSpawn)
-            rotationSpeedDegreesPerSecond = Random.Range(minRotationSpeed, maxRotationSpeed);
+        if (!_configuredExternally)
+        {
+            ApplySpawnRandomization();
+        }
 
         Regenerate();
     }
@@ -59,6 +80,19 @@ public class FanObstacle : MonoBehaviour
     public void SetSideCount(int sides)
     {
         _sideCount = Mathf.Max(3, sides);
+    }
+
+    public void ApplyDifficulty(float difficulty)
+    {
+        float appliedDifficulty = scaleWithDifficulty ? Mathf.Clamp01(difficulty) : 0f;
+        rotationSpeedDegreesPerSecond = Mathf.Lerp(_baseRotationSpeed, rotationSpeedAtMaxDifficulty, appliedDifficulty);
+        minRotationSpeed = Mathf.Lerp(_baseMinRotationSpeed, minRotationSpeedAtMaxDifficulty, appliedDifficulty);
+        maxRotationSpeed = Mathf.Lerp(_baseMaxRotationSpeed, maxRotationSpeedAtMaxDifficulty, appliedDifficulty);
+        maxRotationSpeed = Mathf.Max(minRotationSpeed, maxRotationSpeed);
+        clockwiseChance = Mathf.Lerp(_baseClockwiseChance, clockwiseChanceAtMaxDifficulty, appliedDifficulty);
+
+        ApplySpawnRandomization();
+        _configuredExternally = true;
     }
 
     [ContextMenu("Regenerate Fan")]
@@ -129,5 +163,14 @@ public class FanObstacle : MonoBehaviour
 #endif
             _hubInstance = null;
         }
+    }
+
+    private void ApplySpawnRandomization()
+    {
+        if (randomiseDirectionOnSpawn)
+            clockwise = Random.value < clockwiseChance;
+
+        if (randomiseSpeedOnSpawn)
+            rotationSpeedDegreesPerSecond = Random.Range(minRotationSpeed, maxRotationSpeed);
     }
 }
