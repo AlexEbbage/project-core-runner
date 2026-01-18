@@ -55,6 +55,16 @@ public class GameBalanceConfig : ScriptableObject
     public float slowMoTimeScale = 0.6f;
     public float slowMoDuration = 4f;
 
+    [Header("Upgrade Scaling")]
+    [Tooltip("Added to combo multiplier factor per upgrade level.")]
+    public float comboMultiplierFactorPerLevel = 0.02f;
+    [Tooltip("Added to pickup radius multiplier per upgrade level (1 = base).")]
+    public float pickupRadiusMultiplierPerLevel = 0.05f;
+    [Tooltip("Base cooldown (seconds) before shield can be reactivated after breaking/ending.")]
+    public float shieldRechargeSeconds = 5f;
+    [Tooltip("Added to shield recharge seconds per upgrade level (can be negative).")]
+    public float shieldRechargeSecondsPerLevel = -0.5f;
+
     [Header("Continues")]
     public int maxContinuesPerRun = 3;
     public float continueRespawnBackDistance = 8f;

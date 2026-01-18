@@ -204,6 +204,7 @@ public partial class ObstacleRingGenerator : MonoBehaviour
     private int _pickupChainLength;
     private int _pickupChainGapRemaining;
     private float _pickupSpawnChanceMultiplier = 1f;
+    private float _pickupRadiusMultiplier = 1f;
 
     // Global type-run pattern state (applies to all types)
     private ObstacleRingType _currentPatternType;
@@ -429,6 +430,7 @@ public partial class ObstacleRingGenerator : MonoBehaviour
         _pickupChainLength = 0;
         _pickupChainGapRemaining = 0;
         _pickupSpawnChanceMultiplier = 1f;
+        _pickupRadiusMultiplier = 1f;
 
         _inWedgeRun = false;
         _currentWedgeSet = null;
