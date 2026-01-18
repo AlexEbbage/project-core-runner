@@ -69,4 +69,40 @@ public static class SettingsData
     }
 
     public static event System.Action<float> TouchSensitivityChanged;
+
+    private static bool _initialized;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void InitializeOnLoad()
+    {
+        Initialize();
+    }
+
+    public static void Initialize()
+    {
+        if (_initialized)
+            return;
+
+        _initialized = true;
+
+        bool needsSave = false;
+        int savedInputMode = PlayerPrefs.GetInt(TouchInputModeKey, (int)TouchInputMode.Drag);
+        if (!System.Enum.IsDefined(typeof(TouchInputMode), savedInputMode))
+        {
+            savedInputMode = (int)TouchInputMode.Drag;
+            PlayerPrefs.SetInt(TouchInputModeKey, savedInputMode);
+            needsSave = true;
+        }
+
+        float savedSensitivity = PlayerPrefs.GetFloat(TouchSensitivityKey, TouchSensitivityDefault);
+        float clampedSensitivity = Mathf.Clamp(savedSensitivity, TouchSensitivityMin, TouchSensitivityMax);
+        if (!Mathf.Approximately(savedSensitivity, clampedSensitivity))
+        {
+            PlayerPrefs.SetFloat(TouchSensitivityKey, clampedSensitivity);
+            needsSave = true;
+        }
+
+        if (needsSave)
+            PlayerPrefs.Save();
+    }
 }

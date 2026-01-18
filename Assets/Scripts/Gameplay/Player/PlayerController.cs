@@ -69,6 +69,8 @@ public class PlayerController : MonoBehaviour
 
     private void Awake()
     {
+        SettingsData.Initialize();
+
         _rigidbody = GetComponent<Rigidbody>();
         _rigidbody.useGravity = false;
         _rigidbody.isKinematic = true;        // move via transform
@@ -80,7 +82,7 @@ public class PlayerController : MonoBehaviour
         _currentForwardSpeed = defaultForwardSpeed;
         _baseAngularSpeedDegrees = angularSpeedDegrees;
         _baseTouchInputSensitivity = touchInputSensitivity;
-        ApplySensitivitySettings();
+        ApplySensitivitySettings(SettingsData.TouchSensitivity);
 
         Vector3 pos = transform.position;
         _zPosition = pos.z;
@@ -98,7 +100,9 @@ public class PlayerController : MonoBehaviour
             profile.UpgradeLevelChanged += HandleUpgradeLevelChanged;
         }
 
+        SettingsData.TouchSensitivityChanged += HandleSensitivityChanged;
         ApplyHandlingUpgrade();
+        ApplySensitivitySettings(SettingsData.TouchSensitivity);
     }
 
     private void OnDisable()
@@ -107,6 +111,8 @@ public class PlayerController : MonoBehaviour
         {
             profile.UpgradeLevelChanged -= HandleUpgradeLevelChanged;
         }
+
+        SettingsData.TouchSensitivityChanged -= HandleSensitivityChanged;
     }
 
     private void Start()
@@ -115,16 +121,6 @@ public class PlayerController : MonoBehaviour
             StartRun();
         else
             StopRun();
-    }
-
-    private void OnEnable()
-    {
-        SettingsData.TouchSensitivityChanged += HandleSensitivityChanged;
-    }
-
-    private void OnDisable()
-    {
-        SettingsData.TouchSensitivityChanged -= HandleSensitivityChanged;
     }
 
     public void OnMove(InputAction.CallbackContext context)
