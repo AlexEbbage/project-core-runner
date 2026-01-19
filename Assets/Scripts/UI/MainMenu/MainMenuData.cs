@@ -343,6 +343,15 @@ public class PlayerProfile : ScriptableObject
 
         premiumCurrency += amount;
     }
+
+    public void AddCurrencyAndSave(ShopCurrencyType currencyType, int amount)
+    {
+        if (amount <= 0)
+            return;
+
+        AddCurrency(currencyType, amount);
+        Save();
+    }
     
     public void EnsureDefaults(ShipDatabase database)
     {

@@ -46,8 +46,11 @@ public class GameManager : MonoBehaviour
     [Header("Rewarded Run Prompt")]
     [SerializeField] private bool rewardedRunPromptEnabled = true;
     [SerializeField] private float rewardedRunPromptDelaySeconds = 45f;
-    [SerializeField] private RewardedRunRewardType rewardedRunRewardType = RewardedRunRewardType.CoinMultiplier;
-    [SerializeField] private int rewardedRunCoinReward = 100;
+
+    [Header("Run Rewards")]
+    [SerializeField] private float xpPerScorePoint = 1f;
+    [SerializeField] private int gemsPerCoins = 100;
+    [SerializeField] private float runRewardGrantCooldownSeconds = 2f;
 
     [Header("References - Services")]
     [SerializeField] private MonoBehaviour rewardedAdServiceBehaviour;
@@ -87,7 +90,11 @@ public class GameManager : MonoBehaviour
     private float _rewardedRunPromptPrevTimeScale;
     private GameStateMachine _stateMachine;
     private GameServicesFacade _services;
-    private bool _runCurrencyAwarded;
+    private bool _runRewardsGranted;
+    private bool _runRewardsDoubled;
+    private bool _doubleRunRewardsQueued;
+    private float _lastRunRewardGrantTime = float.NegativeInfinity;
+    private RunRewardBundle _lastRunRewards;
 
     private Vector3 _lastDeathPosition;
     private Vector3 _lastDeathForward;
@@ -102,11 +109,17 @@ public class GameManager : MonoBehaviour
 
     public bool GameTimerEnabled => _gameTimerEnabled;
 
-    private enum RewardedRunRewardType
+    public bool CanDoubleRunRewards => _runRewardsGranted && !_runRewardsDoubled && !_adInProgress;
+
+    public bool IsDoubleRewardsAdReady()
     {
-        CoinMultiplier,
-        ScoreMultiplier,
-        Coins
+        if (!CanDoubleRunRewards)
+            return false;
+
+        if (_services?.RewardedAds == null)
+            return false;
+
+        return _services.RewardedAds.IsRewardedAdReady();
     }
 
     public bool IsContinueAdReady()
@@ -280,7 +293,6 @@ public class GameManager : MonoBehaviour
             return;
 
         _services?.Audio?.PlayButtonClick();
-        AwardRunCurrencyOnce();
         StartNewRunWithFade(StartNewRunFromGameOver);
     }
 
@@ -290,7 +302,6 @@ public class GameManager : MonoBehaviour
             return;
 
         _services?.Audio?.PlayButtonClick();
-        AwardRunCurrencyOnce();
         TryShowInterstitial("menu_return", () => ReturnToMenuWithFade(() =>
         {
             _services?.Audio?.PlayMenuMusic();
@@ -323,7 +334,6 @@ public class GameManager : MonoBehaviour
             return;
 
         _services?.Audio?.PlayButtonClick();
-        AwardRunCurrencyOnce();
         TryShowInterstitial("menu_return", () => ReturnToMenuWithFade(() =>
         {
             _services?.Audio?.PlayMenuMusic();
@@ -418,6 +428,64 @@ public class GameManager : MonoBehaviour
         });
 
         _services.RewardedAds.ShowRewardedAd(HandleContinueAdResult);
+    }
+
+    public void OnDoubleRewardsButtonPressed()
+    {
+        if (_stateMachine.CurrentState != GameState.GameOver)
+            return;
+
+        if (!CanDoubleRunRewards)
+            return;
+
+        if (_services?.RewardedAds == null)
+        {
+            if (logStateChanges)
+            {
+                Debug.LogWarning("GameManager: No IRewardedAdService assigned. Cannot show double rewards ad.");
+            }
+            return;
+        }
+
+        if (!_services.RewardedAds.IsRewardedAdReady())
+        {
+            if (logStateChanges)
+            {
+                Debug.Log("GameManager: Double rewards ad not ready.");
+            }
+            return;
+        }
+
+        _adInProgress = true;
+        Time.timeScale = 1f;
+
+        LogAnalyticsEvent("ad_shown", new Dictionary<string, object>
+        {
+            { "source", "double_rewards" }
+        });
+
+        _services.RewardedAds.ShowRewardedAd(result =>
+        {
+            _adInProgress = false;
+
+            if (result == RewardedAdResult.Rewarded)
+            {
+                LogAnalyticsEvent("ad_completed", new Dictionary<string, object>
+                {
+                    { "source", "double_rewards" }
+                });
+
+                GrantDoubleRunRewards();
+            }
+            else
+            {
+                LogAnalyticsEvent("ad_skipped", new Dictionary<string, object>
+                {
+                    { "source", "double_rewards" },
+                    { "result", result.ToString() }
+                });
+            }
+        });
     }
 
     // --- flow ---
@@ -519,7 +587,10 @@ public class GameManager : MonoBehaviour
 
         _elapsedTime = 0;
         _gameTimerEnabled = false;
-        _runCurrencyAwarded = false;
+        _runRewardsGranted = false;
+        _runRewardsDoubled = false;
+        _doubleRunRewardsQueued = false;
+        _lastRunRewards = default;
         _interstitialShownThisRun = false;
         _rewardedRunPromptShownThisRun = false;
         _rewardedRunPromptActive = false;
@@ -652,10 +723,6 @@ public class GameManager : MonoBehaviour
             { "continues_used", continuesUsed }
         });
         statsTracker?.EndRun();
-        if (continuesUsed >= maxContinuesPerRun)
-        {
-            AwardRunCurrencyOnce();
-        }
 
         ShowGameOverUI();
         if (continuesUsed >= maxContinuesPerRun)
@@ -803,33 +870,14 @@ public class GameManager : MonoBehaviour
 
     private void GrantRewardedRunReward()
     {
-        switch (rewardedRunRewardType)
-        {
-            case RewardedRunRewardType.CoinMultiplier:
-                powerupController?.ActivatePowerup(PowerupType.CoinMultiplier);
-                break;
-            case RewardedRunRewardType.ScoreMultiplier:
-                powerupController?.ActivatePowerup(PowerupType.ScoreMultiplier);
-                break;
-            case RewardedRunRewardType.Coins:
-                currencyManager?.AddCoins(rewardedRunCoinReward);
-                break;
-        }
+        GrantDoubleRunRewards();
     }
 
     private string GetRewardedRunRewardLabel()
     {
-        switch (rewardedRunRewardType)
-        {
-            case RewardedRunRewardType.CoinMultiplier:
-                return LocalizationService.Get("ui.rewarded_run_reward_coin_multiplier", "Reward: Coin Multiplier");
-            case RewardedRunRewardType.ScoreMultiplier:
-                return LocalizationService.Get("ui.rewarded_run_reward_score_multiplier", "Reward: Score Multiplier");
-            case RewardedRunRewardType.Coins:
-                return LocalizationService.Format("ui.rewarded_run_reward_coins", rewardedRunCoinReward);
-            default:
-                return LocalizationService.Get("ui.rewarded_run_reward_coin_multiplier", "Reward: Coin Multiplier");
-        }
+        return LocalizationService.Get(
+            "ui.rewarded_run_reward_double",
+            "Reward: Double run rewards");
     }
 
     private void PauseRunForRewardedPrompt()
@@ -866,6 +914,8 @@ public class GameManager : MonoBehaviour
     {
         if (gameOverUI == null || scoreManager == null)
             return;
+
+        AwardRunRewardsOnce();
 
         float finalScore = scoreManager.CurrentScore;
         float bestScore = scoreManager.BestScore;
@@ -974,22 +1024,87 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void AwardRunCurrencyOnce()
+    private void AwardRunRewardsOnce()
     {
-        if (_runCurrencyAwarded)
+        if (_runRewardsGranted)
             return;
 
-        _runCurrencyAwarded = true;
+        _runRewardsGranted = true;
+        _lastRunRewards = CalculateRunRewards();
+        ApplyRunRewards(_lastRunRewards, 1, false);
 
-        if (playerProfile == null || currencyManager == null)
+        if (_doubleRunRewardsQueued)
+        {
+            GrantDoubleRunRewards();
+        }
+    }
+
+    private void ApplyRunRewards(RunRewardBundle rewards, int multiplier, bool bypassCooldown)
+    {
+        if (multiplier <= 0)
             return;
 
-        int coinsToAward = currencyManager.CurrentCoins;
-        if (coinsToAward <= 0)
+        if (!bypassCooldown
+            && runRewardGrantCooldownSeconds > 0f
+            && Time.unscaledTime - _lastRunRewardGrantTime < runRewardGrantCooldownSeconds)
             return;
 
-        playerProfile.softCurrency += coinsToAward;
-        playerProfile.Save();
+        _lastRunRewardGrantTime = Time.unscaledTime;
+
+        if (playerProfile == null)
+            return;
+
+        int coins = rewards.coins * multiplier;
+        int gems = rewards.gems * multiplier;
+        int xp = rewards.xp * multiplier;
+
+        if (coins > 0)
+            playerProfile.AddCurrencyAndSave(ShopCurrencyType.Soft, coins);
+
+        if (gems > 0)
+            playerProfile.AddCurrencyAndSave(ShopCurrencyType.Premium, gems);
+
+        if (xp > 0)
+            playerProfile.AddXp(xp);
+    }
+
+    private RunRewardBundle CalculateRunRewards()
+    {
+        int coins = currencyManager != null ? currencyManager.CurrentCoins : 0;
+        int gems = gemsPerCoins > 0 ? coins / gemsPerCoins : 0;
+        int xp = scoreManager != null ? Mathf.RoundToInt(scoreManager.CurrentScore * xpPerScorePoint) : 0;
+
+        return new RunRewardBundle(coins, gems, xp);
+    }
+
+    private void GrantDoubleRunRewards()
+    {
+        if (_runRewardsDoubled)
+            return;
+
+        if (!_runRewardsGranted)
+        {
+            _doubleRunRewardsQueued = true;
+            return;
+        }
+
+        _runRewardsDoubled = true;
+        _doubleRunRewardsQueued = false;
+        ApplyRunRewards(_lastRunRewards, 1, true);
+    }
+
+    private readonly struct RunRewardBundle
+    {
+        public RunRewardBundle(int coins, int gems, int xp)
+        {
+            this.coins = coins;
+            this.gems = gems;
+            this.xp = xp;
+        }
+
+        public int coins { get; }
+        public int gems { get; }
+        public int xp { get; }
     }
 
     private sealed class GameStateMachine
