@@ -22,6 +22,7 @@ public class GameOverUI : MonoBehaviour
 
     [Header("Buttons")]
     [SerializeField] private Button continueButton;
+    [SerializeField] private Button doubleRewardsButton;
     [SerializeField] private Button restartButton;
     [SerializeField] private Button menuButton;
 
@@ -50,6 +51,11 @@ public class GameOverUI : MonoBehaviour
             continueButton.onClick.AddListener(OnContinuePressed);
         }
 
+        if (doubleRewardsButton != null)
+        {
+            doubleRewardsButton.onClick.AddListener(OnDoubleRewardsPressed);
+        }
+
         if (restartButton != null)
         {
             restartButton.onClick.AddListener(OnRestartPressed);
@@ -67,6 +73,7 @@ public class GameOverUI : MonoBehaviour
         if (rootPanel != null && rootPanel.activeInHierarchy)
         {
             UpdateContinueButtonState();
+            UpdateDoubleRewardsButtonState();
         }
     }
 
@@ -99,6 +106,8 @@ public class GameOverUI : MonoBehaviour
             continueButton.gameObject.SetActive(_hasContinueRemaining);
             UpdateContinueButtonState();
         }
+
+        UpdateDoubleRewardsButtonState();
     }
 
 
@@ -109,6 +118,16 @@ public class GameOverUI : MonoBehaviour
 
         bool adReady = gameManager != null && gameManager.IsContinueAdReady();
         continueButton.interactable = _hasContinueRemaining && adReady;
+    }
+
+    private void UpdateDoubleRewardsButtonState()
+    {
+        if (doubleRewardsButton == null)
+            return;
+
+        bool canDouble = gameManager != null && gameManager.CanDoubleRunRewards;
+        doubleRewardsButton.gameObject.SetActive(canDouble);
+        doubleRewardsButton.interactable = canDouble && gameManager != null && gameManager.IsDoubleRewardsAdReady();
     }
 
     public void Hide()
@@ -164,6 +183,14 @@ public class GameOverUI : MonoBehaviour
         if (gameManager != null)
         {
             gameManager.OnContinueButtonPressed();
+        }
+    }
+
+    private void OnDoubleRewardsPressed()
+    {
+        if (gameManager != null)
+        {
+            gameManager.OnDoubleRewardsButtonPressed();
         }
     }
 
