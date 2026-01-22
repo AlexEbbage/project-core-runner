@@ -12,6 +12,11 @@ public class Pickup : MonoBehaviour
     [Header("Audio")]
     [SerializeField] private AudioManager audioManager;
 
+    [Header("VFX")]
+    [SerializeField] private GameObject coinPickupVfxPrefab;
+    [SerializeField] private GameObject powerupPickupVfxPrefab;
+    [SerializeField] private GameObject defaultPickupVfxPrefab;
+
     [Header("Visual Motion")]
     [SerializeField] private float spinDegreesPerSecond = 90f;
     [SerializeField] private float bobAmplitude = 0.15f;
@@ -150,7 +155,30 @@ public class Pickup : MonoBehaviour
         }
 
         audioManager?.PlayPickup();
+        SpawnPickupVfx();
         Destroy(gameObject);
+    }
+
+    private void SpawnPickupVfx()
+    {
+        GameObject vfxPrefab = null;
+        switch (pickupType)
+        {
+            case PickupType.Coin:
+                vfxPrefab = coinPickupVfxPrefab;
+                break;
+            case PickupType.Powerup:
+                vfxPrefab = powerupPickupVfxPrefab;
+                break;
+        }
+
+        if (vfxPrefab == null)
+            vfxPrefab = defaultPickupVfxPrefab;
+
+        if (vfxPrefab == null)
+            return;
+
+        Instantiate(vfxPrefab, transform.position, transform.rotation);
     }
 
     private static float GetColliderRadius(Collider collider)
