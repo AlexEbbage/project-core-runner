@@ -19,8 +19,14 @@ public class RewardedRunPromptUI : MonoBehaviour
     [SerializeField] private Button acceptButton;
     [SerializeField] private Button declineButton;
 
+    [Header("Countdown")]
+    [SerializeField] private Slider countdownSlider;
+
     private Action _onAccept;
     private Action _onDecline;
+    private Action _onTimeout;
+    private float _autoDismissSeconds;
+    private float _autoDismissRemaining;
 
     private void Awake()
     {
@@ -34,13 +40,26 @@ public class RewardedRunPromptUI : MonoBehaviour
             declineButton.onClick.AddListener(HandleDeclinePressed);
     }
 
-    public void Show(string title, string body, string reward, string acceptLabel, string declineLabel, Action onAccept, Action onDecline, bool acceptEnabled = true)
+    public void Show(
+        string title,
+        string body,
+        string reward,
+        string acceptLabel,
+        string declineLabel,
+        Action onAccept,
+        Action onDecline,
+        bool acceptEnabled = true,
+        float autoDismissSeconds = 0f,
+        Action onTimeout = null)
     {
         if (rootPanel != null)
             rootPanel.SetActive(true);
 
         _onAccept = onAccept;
         _onDecline = onDecline;
+        _onTimeout = onTimeout;
+        _autoDismissSeconds = Mathf.Max(0f, autoDismissSeconds);
+        _autoDismissRemaining = _autoDismissSeconds;
 
         SetText(titleText, title);
         SetText(bodyText, body);
@@ -50,6 +69,8 @@ public class RewardedRunPromptUI : MonoBehaviour
 
         if (acceptButton != null)
             acceptButton.interactable = acceptEnabled;
+
+        UpdateCountdownVisual();
     }
 
     public void Hide()
@@ -59,18 +80,65 @@ public class RewardedRunPromptUI : MonoBehaviour
 
         _onAccept = null;
         _onDecline = null;
+        _onTimeout = null;
+        _autoDismissSeconds = 0f;
+        _autoDismissRemaining = 0f;
+        UpdateCountdownVisual();
     }
 
     public bool IsVisible => rootPanel != null && rootPanel.activeSelf;
 
     private void HandleAcceptPressed()
     {
+        CancelCountdown();
         _onAccept?.Invoke();
     }
 
     private void HandleDeclinePressed()
     {
+        CancelCountdown();
         _onDecline?.Invoke();
+    }
+
+    private void Update()
+    {
+        if (_autoDismissSeconds <= 0f || _autoDismissRemaining <= 0f)
+            return;
+
+        _autoDismissRemaining = Mathf.Max(0f, _autoDismissRemaining - Time.unscaledDeltaTime);
+        UpdateCountdownVisual();
+
+        if (_autoDismissRemaining <= 0f)
+        {
+            CancelCountdown();
+            _onTimeout?.Invoke();
+        }
+    }
+
+    private void CancelCountdown()
+    {
+        _autoDismissSeconds = 0f;
+        _autoDismissRemaining = 0f;
+        UpdateCountdownVisual();
+    }
+
+    private void UpdateCountdownVisual()
+    {
+        if (countdownSlider == null)
+            return;
+
+        if (_autoDismissSeconds <= 0f)
+        {
+            countdownSlider.gameObject.SetActive(false);
+            countdownSlider.value = 0f;
+            return;
+        }
+
+        countdownSlider.gameObject.SetActive(true);
+        float normalized = _autoDismissSeconds > 0f
+            ? Mathf.Clamp01(_autoDismissRemaining / _autoDismissSeconds)
+            : 0f;
+        countdownSlider.value = normalized;
     }
 
     private static void SetText(TMP_Text textComponent, string value)

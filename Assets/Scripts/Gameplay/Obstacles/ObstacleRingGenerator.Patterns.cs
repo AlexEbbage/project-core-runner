@@ -124,7 +124,9 @@ public partial class ObstacleRingGenerator
 
         if (prefab != null && ring.obstacleInstance == null)
         {
-            SetObstacleInstance(ring, Instantiate(prefab, ring.root));
+            var instance = Instantiate(prefab, ring.root);
+            SetObstacleInstance(ring, instance);
+            EnsureObstacleDissolvers(instance);
         }
 
         ring.obstacleConfig = _currentPatternPrefab;

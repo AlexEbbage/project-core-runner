@@ -46,6 +46,8 @@ public class GameManager : MonoBehaviour
     [Header("Rewarded Run Prompt")]
     [SerializeField] private bool rewardedRunPromptEnabled = true;
     [SerializeField] private float rewardedRunPromptDelaySeconds = 45f;
+    [SerializeField] private bool rewardedRunPromptPausesGameplay = false;
+    [SerializeField] private float rewardedRunPromptAutoDismissSeconds = 8f;
 
     [Header("Run Rewards")]
     [SerializeField] private float xpPerScorePoint = 1f;
@@ -88,6 +90,7 @@ public class GameManager : MonoBehaviour
     private bool _rewardedRunPromptShownThisRun;
     private bool _rewardedRunPromptActive;
     private float _rewardedRunPromptPrevTimeScale;
+    private bool _rewardedRunPromptPausedRun;
     private GameStateMachine _stateMachine;
     private GameServicesFacade _services;
     private bool _runRewardsGranted;
@@ -163,6 +166,7 @@ public class GameManager : MonoBehaviour
             if (obstacleRingGenerator != null)
             {
                 obstacleRingGenerator.SetPickupFloatHeight(balanceConfig.pickupFloatHeight);
+                obstacleRingGenerator.SetPickupSurfaceOffset(balanceConfig.pickupSurfaceOffset);
             }
         }
 
@@ -594,6 +598,7 @@ public class GameManager : MonoBehaviour
         _interstitialShownThisRun = false;
         _rewardedRunPromptShownThisRun = false;
         _rewardedRunPromptActive = false;
+        _rewardedRunPromptPausedRun = false;
 
         // Show and enable the player now we're playing
         SetPlayerVisible(true);
@@ -782,7 +787,8 @@ public class GameManager : MonoBehaviour
         _rewardedRunPromptShownThisRun = true;
         _rewardedRunPromptActive = true;
 
-        PauseRunForRewardedPrompt();
+        if (rewardedRunPromptPausesGameplay)
+            PauseRunForRewardedPrompt();
 
         bool adReady = _services?.RewardedAds != null && _services.RewardedAds.IsRewardedAdReady();
         string title = LocalizationService.Get("ui.rewarded_run_title", "Boost your run!");
@@ -791,7 +797,17 @@ public class GameManager : MonoBehaviour
         string acceptLabel = LocalizationService.Get("ui.rewarded_run_accept", "Watch Ad");
         string declineLabel = LocalizationService.Get("ui.rewarded_run_decline", "No Thanks");
 
-        rewardedRunPromptUI.Show(title, body, reward, acceptLabel, declineLabel, HandleRewardedRunAccept, HandleRewardedRunDecline, adReady);
+        rewardedRunPromptUI.Show(
+            title,
+            body,
+            reward,
+            acceptLabel,
+            declineLabel,
+            HandleRewardedRunAccept,
+            HandleRewardedRunDecline,
+            adReady,
+            rewardedRunPromptAutoDismissSeconds,
+            HandleRewardedRunTimeout);
     }
 
     private void HandleRewardedRunAccept()
@@ -822,7 +838,8 @@ public class GameManager : MonoBehaviour
         }
 
         _adInProgress = true;
-        Time.timeScale = 1f;
+        if (_rewardedRunPromptPausedRun)
+            Time.timeScale = 1f;
 
         LogAnalyticsEvent("ad_shown", new Dictionary<string, object>
         {
@@ -868,6 +885,18 @@ public class GameManager : MonoBehaviour
         ResumeRunAfterRewardedPrompt();
     }
 
+    private void HandleRewardedRunTimeout()
+    {
+        LogAnalyticsEvent("ad_skipped", new Dictionary<string, object>
+        {
+            { "source", "rewarded_run" },
+            { "result", "timeout" }
+        });
+
+        HideRewardedRunPrompt();
+        ResumeRunAfterRewardedPrompt();
+    }
+
     private void GrantRewardedRunReward()
     {
         GrantDoubleRunRewards();
@@ -882,6 +911,7 @@ public class GameManager : MonoBehaviour
 
     private void PauseRunForRewardedPrompt()
     {
+        _rewardedRunPromptPausedRun = true;
         _rewardedRunPromptPrevTimeScale = Time.timeScale;
         Time.timeScale = 0f;
         _gameTimerEnabled = false;
@@ -894,6 +924,9 @@ public class GameManager : MonoBehaviour
 
     private void ResumeRunAfterRewardedPrompt()
     {
+        if (!_rewardedRunPromptPausedRun)
+            return;
+
         Time.timeScale = _rewardedRunPromptPrevTimeScale <= 0f ? 1f : _rewardedRunPromptPrevTimeScale;
         _gameTimerEnabled = true;
 
@@ -902,6 +935,8 @@ public class GameManager : MonoBehaviour
         playerController?.StartRun();
         runZoneManager?.StartRun();
         statsTracker?.ResumeRun();
+
+        _rewardedRunPromptPausedRun = false;
     }
 
     private void HideRewardedRunPrompt()

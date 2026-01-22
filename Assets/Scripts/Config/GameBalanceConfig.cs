@@ -37,6 +37,7 @@ public class GameBalanceConfig : ScriptableObject
     public int pickupMinPerSegment = 1;
     public int pickupMaxPerSegment = 2;
     public float pickupFloatHeight = 0.5f;
+    public float pickupSurfaceOffset = 0.25f;
 
     [Header("Powerups")]
     [Range(0f, 1f)] public float powerupSpawnChance = 0.15f;
