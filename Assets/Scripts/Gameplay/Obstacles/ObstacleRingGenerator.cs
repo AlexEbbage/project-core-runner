@@ -139,6 +139,7 @@ public partial class ObstacleRingGenerator : MonoBehaviour
     [SerializeField] private int pickupSlotsToFillMin = 1;
     [SerializeField] private int pickupSlotsToFillMax = 2;
     [SerializeField] private float pickupFloatHeight = 0.5f;
+    [SerializeField] private float pickupSurfaceOffset = 0.25f;
     [Range(0f, 1f)]
     [SerializeField] private float pickupSlotSpawnChance = 0.8f;
     [Range(0f, 1f)]
@@ -409,6 +410,34 @@ public partial class ObstacleRingGenerator : MonoBehaviour
         {
             if (dissolver != null && !dissolver.gameObject.activeSelf)
                 dissolver.gameObject.SetActive(true);
+        }
+    }
+
+    private void EnsureObstacleDissolvers(GameObject instance)
+    {
+        if (instance == null)
+            return;
+
+        var renderers = instance.GetComponentsInChildren<Renderer>(true);
+        if (renderers.Length > 0)
+        {
+            foreach (var renderer in renderers)
+            {
+                if (renderer == null)
+                    continue;
+
+                if (renderer.GetComponent<ObstacleDissolver>() == null)
+                {
+                    renderer.gameObject.AddComponent<ObstacleDissolver>();
+                }
+            }
+
+            return;
+        }
+
+        if (instance.GetComponent<ObstacleDissolver>() == null)
+        {
+            instance.AddComponent<ObstacleDissolver>();
         }
     }
 
