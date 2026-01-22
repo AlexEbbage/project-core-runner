@@ -695,7 +695,7 @@ MonoBehaviour:
   currencyManager: {fileID: 0}
   powerupController: {fileID: 0}
   playerHealth: {fileID: 7848395938132188008}
-  obstacleRingGenerator: {fileID: 883196103}
+  obstacleRingGenerator: {fileID: 0}
 --- !u!1 &181088811
 GameObject:
   m_ObjectHideFlags: 0
@@ -1349,7 +1349,7 @@ MonoBehaviour:
   speedController: {fileID: 273529348}
   currencyManager: {fileID: 0}
   runZoneManager: {fileID: 273529350}
-  obstacleRingGenerator: {fileID: 883196103}
+  obstacleRingGenerator: {fileID: 0}
   statsTracker: {fileID: 69424008}
   powerupController: {fileID: 0}
   playerProfile: {fileID: 0}
@@ -1515,7 +1515,7 @@ MonoBehaviour:
       obstacleColorCycleSpeedMultiplier: 1
   lockToSingleZone: 1
   tunnelWalls: {fileID: 806837119}
-  obstacleRings: {fileID: 883196103}
+  obstacleRings: {fileID: 0}
   audioManager: {fileID: 2038007867}
   atmosphereController: {fileID: 806837121}
 --- !u!1 &302164554
@@ -4524,7 +4524,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 883196104}
-  - component: {fileID: 883196103}
+  - component: {fileID: 883196105}
   m_Layer: 0
   m_Name: ObstacleGenerator
   m_TagString: Untagged
@@ -4532,132 +4532,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &883196103
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 883196102}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5f1292e93d541d740a4b75514461cead, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  player: {fileID: 1941368005519911021}
-  playerController: {fileID: 7848395938132188007}
-  sideCount: 6
-  ringSpacing: 40
-  ringBufferCount: 20
-  recycleBehindDistance: 100
-  obstaclePrefabs:
-  - id: 
-    prefab: {fileID: 8115283922152456048, guid: 0a4e271f202d7c140987a81860eee24b, type: 3}
-    weight: 1
-    minDifficulty: 0
-    maxDifficulty: 10
-    minRunLength: 1
-    maxRunLength: 3
-    runLengthDifficultyBonus: 0
-    pickupSlots: 
-    rotationByDifficulty: []
-  - id: 
-    prefab: {fileID: 7324066071219425408, guid: 62489c711d3bfa7458136a7ac7dede5e, type: 3}
-    weight: 1
-    minDifficulty: 0
-    maxDifficulty: 10
-    minRunLength: 1
-    maxRunLength: 3
-    runLengthDifficultyBonus: 0
-    pickupSlots: 
-    rotationByDifficulty: []
-  pickupPrefab: {fileID: 9136986109370162655, guid: befe4551c504b7848b6754267dad11b7, type: 3}
-  pickupRingPrefab: {fileID: 7343388740536788716, guid: f6a87dadeb1ae8843ac5863c86a41407, type: 3}
-  pickupSlotsPerRing: 6
-  pickupSlotRadiusOverride: 0
-  pickupSlotsToFillMin: 1
-  pickupSlotsToFillMax: 2
-  pickupFloatHeight: 1
-  pickupSurfaceOffset: 0.25
-  pickupSlotSpawnChance: 0.8
-  obstacleRingPickupChance: 0.35
-  powerupSpawnChance: 0.15
-  powerupEntries:
-  - type: 0
-    weight: 1
-  - type: 1
-    weight: 1
-  - type: 2
-    weight: 1
-  - type: 3
-    weight: 1
-  - type: 4
-    weight: 1
-  - type: 5
-    weight: 1
-  - type: 6
-    weight: 1
-  - type: 7
-    weight: 1
-  pickupClearanceRadius: 0.35
-  pickupPlacementAttempts: 3
-  obstacleOverlapMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  pickupChainStartChance: 0.6
-  pickupChainMinRings: 3
-  pickupChainMaxRings: 6
-  pickupChainGapMin: 1
-  pickupChainGapMax: 3
-  obstacleRingIntervalStart: 4
-  obstacleRingIntervalAtMaxDifficulty: 2
-  enableDifficultyScaling: 1
-  difficultyRampMinutes: 5
-  laserRandomOrientationSettings:
-    enableRotation: 0
-    rotationSpeed: 45
-    enableBeamCycling: 0
-    pulseDuration: 2
-    dutyCycle: 0.6
-    startBeamsOn: 1
-    randomizeBeamCyclePhase: 0
-  scaleLaserWithDifficulty: 1
-  laserRotationSpeedAtMaxDifficulty: 90
-  laserPulseDurationAtMaxDifficulty: 1.2
-  laserDutyCycleAtMaxDifficulty: 0.7
-  obstacleColorGradient:
-    serializedVersion: 2
-    key0: {r: 0.50980395, g: 0.0072938837, b: 0, a: 1}
-    key1: {r: 0.48235297, g: 0.007843138, b: 0, a: 1}
-    key2: {r: 0, g: 0, b: 0, a: 0}
-    key3: {r: 0, g: 0, b: 0, a: 0}
-    key4: {r: 0, g: 0, b: 0, a: 0}
-    key5: {r: 0, g: 0, b: 0, a: 0}
-    key6: {r: 0, g: 0, b: 0, a: 0}
-    key7: {r: 0, g: 0, b: 0, a: 0}
-    ctime0: 0
-    ctime1: 65535
-    ctime2: 0
-    ctime3: 0
-    ctime4: 0
-    ctime5: 0
-    ctime6: 0
-    ctime7: 0
-    atime0: 0
-    atime1: 65535
-    atime2: 0
-    atime3: 0
-    atime4: 0
-    atime5: 0
-    atime6: 0
-    atime7: 0
-    m_Mode: 0
-    m_ColorSpace: -1
-    m_NumColorKeys: 2
-    m_NumAlphaKeys: 2
-  colorCycleSpeed: 0.2
-  darkenFactor: 0
-  randomSeed: 0
 --- !u!4 &883196104
 Transform:
   m_ObjectHideFlags: 0
@@ -4673,6 +4547,53 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &883196105
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 883196102}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 594f07d4fabca2d47a73ee3df3bf7e7f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerTransform: {fileID: 1941368005519911021}
+  obstacleRingConfigs:
+  - {fileID: 11400000, guid: 0fda1b511097f9541902b98605c643cd, type: 2}
+  pickupRingPrefab: {fileID: 5609623358749258697, guid: e47b03a11f92a194f84fb40a1c2354b1, type: 3}
+  ringsParent: {fileID: 883196104}
+  obstacleRingSpacing: 30
+  obstacleRingsAhead: 20
+  obstacleRecycleDistanceBehind: 20
+  pickupRingSpacing: 10
+  pickupRingsAhead: 20
+  pickupRecycleDistanceBehind: 20
+  startingPickupRingScale: 1
+  minPickupRingScale: 0.5
+  difficultyForMinPickupScale: 100
+  startingDifficulty: 0
+  useTimeBasedDifficulty: 1
+  difficultyIncreasePerSecond: 0.1
+  difficultyIncreasePerMeter: 0.01
+  pickupPrefab: {fileID: 9136986109370162655, guid: befe4551c504b7848b6754267dad11b7, type: 3}
+  pickupSlotsToFillMin: 1
+  pickupSlotsToFillMax: 3
+  pickupSlotSpawnChance: 0.4
+  obstacleRingPickupChance: 1
+  powerupSpawnChance: 0
+  powerupEntries: []
+  pickupPlacementAttempts: 3
+  pickupClearanceRadius: 1
+  obstacleOverlapMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  pickupChainStartChance: 0.3
+  pickupChainMinRings: 2
+  pickupChainMaxRings: 5
+  pickupChainGapMin: 1
+  pickupChainGapMax: 3
 --- !u!1 &889387550
 GameObject:
   m_ObjectHideFlags: 0
@@ -6417,10 +6338,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5dd0a38b2ac01d74b962e9d6bb7fdd4c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ringGenerator: {fileID: 883196103}
+  ringGenerator: {fileID: 0}
   debugText: {fileID: 191920627}
   onlyShowWhenWedgeRun: 0
   updateInterval: 0.1
+  _timer: 0
 --- !u!1 &1409779742
 GameObject:
   m_ObjectHideFlags: 0
@@ -6687,7 +6609,7 @@ MonoBehaviour:
   - displayName: HEXAGON
     sides: 6
     shapeSprite: {fileID: 0}
-  obstacleRingGenerator: {fileID: 883196103}
+  obstacleRingGenerator: {fileID: 0}
   tunnelWallGenerator: {fileID: 806837119}
   runSpeedController: {fileID: 273529348}
   defaultSpeedConfig: {fileID: 11400000, guid: 4dfa3040d7c096845a7fcc563094ac2b, type: 2}
@@ -8756,7 +8678,7 @@ MonoBehaviour:
   menuMusic: {fileID: 8300000, guid: 6e12d51161c858b4ab075c4ca7461afa, type: 3}
   gameplayTracks: []
   musicCrossfadeTime: 1
-  pickupSfx: {fileID: 8300000, guid: 4be8b5d9483df2e448c1c31741110e83, type: 3}
+  pickupSfx: {fileID: 8300000, guid: 669bc3204dd0d5340b3132c9add95530, type: 3}
   hitSfx: {fileID: 8300000, guid: 9d0ed529cfc642d45928429adf022854, type: 3}
   buttonClickSfx: {fileID: 8300000, guid: ac064f6f58feac84eba0b6b5af9dd26f, type: 3}
   speedUpSfx: {fileID: 8300000, guid: 4be8b5d9483df2e448c1c31741110e83, type: 3}

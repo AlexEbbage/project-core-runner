@@ -163,11 +163,6 @@ public class GameManager : MonoBehaviour
             maxContinuesPerRun = balanceConfig.maxContinuesPerRun;
             continueRespawnBackDistance = balanceConfig.continueRespawnBackDistance;
             continueRespawnHeightOffset = balanceConfig.continueRespawnHeightOffset;
-            if (obstacleRingGenerator != null)
-            {
-                obstacleRingGenerator.SetPickupFloatHeight(balanceConfig.pickupFloatHeight);
-                obstacleRingGenerator.SetPickupSurfaceOffset(balanceConfig.pickupSurfaceOffset);
-            }
         }
 
 

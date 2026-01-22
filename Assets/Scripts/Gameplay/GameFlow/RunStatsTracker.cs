@@ -81,10 +81,10 @@ public class RunStatsTracker : MonoBehaviour
             currencyManager.OnCoinsAdded += HandleCoinsAdded;
         }
 
-        if (obstacleRingGenerator != null)
-        {
-            obstacleRingGenerator.OnObstacleRingPassed += HandleObstaclePassed;
-        }
+        //if (obstacleRingGenerator != null)
+        //{
+        //    obstacleRingGenerator.OnObstacleRingPassed += HandleObstaclePassed;
+        //}
     }
 
     private void OnDisable()
@@ -105,10 +105,10 @@ public class RunStatsTracker : MonoBehaviour
             currencyManager.OnCoinsAdded -= HandleCoinsAdded;
         }
 
-        if (obstacleRingGenerator != null)
-        {
-            obstacleRingGenerator.OnObstacleRingPassed -= HandleObstaclePassed;
-        }
+        //if (obstacleRingGenerator != null)
+        //{
+        //    obstacleRingGenerator.OnObstacleRingPassed -= HandleObstaclePassed;
+        //}
     }
 
     private void Update()
