@@ -133,18 +133,27 @@ public class AudioManager : MonoBehaviour
 
         if (musicSourceA != null)
         {
+            musicSourceA.playOnAwake = false;
+            if (musicSourceA.isPlaying)
+                musicSourceA.Stop();
             musicSourceA.loop = false;
             musicSourceA.volume = _musicVolume;
         }
 
         if (musicSourceB != null)
         {
+            musicSourceB.playOnAwake = false;
+            if (musicSourceB.isPlaying)
+                musicSourceB.Stop();
             musicSourceB.loop = false;
             musicSourceB.volume = 0f;
         }
 
         if(sfxSource != null)
         {
+            sfxSource.playOnAwake = false;
+            if (sfxSource.isPlaying)
+                sfxSource.Stop();
             sfxSource.volume = SettingsData.SfxVolume;
         }
     }
