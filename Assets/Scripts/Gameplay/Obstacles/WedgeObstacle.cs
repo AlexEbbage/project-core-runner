@@ -68,6 +68,8 @@ public class WedgeObstacle : MonoBehaviour
         patternType = type;
     }
 
+    public LocalPatternType CurrentPatternType => patternType;
+
     [ContextMenu("Regenerate Pattern")]
     public void RegeneratePattern()
     {
