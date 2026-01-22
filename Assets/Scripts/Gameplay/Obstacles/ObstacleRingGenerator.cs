@@ -59,6 +59,7 @@ public partial class ObstacleRingGenerator : MonoBehaviour
         public bool isObstacleRing;
         public bool isDissolving;
         public GameObject obstacleInstance;
+        public GameObject pickupRingInstance;
         public Renderer[] renderers;
         public ObstacleRingPrefab obstacleConfig;
         public readonly List<GameObject> pickups = new List<GameObject>();
@@ -98,6 +99,7 @@ public partial class ObstacleRingGenerator : MonoBehaviour
 
     [Header("Pickups")]
     [SerializeField] private Pickup pickupPrefab;
+    [SerializeField] private GameObject pickupRingPrefab;
     [SerializeField] private int pickupSlotsPerRing = 6;
     [SerializeField] private float pickupSlotRadiusOverride = 0f;
     [SerializeField] private int pickupSlotsToFillMin = 1;
