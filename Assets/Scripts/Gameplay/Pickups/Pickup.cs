@@ -19,6 +19,8 @@ public class Pickup : MonoBehaviour
     [SerializeField] private float bobZPhaseScale = 0.1f;
     [SerializeField] private float zRotationAmplitude = 25f;
     [SerializeField] private float zRotationFrequency = 0.1f;
+    [SerializeField] private float yRotationAmplitude = 25f;
+    [SerializeField] private float yRotationFrequency = 0.1f;
 
     private Vector3 _baseLocalPosition;
     private Quaternion _baseLocalRotation;
@@ -53,7 +55,13 @@ public class Pickup : MonoBehaviour
 
         float zPhase = transform.position.z * zRotationFrequency;
         float zRotationOffset = Mathf.Sin(zPhase) * zRotationAmplitude;
+
+        float yPhase = transform.position.y * yRotationFrequency;
+        float yRotationOffset = Mathf.Sin(yPhase) * yRotationAmplitude;
+
         _baseLocalRotation = Quaternion.AngleAxis(zRotationOffset, Vector3.forward) * _baseLocalRotation;
+        _baseLocalRotation = Quaternion.AngleAxis(yRotationOffset, Vector3.up) * _baseLocalRotation;
+
         transform.localRotation = _baseLocalRotation;
 
         _bobPhaseOffset = transform.position.z * bobZPhaseScale;
@@ -66,7 +74,7 @@ public class Pickup : MonoBehaviour
 
         if (Mathf.Abs(spinDegreesPerSecond) > 0.01f)
         {
-            transform.Rotate(Vector3.forward, spinDegreesPerSecond * Time.deltaTime, Space.Self);
+            transform.Rotate(Vector3.up, spinDegreesPerSecond * Time.deltaTime, Space.Self);
         }
 
         if (!_isCollected && MagnetRadiusMultiplier > 1f)
