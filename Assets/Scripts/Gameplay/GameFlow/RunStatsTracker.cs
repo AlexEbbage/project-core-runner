@@ -225,7 +225,7 @@ public class RunStatsTracker : MonoBehaviour
         }
     }
 
-    private void HandleObstaclePassed(ObstacleRingGenerator.ObstacleRingType type)
+    private void HandleObstaclePassed()
     {
         if (!_isTracking)
             return;

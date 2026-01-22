@@ -7,109 +7,116 @@ public partial class ObstacleRingGenerator
 
     private void EnsurePatternState()
     {
-        if (_patternRingsRemaining > 0 || _wedgeRunRingsRemaining > 0)
+        if (_patternRingsRemaining > 0)
             return;
 
-        float difficulty = GetDifficulty01();
-        int minRun = Mathf.RoundToInt(Mathf.Lerp(minPatternRunLength, minPatternRunLengthAtMaxDifficulty, difficulty));
-        int maxRun = Mathf.RoundToInt(Mathf.Lerp(maxPatternRunLength, maxPatternRunLengthAtMaxDifficulty, difficulty));
-        maxRun = Mathf.Max(maxRun, minRun);
-        float shiftedChance = Mathf.Lerp(shiftedPatternChance, shiftedPatternChanceAtMaxDifficulty, difficulty);
+        int difficulty = GetDifficultyLevel();
+        _currentPatternPrefab = ChooseRandomObstaclePrefab(difficulty);
+        if (_currentPatternPrefab == null)
+        {
+            _patternRingsRemaining = 0;
+            return;
+        }
 
-        _currentPatternType = ChooseRandomObstacleType(difficulty);
-
-        _currentPatternMode = (RandomValue() < shiftedChance)
-            ? PatternMode.ShiftedOrientation
-            : PatternMode.RandomOrientationEachRing;
-
+        int minRun = Mathf.Max(1, _currentPatternPrefab.minRunLength + difficulty * _currentPatternPrefab.runLengthDifficultyBonus);
+        int maxRun = Mathf.Max(minRun, _currentPatternPrefab.maxRunLength + difficulty * _currentPatternPrefab.runLengthDifficultyBonus);
         _patternRingsRemaining = RandomRange(minRun, maxRun + 1);
+        _patternIndex = 0;
 
+        _currentRotationConfig = ChooseRotationConfig(_currentPatternPrefab, difficulty);
         _currentRotationStep = RandomRange(0, Mathf.Max(1, sideCount));
-        _rotationStepDelta = RandomRange(-2, 3);
-        if (_rotationStepDelta == 0)
-            _rotationStepDelta = 1;
+        _rotationDirectionSign = _currentRotationConfig != null && !_currentRotationConfig.allowBothDirections
+            ? (RandomValue() > 0.5f ? 1 : -1)
+            : 0;
     }
 
-    private ObstacleRingType ChooseRandomObstacleType(float difficulty)
+    private ObstacleRingPrefab ChooseRandomObstaclePrefab(int difficulty)
     {
         var available = new List<ObstacleRingPrefab>();
         if (obstaclePrefabs != null)
         {
-            foreach (var e in obstaclePrefabs)
+            foreach (var entry in obstaclePrefabs)
             {
-                if (e != null && e.prefab != null)
-                    available.Add(e);
+                if (entry == null || entry.prefab == null)
+                    continue;
+
+                if (difficulty < entry.minDifficulty || difficulty > entry.maxDifficulty)
+                    continue;
+
+                available.Add(entry);
             }
         }
 
         if (available.Count == 0)
-            return ObstacleRingType.Wedge;
+        {
+            if (obstaclePrefabs != null)
+            {
+                foreach (var entry in obstaclePrefabs)
+                {
+                    if (entry != null && entry.prefab != null)
+                        return entry;
+                }
+            }
+            return null;
+        }
 
         int totalWeight = 0;
         foreach (var entry in available)
         {
-            int baseWeight = Mathf.Max(0, entry.weight);
-            int bonus = Mathf.RoundToInt(Mathf.Max(0f, entry.weightBonusAtMaxDifficulty) * difficulty);
-            totalWeight += Mathf.Max(0, baseWeight + bonus);
+            totalWeight += Mathf.Max(0, entry.weight);
         }
 
         if (totalWeight <= 0)
-            return available[0].type;
+            return available[0];
 
         int roll = RandomRange(0, totalWeight);
         int cumulative = 0;
         foreach (var entry in available)
         {
-            int baseWeight = Mathf.Max(0, entry.weight);
-            int bonus = Mathf.RoundToInt(Mathf.Max(0f, entry.weightBonusAtMaxDifficulty) * difficulty);
-            int w = Mathf.Max(0, baseWeight + bonus);
+            int w = Mathf.Max(0, entry.weight);
             cumulative += w;
             if (roll < cumulative)
-                return entry.type;
+                return entry;
         }
 
-        return available[0].type;
+        return available[0];
     }
 
-    private GameObject GetPrefabForType(ObstacleRingType type)
+    private static RotationDifficultyConfig ChooseRotationConfig(ObstacleRingPrefab prefab, int difficulty)
     {
-        if (obstaclePrefabs == null) return null;
+        if (prefab == null || prefab.rotationByDifficulty == null || prefab.rotationByDifficulty.Length == 0)
+            return null;
 
-        foreach (var e in obstaclePrefabs)
+        RotationDifficultyConfig bestMatch = null;
+        foreach (var config in prefab.rotationByDifficulty)
         {
-            if (e != null && e.prefab != null && e.type == type)
-                return e.prefab;
+            if (config == null)
+                continue;
+
+            if (config.difficultyLevel == difficulty)
+                return config;
+
+            if (config.difficultyLevel <= difficulty)
+            {
+                if (bestMatch == null || config.difficultyLevel > bestMatch.difficultyLevel)
+                    bestMatch = config;
+            }
         }
-        return null;
+
+        return bestMatch ?? prefab.rotationByDifficulty[0];
     }
 
     #endregion
 
-    #region Non-wedge configuration
+    #region Obstacle configuration
 
-    private void ConfigureNonWedgeRing(RingInstance ring, ObstacleRingType type)
+    private void ConfigureObstacleRing(RingInstance ring)
     {
-        int rotationStep;
-        if (_currentPatternMode == PatternMode.RandomOrientationEachRing)
-        {
-            rotationStep = RandomRange(0, sideCount);
-        }
-        else
-        {
-            rotationStep = _currentRotationStep;
-            int stepChange = RandomRange(-2, 3);
-            if (stepChange == 0)
-                stepChange = 1;
-            _rotationStepDelta = stepChange;
-            _currentRotationStep = Mod(_currentRotationStep + _rotationStepDelta, sideCount);
-        }
+        if (_currentPatternPrefab == null)
+            return;
 
-        float angleStep = 360f / Mathf.Max(3, sideCount);
-        float zAngle = rotationStep * angleStep;
-
-        GameObject prefab = GetPrefabForType(type);
-
-        if (ring.obstacleInstance != null && ring.type != type)
+        GameObject prefab = _currentPatternPrefab.prefab;
+        if (ring.obstacleInstance != null && ring.obstacleConfig != _currentPatternPrefab)
         {
             Destroy(ring.obstacleInstance);
             SetObstacleInstance(ring, null);
@@ -120,23 +127,54 @@ public partial class ObstacleRingGenerator
             SetObstacleInstance(ring, Instantiate(prefab, ring.root));
         }
 
-        ring.type = type;
+        ring.obstacleConfig = _currentPatternPrefab;
 
         if (ring.obstacleInstance != null)
         {
             ReactivateObstacleInstance(ring.obstacleInstance);
 
+            float angleStep = 360f / Mathf.Max(3, sideCount);
+            float zAngle = _currentRotationStep * angleStep;
+
             var t = ring.obstacleInstance.transform;
             t.localPosition = Vector3.zero;
             t.localRotation = Quaternion.Euler(0f, 0f, zAngle);
 
-            ConfigureObstacleInstanceNonWedge(ring.obstacleInstance, type);
+            ConfigureObstacleInstance(ring.obstacleInstance);
         }
+
+        AdvancePatternRotation();
+        _patternIndex++;
     }
 
-    private void ConfigureObstacleInstanceNonWedge(GameObject instance, ObstacleRingType type)
+    private void AdvancePatternRotation()
     {
-        if (instance == null) return;
+        if (_currentRotationConfig == null || _patternRingsRemaining <= 1)
+            return;
+
+        int minStep = Mathf.Max(0, _currentRotationConfig.minRotationSteps);
+        int maxStep = Mathf.Max(minStep, _currentRotationConfig.maxRotationSteps);
+        int steps = RandomRange(minStep, maxStep + 1);
+        if (steps == 0)
+            return;
+
+        int direction;
+        if (_currentRotationConfig.allowBothDirections)
+        {
+            direction = RandomValue() > 0.5f ? 1 : -1;
+        }
+        else
+        {
+            direction = _rotationDirectionSign == 0 ? 1 : _rotationDirectionSign;
+        }
+
+        _currentRotationStep = Mod(_currentRotationStep + steps * direction, sideCount);
+    }
+
+    private void ConfigureObstacleInstance(GameObject instance)
+    {
+        if (instance == null)
+            return;
 
         var fan = instance.GetComponent<FanObstacle>();
         if (fan != null)
@@ -157,17 +195,23 @@ public partial class ObstacleRingGenerator
         {
             door.ResetCycle();
         }
+
+        var wedge = instance.GetComponent<WedgeObstacle>();
+        if (wedge != null)
+        {
+            wedge.SetSideCount(sideCount);
+            wedge.RegeneratePattern();
+        }
     }
 
     private void ConfigureLaserSettings(LaserObstacle laser)
     {
-        if (laser == null) return;
+        if (laser == null)
+            return;
 
-        LaserBehaviorSettings settings = _currentPatternMode == PatternMode.ShiftedOrientation
-            ? laserShiftedOrientationSettings
-            : laserRandomOrientationSettings;
+        LaserBehaviorSettings settings = laserRandomOrientationSettings;
 
-        float difficulty = enableDifficultyScaling ? GetDifficulty01() : 0f;
+        float difficulty = GetDifficulty01();
         float rotationSpeed = settings.rotationSpeed;
         float pulseDuration = settings.pulseDuration;
         float dutyCycle = settings.dutyCycle;
@@ -186,182 +230,6 @@ public partial class ObstacleRingGenerator
             dutyCycle,
             settings.startBeamsOn,
             settings.randomizeBeamCyclePhase);
-    }
-
-    #endregion
-
-    #region Wedge configuration using WedgePatternSet
-
-    private void ConfigureWedgeRing(RingInstance ring, ObstacleRingType type)
-    {
-        bool isWedgeType = type == ObstacleRingType.Wedge;
-
-        if (!isWedgeType)
-        {
-            _inWedgeRun = false;
-            _currentWedgeSet = null;
-            return;
-        }
-
-        if (ring.obstacleInstance != null && ring.type != type)
-        {
-            Destroy(ring.obstacleInstance);
-            SetObstacleInstance(ring, null);
-        }
-
-        if (!_inWedgeRun || _wedgeRunRingsRemaining <= 0 || _currentWedgeSet == null)
-        {
-            _currentWedgeSet = ChooseWedgePatternSet();
-            if (_currentWedgeSet == null)
-            {
-                ConfigureNonWedgeRing(ring, type);
-                return;
-            }
-
-            _inWedgeRun = true;
-            int minRings = _currentWedgeSet.minRings;
-            int maxRings = _currentWedgeSet.maxRings;
-            if (enableDifficultyScaling)
-            {
-                float difficulty = GetDifficulty01();
-                int minTarget = _currentWedgeSet.minRingsAtMaxDifficulty >= 0
-                    ? _currentWedgeSet.minRingsAtMaxDifficulty
-                    : minRings;
-                int maxTarget = _currentWedgeSet.maxRingsAtMaxDifficulty >= 0
-                    ? _currentWedgeSet.maxRingsAtMaxDifficulty
-                    : maxRings;
-                minRings = Mathf.RoundToInt(Mathf.Lerp(minRings, minTarget, difficulty));
-                maxRings = Mathf.RoundToInt(Mathf.Lerp(maxRings, maxTarget, difficulty));
-            }
-            maxRings = Mathf.Max(maxRings, minRings);
-            _wedgeRunRingsRemaining = RandomRange(minRings, maxRings + 1);
-            _wedgeCurrentRotationStep = RandomRange(0, Mathf.Max(1, sideCount));
-
-            if (_currentWedgeSet.oneDirectionOnly)
-            {
-                _wedgeRotationDirectionSign = RandomValue() > 0.5f ? 1 : -1;
-            }
-            else
-            {
-                _wedgeRotationDirectionSign = 0;
-            }
-        }
-
-        float angleStep = 360f / Mathf.Max(3, sideCount);
-        float zAngle = _wedgeCurrentRotationStep * angleStep;
-
-        GameObject prefab = GetPrefabForType(type);
-        if (prefab != null && ring.obstacleInstance == null)
-        {
-            SetObstacleInstance(ring, Instantiate(prefab, ring.root));
-        }
-
-        ring.type = type;
-
-        if (ring.obstacleInstance != null)
-        {
-            ReactivateObstacleInstance(ring.obstacleInstance);
-
-            Transform t = ring.obstacleInstance.transform;
-            t.localPosition = Vector3.zero;
-            t.localRotation = Quaternion.Euler(0f, 0f, zAngle);
-
-            var wedge = ring.obstacleInstance.GetComponent<WedgeObstacle>();
-            if (wedge != null)
-            {
-                wedge.SetSideCount(sideCount);
-                wedge.SetLocalPattern(_currentWedgeSet.localPattern);
-                wedge.RegeneratePattern();
-            }
-        }
-
-        _wedgeRunRingsRemaining--;
-
-        if (_wedgeRunRingsRemaining > 0)
-        {
-            int maxStep = Mathf.Max(0, _currentWedgeSet.maxRotationStepPerRing);
-            if (enableDifficultyScaling)
-            {
-                float difficulty = GetDifficulty01();
-                int maxStepTarget = _currentWedgeSet.maxRotationStepPerRingAtMaxDifficulty >= 0
-                    ? _currentWedgeSet.maxRotationStepPerRingAtMaxDifficulty
-                    : maxStep;
-                maxStep = Mathf.RoundToInt(Mathf.Lerp(maxStep, maxStepTarget, difficulty));
-                float multiplier = Mathf.Lerp(1f, wedgeRotationStepMultiplierAtMaxDifficulty, difficulty);
-                maxStep = Mathf.RoundToInt(maxStep * multiplier);
-            }
-            int delta = 0;
-
-            if (maxStep > 0)
-            {
-                if (_currentWedgeSet.oneDirectionOnly)
-                {
-                    int steps = RandomRange(0, maxStep + 1);
-                    int sign = (_wedgeRotationDirectionSign == 0) ? 1 : _wedgeRotationDirectionSign;
-                    delta = steps * sign;
-                }
-                else
-                {
-                    delta = RandomRange(-maxStep, maxStep + 1);
-                }
-            }
-
-            _wedgeCurrentRotationStep = Mod(_wedgeCurrentRotationStep + delta, sideCount);
-        }
-        else
-        {
-            _inWedgeRun = false;
-            _currentWedgeSet = null;
-        }
-    }
-
-    private WedgePatternSet ChooseWedgePatternSet()
-    {
-        if (wedgePatternSets == null || wedgePatternSets.Length == 0)
-            return null;
-
-        int totalWeight = 0;
-        foreach (var set in wedgePatternSets)
-        {
-            if (set == null) continue;
-            int baseWeight = Mathf.Max(0, set.weight);
-            int bonus = 0;
-            if (enableDifficultyScaling)
-            {
-                float difficulty = GetDifficulty01();
-                bonus = Mathf.RoundToInt(Mathf.Max(0f, set.weightBonusAtMaxDifficulty) * difficulty);
-            }
-            totalWeight += Mathf.Max(0, baseWeight + bonus);
-        }
-
-        if (totalWeight <= 0)
-        {
-            foreach (var set in wedgePatternSets)
-            {
-                if (set != null) return set;
-            }
-            return null;
-        }
-
-        int roll = RandomRange(0, totalWeight);
-        int cumulative = 0;
-        foreach (var set in wedgePatternSets)
-        {
-            if (set == null) continue;
-            int baseWeight = Mathf.Max(0, set.weight);
-            int bonus = 0;
-            if (enableDifficultyScaling)
-            {
-                float difficulty = GetDifficulty01();
-                bonus = Mathf.RoundToInt(Mathf.Max(0f, set.weightBonusAtMaxDifficulty) * difficulty);
-            }
-            int w = Mathf.Max(0, baseWeight + bonus);
-            cumulative += w;
-            if (roll < cumulative)
-                return set;
-        }
-
-        return wedgePatternSets[0];
     }
 
     #endregion
