@@ -9459,7 +9459,7 @@ MonoBehaviour:
   menuMusic: {fileID: 8300000, guid: 6e12d51161c858b4ab075c4ca7461afa, type: 3}
   gameplayTracks: []
   musicCrossfadeTime: 1
-  pickupSfx: {fileID: 0}
+  pickupSfx: {fileID: 8300000, guid: 4be8b5d9483df2e448c1c31741110e83, type: 3}
   hitSfx: {fileID: 8300000, guid: 9d0ed529cfc642d45928429adf022854, type: 3}
   buttonClickSfx: {fileID: 8300000, guid: ac064f6f58feac84eba0b6b5af9dd26f, type: 3}
   speedUpSfx: {fileID: 8300000, guid: 4be8b5d9483df2e448c1c31741110e83, type: 3}
