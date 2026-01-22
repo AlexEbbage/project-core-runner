@@ -7,15 +7,19 @@ public partial class ObstacleRingGenerator
 
     private void ConfigurePickupRing(RingInstance ring)
     {
-        if (ring == null || ring.root == null || pickupPrefab == null)
+        if (ring == null || ring.root == null || pickupPrefab == null || pickupRingPrefab == null)
             return;
 
         if (!EnsurePickupChain())
             return;
 
-        int slotCount = Mathf.Max(1, pickupSlotsPerRing);
+        ring.pickupRingInstance = Instantiate(pickupRingPrefab, ring.root);
+        ring.pickupRingInstance.transform.localPosition = Vector3.zero;
+        ring.pickupRingInstance.transform.localRotation = Quaternion.identity;
+
+        var spawnPoints = GetPickupRingSpawnPoints(ring.pickupRingInstance.transform);
         int slotsToFill = RandomRange(pickupSlotsToFillMin, pickupSlotsToFillMax + 1);
-        slotsToFill = Mathf.Clamp(slotsToFill, 0, slotCount);
+        slotsToFill = Mathf.Clamp(slotsToFill, 0, spawnPoints.Count);
 
         var usedSlots = new HashSet<int>();
         for (int i = 0; i < slotsToFill; i++)
@@ -24,7 +28,7 @@ public partial class ObstacleRingGenerator
             if (RandomValue() > spawnChance)
                 continue;
 
-            bool spawned = TrySpawnPickup(ring, slotCount, usedSlots, ShouldSpawnPowerupInChain());
+            bool spawned = TrySpawnPickupFromSpawnPoints(ring, spawnPoints, usedSlots, ShouldSpawnPowerupInChain());
             if (!spawned)
                 break;
         }
@@ -98,6 +102,72 @@ public partial class ObstacleRingGenerator
         }
 
         return false;
+    }
+
+    private bool TrySpawnPickupFromSpawnPoints(
+        RingInstance ring,
+        List<Transform> spawnPoints,
+        HashSet<int> usedSlots,
+        bool allowPowerup)
+    {
+        int attempts = Mathf.Max(1, pickupPlacementAttempts);
+        for (int attempt = 0; attempt < attempts; attempt++)
+        {
+            int slotIndex = GetNextPickupSpawnIndex(spawnPoints.Count, usedSlots);
+            if (slotIndex < 0)
+                return false;
+            if (!usedSlots.Add(slotIndex))
+                continue;
+
+            Transform spawn = spawnPoints[slotIndex];
+            Vector3 worldPos = spawn.position;
+            if (IsPickupBlocked(worldPos))
+                continue;
+
+            Vector3 localPos = ring.root.InverseTransformPoint(worldPos);
+            var pickup = Instantiate(pickupPrefab, ring.root);
+            pickup.transform.localPosition = localPos;
+            pickup.transform.localRotation = Quaternion.LookRotation(Vector3.forward, -localPos.normalized);
+
+            bool spawnPowerup = allowPowerup && RandomValue() <= powerupSpawnChance;
+            if (spawnPowerup)
+            {
+                pickup.Configure(PickupType.Powerup, ChooseRandomPowerup());
+            }
+            else
+            {
+                pickup.Configure(PickupType.Coin, PowerupType.CoinMultiplier);
+            }
+
+            ring.pickups.Add(pickup.gameObject);
+            return true;
+        }
+
+        return false;
+    }
+
+    private List<Transform> GetPickupRingSpawnPoints(Transform pickupRingRoot)
+    {
+        var spawnPoints = new List<Transform>();
+        if (pickupRingRoot == null)
+            return spawnPoints;
+
+        var children = pickupRingRoot.GetComponentsInChildren<Transform>(true);
+        foreach (var child in children)
+        {
+            if (child != null && child.name == "Spawn")
+                spawnPoints.Add(child);
+        }
+
+        return spawnPoints;
+    }
+
+    private int GetNextPickupSpawnIndex(int slotCount, HashSet<int> usedSlots)
+    {
+        if (slotCount <= 0 || usedSlots.Count >= slotCount)
+            return -1;
+
+        return RandomRange(0, slotCount);
     }
 
     private IReadOnlyList<int> GetObstaclePickupSlots(RingInstance ring, int slotCount)
@@ -209,6 +279,12 @@ public partial class ObstacleRingGenerator
     {
         if (ring == null)
             return;
+
+        if (ring.pickupRingInstance != null)
+        {
+            Destroy(ring.pickupRingInstance);
+            ring.pickupRingInstance = null;
+        }
 
         foreach (var pickup in ring.pickups)
         {

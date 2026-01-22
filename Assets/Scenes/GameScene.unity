@@ -4923,6 +4923,7 @@ MonoBehaviour:
     pickupSlots: 
     rotationByDifficulty: []
   pickupPrefab: {fileID: 9136986109370162655, guid: befe4551c504b7848b6754267dad11b7, type: 3}
+  pickupRingPrefab: {fileID: 7343388740536788716, guid: f6a87dadeb1ae8843ac5863c86a41407, type: 3}
   pickupSlotsPerRing: 6
   pickupSlotRadiusOverride: 0
   pickupSlotsToFillMin: 1
