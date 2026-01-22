@@ -112,6 +112,10 @@ public class WedgeObstacle : MonoBehaviour
             go.name = $"WedgeSlot_{i}";
             go.transform.localPosition = Vector3.zero;
             go.transform.localRotation = Quaternion.Euler(0f, 0f, angleDeg);
+            if (go.GetComponent<ObstacleDissolver>() == null)
+            {
+                go.AddComponent<ObstacleDissolver>();
+            }
 
             _spawnedSegments.Add(go);
         }

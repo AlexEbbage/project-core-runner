@@ -130,7 +130,10 @@ public class Pickup : MonoBehaviour
             scoreManager?.OnPickupCollected();
             if (currencyManager != null)
             {
-                currencyManager.AddCoins(currencyManager.GetCoinValue());
+                float multiplier = scoreManager != null ? scoreManager.CurrentMultiplier : 1f;
+                int baseValue = currencyManager.GetCoinValue();
+                int bonusValue = Mathf.Max(1, Mathf.RoundToInt(baseValue * multiplier));
+                currencyManager.AddCoins(bonusValue);
             }
         }
         else if (pickupType == PickupType.Powerup)
