@@ -121,3 +121,6 @@ MonoBehaviour:
   pickupType: 0
   powerupType: 1
   audioManager: {fileID: 0}
+  coinPickupVfxPrefab: {fileID: 100100000, guid: aa0fdb9a759848e0ad127fadf532c5dc, type: 3}
+  powerupPickupVfxPrefab: {fileID: 100100000, guid: 7535e105158f4a3287c36f6d86403b3b, type: 3}
+  defaultPickupVfxPrefab: {fileID: 100100000, guid: 5e9c0bec166a422783495a8558dcaefd, type: 3}
