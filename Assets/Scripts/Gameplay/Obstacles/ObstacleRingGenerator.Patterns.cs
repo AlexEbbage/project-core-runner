@@ -18,6 +18,8 @@ public partial class ObstacleRingGenerator
             return;
         }
 
+        _currentWedgePatternType = GetWedgePatternType(_currentPatternPrefab);
+
         int minRun = Mathf.Max(1, _currentPatternPrefab.minRunLength + difficulty * _currentPatternPrefab.runLengthDifficultyBonus);
         int maxRun = Mathf.Max(minRun, _currentPatternPrefab.maxRunLength + difficulty * _currentPatternPrefab.runLengthDifficultyBonus);
         _patternRingsRemaining = RandomRange(minRun, maxRun + 1);
@@ -203,6 +205,7 @@ public partial class ObstacleRingGenerator
         {
             wedge.SetSideCount(sideCount);
             wedge.RegeneratePattern();
+            _currentWedgePatternType = wedge.CurrentPatternType;
         }
     }
 
