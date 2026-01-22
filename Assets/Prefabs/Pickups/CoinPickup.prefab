@@ -18,7 +18,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 551c4f3fb3d959348bf546d4fed51a3d, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1
+      value: 2.4
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 551c4f3fb3d959348bf546d4fed51a3d, type: 3}
       propertyPath: m_LocalPosition.x
@@ -99,11 +99,11 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.86602545, y: 1, z: 0.05}
+  m_Size: {x: 1.2, y: 1.2, z: 0.5}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &9136986109370162655
 MonoBehaviour:
@@ -120,9 +120,9 @@ MonoBehaviour:
   pickupType: 0
   powerupType: 1
   audioManager: {fileID: 0}
-  coinPickupVfxPrefab: {fileID: 100100000, guid: aa0fdb9a759848e0ad127fadf532c5dc, type: 3}
-  powerupPickupVfxPrefab: {fileID: 100100000, guid: 7535e105158f4a3287c36f6d86403b3b, type: 3}
-  defaultPickupVfxPrefab: {fileID: 100100000, guid: 5e9c0bec166a422783495a8558dcaefd, type: 3}
+  coinPickupVfxPrefab: {fileID: 6602472304470955431, guid: aa0fdb9a759848e0ad127fadf532c5dc, type: 3}
+  powerupPickupVfxPrefab: {fileID: 6602472304470955431, guid: aa0fdb9a759848e0ad127fadf532c5dc, type: 3}
+  defaultPickupVfxPrefab: {fileID: 6602472304470955431, guid: aa0fdb9a759848e0ad127fadf532c5dc, type: 3}
   spinDegreesPerSecond: 90
   bobAmplitude: 0.15
   bobFrequency: 1
