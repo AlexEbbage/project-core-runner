@@ -43,15 +43,23 @@ public partial class ObstacleRingGenerator
 
         int slotCount = Mathf.Max(1, pickupSlotsPerRing);
         var usedSlots = new HashSet<int>();
-        TrySpawnPickup(ring, slotCount, usedSlots, ShouldSpawnPowerupInChain());
+        IReadOnlyList<int> allowedSlots = GetObstaclePickupSlots(ring, slotCount);
+        TrySpawnPickup(ring, slotCount, usedSlots, ShouldSpawnPowerupInChain(), allowedSlots);
     }
 
-    private bool TrySpawnPickup(RingInstance ring, int slotCount, HashSet<int> usedSlots, bool allowPowerup)
+    private bool TrySpawnPickup(
+        RingInstance ring,
+        int slotCount,
+        HashSet<int> usedSlots,
+        bool allowPowerup,
+        IReadOnlyList<int> allowedSlots = null)
     {
         int attempts = Mathf.Max(1, pickupPlacementAttempts);
         for (int attempt = 0; attempt < attempts; attempt++)
         {
-            int slotIndex = RandomRange(0, slotCount);
+            int slotIndex = GetNextPickupSlot(slotCount, usedSlots, allowedSlots);
+            if (slotIndex < 0)
+                return false;
             if (!usedSlots.Add(slotIndex))
                 continue;
 
@@ -90,6 +98,33 @@ public partial class ObstacleRingGenerator
         }
 
         return false;
+    }
+
+    private IReadOnlyList<int> GetObstaclePickupSlots(RingInstance ring, int slotCount)
+    {
+        if (ring?.obstacleConfig?.pickupSlots == null || ring.obstacleConfig.pickupSlots.Length == 0)
+            return null;
+
+        var validSlots = new List<int>();
+        foreach (int slot in ring.obstacleConfig.pickupSlots)
+        {
+            if (slot >= 0 && slot < slotCount)
+                validSlots.Add(slot);
+        }
+
+        return validSlots.Count > 0 ? validSlots : null;
+    }
+
+    private int GetNextPickupSlot(int slotCount, HashSet<int> usedSlots, IReadOnlyList<int> allowedSlots)
+    {
+        if (allowedSlots == null || allowedSlots.Count == 0)
+            return RandomRange(0, slotCount);
+
+        if (allowedSlots.Count <= usedSlots.Count)
+            return -1;
+
+        int slotIndex = allowedSlots[RandomRange(0, allowedSlots.Count)];
+        return slotIndex;
     }
 
     private bool EnsurePickupChain()
