@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 7771996574703450174}
   m_Layer: 0
   m_Name: Wall
-  m_TagString: Untagged
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -133,7 +133,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 126
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
 --- !u!1 &5565880339667569230
 GameObject:
   m_ObjectHideFlags: 0
@@ -185,9 +185,45 @@ MonoBehaviour:
   speed: 0
   direction: 1
   fanRotors: []
+  useTimePerRotation: 0
+  timePerRotationSeconds: 1
   fanRotationAxis: {x: 0, y: 0, z: 1}
-  doorTransforms: []
-  doorCloseOffset: {x: 0, y: -1, z: 0}
+  doorPanels: []
+  cycleDuration: 3
+  openHoldDuration: 1.2
+  closedHoldDuration: 0.8
+  transitionDuration: 0.4
+  useWeightedDurations: 0
+  openHoldWeight: 1
+  closedHoldWeight: 1
+  transitionWeight: 1
+  startOpen: 1
+  openOrCloseOnce: 1
+  randomizePhaseOnEnable: 0
+  doorMotionCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &8092111268823243626
 GameObject:
   m_ObjectHideFlags: 0
@@ -236,7 +272,7 @@ GameObject:
   - component: {fileID: 3779884972525205252}
   m_Layer: 0
   m_Name: Wall
-  m_TagString: Untagged
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -354,4 +390,4 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 126
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1

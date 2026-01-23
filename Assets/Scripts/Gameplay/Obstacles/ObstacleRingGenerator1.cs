@@ -27,6 +27,10 @@ public class ObstacleRingGenerator : MonoBehaviour
     [Tooltip("When an obstacle ring is this far behind the player on Z, recycle it.")]
     [SerializeField] private float obstacleRecycleDistanceBehind = 20f;
 
+    [Header("Door Phase")]
+    [Tooltip("Seconds of door-cycle delay per unit of distance along +Z. Farther rings get more negative initial time, so they close later.")]
+    [SerializeField] private float doorPhaseDelayPerUnitZ = 0.2f;
+
     [Header("Pickup Ring Placement")]
     [Tooltip("Distance along Z between consecutive pickup rings.")]
     [SerializeField] private float pickupRingSpacing = 7f;
@@ -109,6 +113,31 @@ public class ObstacleRingGenerator : MonoBehaviour
     [Tooltip("Maximum number of rings between pickup chains.")]
     [SerializeField] private int pickupChainGapMax = 3;
 
+    [Header("Pickup Patterns")]
+    [Tooltip("Allow pattern where all slots are filled.")]
+    [SerializeField] private bool allowFullRingPattern = true;
+
+    [Tooltip("Allow pattern where every second slot is filled.")]
+    [SerializeField] private bool allowAlternatingPattern = true;
+
+    [Tooltip("Allow arc patterns (contiguous block of slots).")]
+    [SerializeField] private bool allowArcPattern = true;
+
+    [Tooltip("Allow small cluster patterns (short contiguous block).")]
+    [SerializeField] private bool allowClusterPattern = true;
+
+    [Tooltip("Minimum size of an arc pattern in slots.")]
+    [SerializeField] private int minArcSize = 3;
+
+    [Tooltip("Maximum size of an arc pattern in slots.")]
+    [SerializeField] private int maxArcSize = 8;
+
+    [Tooltip("Minimum size of a cluster pattern in slots.")]
+    [SerializeField] private int minClusterSize = 2;
+
+    [Tooltip("Maximum size of a cluster pattern in slots.")]
+    [SerializeField] private int maxClusterSize = 4;
+
     // Runtime difficulty
     private float _currentDifficulty;
     private float _startPlayerZ;
@@ -149,6 +178,16 @@ public class ObstacleRingGenerator : MonoBehaviour
 
     // Spawn chance multiplier, tweakable externally
     private float _pickupSpawnChanceMultiplier = 1f;
+    private enum PickupPatternType
+    {
+        FullRing,
+        Alternating,
+        Arc,
+        Cluster
+    }
+
+    private readonly List<PickupPatternType> _patternTypesBuffer = new List<PickupPatternType>();
+    private readonly List<int> _patternSlotBuffer = new List<int>();
 
     private void Start()
     {
@@ -287,8 +326,18 @@ public class ObstacleRingGenerator : MonoBehaviour
         float speed = Random.Range(_currentPatternDifficultyConfig.minSpeed, _currentPatternDifficultyConfig.maxSpeed);
         ring.SetupForPattern(speed, directionSign);
 
+        // Stagger door closing based on how far ahead this ring is.
+        // Closer rings start "earlier" in the cycle; farther ones start behind (negative time),
+        // so they reach the closing phase later.
+        if (ring.Type == ObstacleType.Doors && doorPhaseDelayPerUnitZ > 0f)
+        {
+            float distanceAhead = ring.transform.position.z - playerTransform.position.z;
+            float initialTime = -distanceAhead * doorPhaseDelayPerUnitZ;
+            ring.SetInitialDoorTime(initialTime);
+        }
+
         // Optionally spawn pickups on this obstacle ring
-        ConfigureObstacleRingPickups(ring);
+        //ConfigureObstacleRingPickups(ring);
 
         _activeObstacleRings.Add(ring);
 
@@ -571,37 +620,134 @@ public class ObstacleRingGenerator : MonoBehaviour
         if (ring == null || pickupPrefab == null)
             return;
 
-        // Chains: if we're in a "gap", skip this ring entirely
-        if (!EnsurePickupChain())
-            return;
-
         var spawnPoints = ring.PickupSpawnPoints;
         if (spawnPoints == null || spawnPoints.Count == 0)
             return;
 
-        int slotsToFill = Random.Range(pickupSlotsToFillMin, pickupSlotsToFillMax + 1);
-        slotsToFill = Mathf.Clamp(slotsToFill, 0, spawnPoints.Count);
+        // Optional chain logic: if we're not in a chain, skip this ring entirely.
+        if (!EnsurePickupChain())
+            return;
 
-        var usedSlots = new HashSet<int>();
-        for (int i = 0; i < slotsToFill; i++)
+        int slotCount = spawnPoints.Count;
+        _patternSlotBuffer.Clear();
+
+        // Choose a pattern and fill the buffer with slot indices for this ring.
+        FillPatternSlots(slotCount, _patternSlotBuffer);
+
+        float spawnChance = Mathf.Clamp01(pickupSlotSpawnChance * _pickupSpawnChanceMultiplier);
+
+        foreach (int slotIndex in _patternSlotBuffer)
         {
-            float spawnChance = Mathf.Clamp01(pickupSlotSpawnChance * _pickupSpawnChanceMultiplier);
+            if (slotIndex < 0 || slotIndex >= slotCount)
+                continue;
+
             if (Random.value > spawnChance)
                 continue;
 
-            bool spawned = TrySpawnPickupFromSpawnPoints(
-                parent: ring.transform,
-                spawnPoints: spawnPoints,
-                usedSlots: usedSlots,
-                allowPowerup: ShouldSpawnPowerupInChain()
-            );
+            Transform spawn = spawnPoints[slotIndex];
+            if (spawn == null)
+                continue;
 
-            if (!spawned)
-                break;
+            Vector3 worldPos = spawn.position;
+            if (IsPickupBlocked(worldPos))
+                continue;
+
+            Vector3 localPos = ring.transform.InverseTransformPoint(worldPos);
+
+            var pickup = GetPickupInstance();
+            if (pickup == null)
+                continue;
+
+            pickup.transform.SetParent(ring.transform, false);
+            pickup.transform.localPosition = localPos;
+
+            Vector3 upDir = localPos.sqrMagnitude > 0.0001f ? -localPos.normalized : Vector3.up;
+            pickup.transform.localRotation = Quaternion.LookRotation(Vector3.forward, upDir);
+
+            bool spawnPowerup = ShouldSpawnPowerupInChain() && Random.value <= powerupSpawnChance;
+            if (spawnPowerup)
+            {
+                pickup.Configure(PickupType.Powerup, ChooseRandomPowerup());
+            }
+            else
+            {
+                pickup.Configure(PickupType.Coin, PowerupType.CoinMultiplier);
+            }
         }
 
-        // move chain forward (length + gap logic)
+        // Advance chain (so we eventually end and get a gap).
         AdvancePickupChain();
+    }
+    private PickupPatternType ChoosePickupPatternType()
+    {
+        _patternTypesBuffer.Clear();
+
+        if (allowFullRingPattern) _patternTypesBuffer.Add(PickupPatternType.FullRing);
+        if (allowAlternatingPattern) _patternTypesBuffer.Add(PickupPatternType.Alternating);
+        if (allowArcPattern) _patternTypesBuffer.Add(PickupPatternType.Arc);
+        if (allowClusterPattern) _patternTypesBuffer.Add(PickupPatternType.Cluster);
+
+        if (_patternTypesBuffer.Count == 0)
+        {
+            // Fallback to a sensible default.
+            _patternTypesBuffer.Add(PickupPatternType.Arc);
+        }
+
+        int index = Random.Range(0, _patternTypesBuffer.Count);
+        return _patternTypesBuffer[index];
+    }
+
+    private void FillPatternSlots(int slotCount, List<int> output)
+    {
+        if (slotCount <= 0)
+            return;
+
+        PickupPatternType pattern = ChoosePickupPatternType();
+
+        switch (pattern)
+        {
+            case PickupPatternType.FullRing:
+                for (int i = 0; i < slotCount; i++)
+                    output.Add(i);
+                break;
+
+            case PickupPatternType.Alternating:
+                {
+                    int startIndex = Random.value < 0.5f ? 0 : 1;
+                    for (int i = startIndex; i < slotCount; i += 2)
+                        output.Add(i);
+                    break;
+                }
+
+            case PickupPatternType.Arc:
+                {
+                    int arcSize = Mathf.Clamp(Random.Range(minArcSize, maxArcSize + 1), 1, slotCount);
+                    int center = Random.Range(0, slotCount);
+                    int half = arcSize / 2;
+
+                    for (int i = 0; i < arcSize; i++)
+                    {
+                        int index = (center - half + i + slotCount) % slotCount;
+                        if (!output.Contains(index))
+                            output.Add(index);
+                    }
+                    break;
+                }
+
+            case PickupPatternType.Cluster:
+                {
+                    int clusterSize = Mathf.Clamp(Random.Range(minClusterSize, maxClusterSize + 1), 1, slotCount);
+                    int start = Random.Range(0, slotCount);
+
+                    for (int i = 0; i < clusterSize; i++)
+                    {
+                        int index = (start + i) % slotCount;
+                        if (!output.Contains(index))
+                            output.Add(index);
+                    }
+                    break;
+                }
+        }
     }
 
     internal void DissolveNextRings(int startClearRings, float dissolveDuration)
@@ -870,6 +1016,12 @@ public class ObstacleRingGenerator : MonoBehaviour
         pickupChainMaxRings = Mathf.Max(pickupChainMinRings, pickupChainMaxRings);
         pickupChainGapMin = Mathf.Max(0, pickupChainGapMin);
         pickupChainGapMax = Mathf.Max(pickupChainGapMin, pickupChainGapMax);
+
+        minArcSize = Mathf.Max(1, minArcSize);
+        maxArcSize = Mathf.Max(minArcSize, maxArcSize);
+        minClusterSize = Mathf.Max(1, minClusterSize);
+        maxClusterSize = Mathf.Max(minClusterSize, maxClusterSize);
+
     }
 #endif
 }

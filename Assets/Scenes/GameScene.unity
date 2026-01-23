@@ -696,6 +696,11 @@ MonoBehaviour:
   powerupController: {fileID: 0}
   playerHealth: {fileID: 7848395938132188008}
   obstacleRingGenerator: {fileID: 0}
+--- !u!1 &150845339 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6400039063119084493, guid: 6943d67c051a348418331897719c8d0a, type: 3}
+  m_PrefabInstance: {fileID: 1000798661984683679}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &181088811
 GameObject:
   m_ObjectHideFlags: 0
@@ -1308,6 +1313,7 @@ GameObject:
   - component: {fileID: 273529348}
   - component: {fileID: 273529347}
   - component: {fileID: 273529350}
+  - component: {fileID: 273529351}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -1349,9 +1355,9 @@ MonoBehaviour:
   speedController: {fileID: 273529348}
   currencyManager: {fileID: 0}
   runZoneManager: {fileID: 273529350}
-  obstacleRingGenerator: {fileID: 0}
+  obstacleRingGenerator: {fileID: 883196105}
   statsTracker: {fileID: 69424008}
-  powerupController: {fileID: 0}
+  powerupController: {fileID: 273529351}
   playerProfile: {fileID: 0}
   playerVisual: {fileID: 7848395938132188012}
   playerCollider: {fileID: 7848395938132188011}
@@ -1438,7 +1444,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 273529345}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 510e97f74afdf85468a93207aab80e9a, type: 3}
   m_Name: 
@@ -1515,9 +1521,57 @@ MonoBehaviour:
       obstacleColorCycleSpeedMultiplier: 1
   lockToSingleZone: 1
   tunnelWalls: {fileID: 806837119}
-  obstacleRings: {fileID: 0}
+  obstacleRings: {fileID: 883196105}
   audioManager: {fileID: 2038007867}
   atmosphereController: {fileID: 806837121}
+--- !u!114 &273529351
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 273529345}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f25035c0c53a64d46b00162616d4e4f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  balanceConfig: {fileID: 0}
+  powerupUpgradeConfig: {fileID: 0}
+  playerProfile: {fileID: 0}
+  playerController: {fileID: 7848395938132188007}
+  playerHealth: {fileID: 7848395938132188008}
+  runScoreManager: {fileID: 273529349}
+  runSpeedController: {fileID: 273529348}
+  obstacleRingGenerator: {fileID: 883196105}
+  audioManager: {fileID: 2038007867}
+  vfxManager: {fileID: 763293959}
+  autoPilotDuration: 4
+  coinMultiplierValue: 2
+  coinMultiplierDuration: 6
+  scoreMultiplierValue: 2
+  scoreMultiplierDuration: 6
+  magnetDuration: 6
+  magnetRadiusMultiplier: 2
+  shieldDuration: 5
+  shieldRechargeSeconds: 5
+  coinBonanzaSpawnMultiplier: 2.5
+  coinBonanzaDuration: 6
+  speedBoostMultiplier: 1.4
+  speedBoostDuration: 5
+  slowMoTimeScale: 0.6
+  slowMoDuration: 4
+  powerupEffects: []
+  autoPilotLookAhead: 35
+  autoPilotProbeRadius: 0.4
+  autoPilotSampleCount: 12
+  obstacleMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  pickupMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  gameManager: {fileID: 0}
 --- !u!1 &302164554
 GameObject:
   m_ObjectHideFlags: 0
@@ -4561,12 +4615,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerTransform: {fileID: 1941368005519911021}
   obstacleRingConfigs:
+  - {fileID: 11400000, guid: 49a919991a45b4d4ea1f5784f75d5b94, type: 2}
+  - {fileID: 11400000, guid: 24c60cea9c990134fbed17a779b26085, type: 2}
+  - {fileID: 11400000, guid: 9d618b5f420ac644780cc9c622089278, type: 2}
+  - {fileID: 11400000, guid: 3b64f3f062a567a43b6a3e7c253970af, type: 2}
+  - {fileID: 11400000, guid: 332b166554b8a5b4f88f7140ae1a6e43, type: 2}
   - {fileID: 11400000, guid: 0fda1b511097f9541902b98605c643cd, type: 2}
+  - {fileID: 11400000, guid: 9a00ce0b380a85747b7cea288d479687, type: 2}
+  - {fileID: 11400000, guid: 89fc07019b123d44696697fa4bc9b9bf, type: 2}
+  - {fileID: 11400000, guid: f1b5df60158bd944f9fac8403f8cbc36, type: 2}
+  - {fileID: 11400000, guid: c96c22f7c69439446925ba8c80139aae, type: 2}
+  - {fileID: 11400000, guid: 2001a51b51f061543935b615611178ad, type: 2}
+  - {fileID: 11400000, guid: 29b9733e83265814fa803453779b7a99, type: 2}
   pickupRingPrefab: {fileID: 5609623358749258697, guid: e47b03a11f92a194f84fb40a1c2354b1, type: 3}
   ringsParent: {fileID: 883196104}
   obstacleRingSpacing: 30
   obstacleRingsAhead: 20
   obstacleRecycleDistanceBehind: 20
+  doorPhaseDelayPerUnitZ: 0.02
   pickupRingSpacing: 10
   pickupRingsAhead: 20
   pickupRecycleDistanceBehind: 20
@@ -4594,6 +4660,14 @@ MonoBehaviour:
   pickupChainMaxRings: 5
   pickupChainGapMin: 1
   pickupChainGapMax: 3
+  allowFullRingPattern: 1
+  allowAlternatingPattern: 1
+  allowArcPattern: 1
+  allowClusterPattern: 1
+  minArcSize: 3
+  maxArcSize: 8
+  minClusterSize: 2
+  maxClusterSize: 4
 --- !u!1 &889387550
 GameObject:
   m_ObjectHideFlags: 0
@@ -9610,11 +9684,16 @@ PrefabInstance:
       propertyPath: m_UIInputModule
       value: 
       objectReference: {fileID: 302164558}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 3683510785595301329, guid: 6943d67c051a348418331897719c8d0a, type: 3}
+    - {fileID: 9023771232297936382, guid: 6943d67c051a348418331897719c8d0a, type: 3}
     m_RemovedGameObjects:
     - {fileID: 4383030237616926717, guid: 6943d67c051a348418331897719c8d0a, type: 3}
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6400039063119084493, guid: 6943d67c051a348418331897719c8d0a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7848395938132188016}
   m_SourcePrefab: {fileID: 100100000, guid: 6943d67c051a348418331897719c8d0a, type: 3}
 --- !u!4 &1941368005519911021 stripped
 Transform:
@@ -9750,7 +9829,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6375545581364662386, guid: 6943d67c051a348418331897719c8d0a, type: 3}
   m_PrefabInstance: {fileID: 1000798661984683679}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 150845339}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 71b0245b66128974a8910c40946ca4d2, type: 3}
@@ -9761,7 +9840,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2620531593345561531, guid: 6943d67c051a348418331897719c8d0a, type: 3}
   m_PrefabInstance: {fileID: 1000798661984683679}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 150845339}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 549c0f66bd9d8c341a973955d992a5fd, type: 3}
@@ -9777,12 +9856,27 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8792442183497078168, guid: 6943d67c051a348418331897719c8d0a, type: 3}
   m_PrefabInstance: {fileID: 1000798661984683679}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 150845339}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d214e2327def83e4a84a855ab88a3a69, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerVisual
+--- !u!114 &7848395938132188016
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 150845339}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5320a8f0ed3b0349aa27613ebc8d45b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  headOnThreshold: 0.7
+  playerHealth: {fileID: 7848395938132188008}
+  gameManager: {fileID: 273529347}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

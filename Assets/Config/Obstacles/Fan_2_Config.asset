@@ -10,26 +10,35 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7c5a4c0652a02a54e894dd6f2457470d, type: 3}
-  m_Name: ObstacleRingConfig
+  m_Name: Fan_2_Config
   m_EditorClassIdentifier: 
-  ringPrefab: {fileID: 1059361126109027098, guid: d7971a71af3e2744bbc5a9ae2d87932c, type: 3}
-  obstacleType: 0
+  ringPrefab: {fileID: 905085002100805724, guid: 9741a8d761b450246bb4b835627a6959, type: 3}
+  obstacleType: 1
   difficultyConfigs:
   - minLevel: 0
     maxLevel: 0
     minRotationsPerIteration: 1
-    maxRotationsPerIteration: 2
-    minIterationCount: 4
-    maxIterationCount: 8
+    maxRotationsPerIteration: 1
+    minIterationCount: 3
+    maxIterationCount: 5
     rotateInOneDirectionPerIteration: 0
-    minSpeed: 0
-    maxSpeed: 0
+    minSpeed: 0.8
+    maxSpeed: 1
   - minLevel: 1
     maxLevel: 1
     minRotationsPerIteration: 1
-    maxRotationsPerIteration: 3
-    minIterationCount: 4
-    maxIterationCount: 8
+    maxRotationsPerIteration: 1
+    minIterationCount: 3
+    maxIterationCount: 5
     rotateInOneDirectionPerIteration: 0
-    minSpeed: 0
-    maxSpeed: 0
+    minSpeed: 1
+    maxSpeed: 1.2
+  - minLevel: 2
+    maxLevel: 3
+    minRotationsPerIteration: 1
+    maxRotationsPerIteration: 1
+    minIterationCount: 3
+    maxIterationCount: 5
+    rotateInOneDirectionPerIteration: 0
+    minSpeed: 1.2
+    maxSpeed: 1.4
