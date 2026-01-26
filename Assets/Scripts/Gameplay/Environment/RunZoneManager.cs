@@ -139,11 +139,11 @@ public class RunZoneManager : MonoBehaviour
             float colorCycleMultiplier = vfxSettings != null ? vfxSettings.obstacleColorCycleSpeedMultiplier : 1f;
             if (zone.obstacleGradient != null)
             {
-                obstacleRings.SetColorStyle(zone.obstacleGradient, contrastMultiplier, colorCycleMultiplier);
+                //obstacleRings.SetColorStyle(zone.obstacleGradient, contrastMultiplier, colorCycleMultiplier);
             }
             else
             {
-                obstacleRings.SetColorStyle(contrastMultiplier, colorCycleMultiplier);
+                //obstacleRings.SetColorStyle(contrastMultiplier, colorCycleMultiplier);
             }
         }
 

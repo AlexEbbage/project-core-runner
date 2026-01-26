@@ -197,8 +197,8 @@ public class MainMenuUI : MonoBehaviour
         var info = levels[_currentLevelIndex];
         int sides = Mathf.Max(3, info.sides);
 
-        if (obstacleRingGenerator != null)
-            obstacleRingGenerator.RebuildAll(sides);
+        //if (obstacleRingGenerator != null)
+        //    obstacleRingGenerator.RebuildAll(sides);
 
         if (tunnelWallGenerator != null)
             tunnelWallGenerator.Rebuild(sides);
