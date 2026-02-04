@@ -41,6 +41,10 @@ public class ObstacleRingGenerator : MonoBehaviour
     [Tooltip("When a pickup ring is this far behind the player on Z, recycle it.")]
     [SerializeField] private float pickupRecycleDistanceBehind = 20f;
 
+    [Header("Pickup / Obstacle Separation")]
+    [Tooltip("Minimum Z-distance between pickup rings and obstacle rings to avoid overlap.")]
+    [SerializeField] private float minPickupObstacleSeparation = 3f;
+
     [Header("Pickup Ring Difficulty Scaling")]
     [Tooltip("Initial uniform scale for pickup rings at starting difficulty.")]
     [SerializeField] private float startingPickupRingScale = 1.0f;
@@ -149,17 +153,18 @@ public class ObstacleRingGenerator : MonoBehaviour
     private float _nextObstacleSpawnZ;
     private float _nextPickupSpawnZ;
 
-    // Pools & active lists
+    // Obstacle rings
     private readonly List<ObstacleRingController> _tempAheadRingsBuffer = new List<ObstacleRingController>();
     private readonly Dictionary<ObstacleRingConfig, Queue<ObstacleRingController>> _obstaclePools
         = new Dictionary<ObstacleRingConfig, Queue<ObstacleRingController>>();
     private readonly List<ObstacleRingController> _activeObstacleRings
         = new List<ObstacleRingController>();
 
+    // Pickup rings
     private readonly Queue<PickupRing> _pickupRingPool = new Queue<PickupRing>();
     private readonly List<PickupRing> _activePickupRings = new List<PickupRing>();
 
-    // New: pool for individual pickup instances
+    // Individual pickup objects
     private readonly Queue<Pickup> _pickupObjectPool = new Queue<Pickup>();
 
     // Pattern state
@@ -182,6 +187,7 @@ public class ObstacleRingGenerator : MonoBehaviour
 
     // Spawn chance multiplier, tweakable externally
     private float _pickupSpawnChanceMultiplier = 1f;
+
     private enum PickupPatternType
     {
         FullRing,
@@ -193,6 +199,8 @@ public class ObstacleRingGenerator : MonoBehaviour
     private readonly List<PickupPatternType> _patternTypesBuffer = new List<PickupPatternType>();
     private readonly List<int> _patternSlotBuffer = new List<int>();
 
+    #region Unity Lifecycle
+
     private void Start()
     {
         if (playerTransform == null)
@@ -202,22 +210,7 @@ public class ObstacleRingGenerator : MonoBehaviour
             return;
         }
 
-        _startPlayerZ = playerTransform.position.z;
-        _currentDifficulty = startingDifficulty;
-
-        _nextObstacleSpawnZ = playerTransform.position.z + obstacleRingSpacing;
-        _nextPickupSpawnZ = playerTransform.position.z + pickupRingSpacing;
-
-        // Seed rings ahead of the player at the start of the run.
-        for (int i = 0; i < obstacleRingsAhead; i++)
-        {
-            SpawnNextObstacleRing();
-        }
-
-        for (int i = 0; i < pickupRingsAhead; i++)
-        {
-            SpawnNextPickupRing();
-        }
+        InitializeForRun();
     }
 
     private void Update()
@@ -235,6 +228,88 @@ public class ObstacleRingGenerator : MonoBehaviour
         EnsureObstacleRingsAhead(playerZ);
         EnsurePickupRingsAhead(playerZ);
     }
+
+    #endregion
+
+    #region Run Init / Reset
+
+    /// <summary>
+    /// Clears all current rings and re-seeds obstacle and pickup rings ahead of the player.
+    /// Call this when starting a new run or after a continue, once the player has been positioned.
+    /// </summary>
+    public void InitializeForRun()
+    {
+        if (playerTransform == null)
+        {
+            Debug.LogError("[ObstacleRingGenerator] Player transform is not assigned.");
+            enabled = false;
+            return;
+        }
+
+        ClearAllRingsImmediate();
+
+        _startPlayerZ = playerTransform.position.z;
+        _currentDifficulty = startingDifficulty;
+
+        _nextObstacleSpawnZ = _startPlayerZ + obstacleRingSpacing;
+        _nextPickupSpawnZ = _startPlayerZ + pickupRingSpacing;
+
+        for (int i = 0; i < obstacleRingsAhead; i++)
+        {
+            SpawnNextObstacleRing();
+        }
+
+        for (int i = 0; i < pickupRingsAhead; i++)
+        {
+            SpawnNextPickupRing();
+        }
+    }
+
+    /// <summary>
+    /// Immediately clears all obstacle and pickup rings and resets pattern/chain state.
+    /// Does not spawn new rings; call InitializeForRun() for that.
+    /// </summary>
+    public void ClearAllRingsImmediate()
+    {
+        // Obstacles
+        for (int i = _activeObstacleRings.Count - 1; i >= 0; i--)
+        {
+            var ring = _activeObstacleRings[i];
+            if (ring != null)
+            {
+                ReleaseObstacleRing(ring);
+            }
+        }
+        _activeObstacleRings.Clear();
+
+        // Pickup rings
+        for (int i = _activePickupRings.Count - 1; i >= 0; i--)
+        {
+            var ring = _activePickupRings[i];
+            if (ring != null)
+            {
+                ReleasePickupRing(ring);
+            }
+        }
+        _activePickupRings.Clear();
+
+        // Pickup chain reset
+        _pickupChainLength = 0;
+        _pickupChainRemaining = 0;
+        _pickupChainGapRemaining = 0;
+
+        // Pattern reset
+        _currentPatternConfig = null;
+        _currentPatternDifficultyConfig = null;
+        _currentPatternIterationIndex = 0;
+        _currentPatternIterationCount = 0;
+        _currentPatternRotationPerIteration = 0f;
+        _lastObstacleRingAngle = 0f;
+    }
+
+    #endregion
+
+    #region Difficulty
 
     private void UpdateDifficulty()
     {
@@ -259,6 +334,8 @@ public class ObstacleRingGenerator : MonoBehaviour
     {
         _currentDifficulty = Mathf.Max(0f, newDifficulty);
     }
+
+    #endregion
 
     #region Obstacle Rings
 
@@ -324,15 +401,12 @@ public class ObstacleRingGenerator : MonoBehaviour
             ring.transform.SetParent(ringsParent, false);
 
         ring.transform.position = new Vector3(0f, 0f, _nextObstacleSpawnZ);
-        // Assuming tube axis is Z; rotate around Z.
         ring.transform.rotation = Quaternion.AngleAxis(_lastObstacleRingAngle, Vector3.forward);
 
         float speed = Random.Range(_currentPatternDifficultyConfig.minSpeed, _currentPatternDifficultyConfig.maxSpeed);
         ring.SetupForPattern(speed, directionSign);
 
-        // Stagger door closing based on how far ahead this ring is.
-        // Closer rings start "earlier" in the cycle; farther ones start behind (negative time),
-        // so they reach the closing phase later.
+        // Door phasing
         if (ring.Type == ObstacleType.Doors && doorPhaseDelayPerUnitZ > 0f)
         {
             float distanceAhead = ring.transform.position.z - playerTransform.position.z;
@@ -340,17 +414,15 @@ public class ObstacleRingGenerator : MonoBehaviour
             ring.SetInitialDoorTime(initialTime);
         }
 
-        var visuals = ring.GetComponent<ObstacleRingVisuals>(); 
+        var visuals = ring.GetComponent<ObstacleRingVisuals>();
         if (visuals != null)
         {
             visuals.SetHiddenImmediate();
             visuals.PlayFadeIn(ringSpawnFadeInDuration);
         }
 
-
-
-        // Optionally spawn pickups on this obstacle ring
-        //ConfigureObstacleRingPickups(ring);
+        // Optional: pickups on obstacle rings (currently disabled).
+        // ConfigureObstacleRingPickups(ring);
 
         _activeObstacleRings.Add(ring);
 
@@ -371,7 +443,7 @@ public class ObstacleRingGenerator : MonoBehaviour
 
         _validConfigBuffer.Clear();
 
-        // First, find all configs that have at least one valid difficulty band.
+        // Find configs that have at least one valid difficulty band.
         for (int i = 0; i < obstacleRingConfigs.Count; i++)
         {
             var cfg = obstacleRingConfigs[i];
@@ -404,7 +476,6 @@ public class ObstacleRingGenerator : MonoBehaviour
         _currentPatternConfig.GetValidDifficultyConfigs(_currentDifficulty, _validDifficultyBuffer);
         if (_validDifficultyBuffer.Count == 0)
         {
-            // Fallback to all bands if none match.
             var allBands = _currentPatternConfig.DifficultyConfigs;
             for (int i = 0; i < allBands.Count; i++)
             {
@@ -446,7 +517,6 @@ public class ObstacleRingGenerator : MonoBehaviour
         }
         else
         {
-            // Random.Range for ints is [min, maxExclusive), so we use maxSteps + 1.
             stepCount = Random.Range(minSteps, maxSteps + 1);
         }
 
@@ -517,6 +587,117 @@ public class ObstacleRingGenerator : MonoBehaviour
         queue.Enqueue(ring);
     }
 
+    /// <summary>
+    /// Clears obstacle rings within a Z window around the player (ahead and slightly behind) with dissolve visuals.
+    /// Can be used at run start/continue to guarantee a safe region.
+    /// </summary>
+    internal void ClearRingsAroundPlayer(float clearAheadDistance, float clearBehindDistance, float dissolveDuration)
+    {
+        if (playerTransform == null)
+            return;
+
+        float playerZ = playerTransform.position.z;
+        _tempAheadRingsBuffer.Clear();
+
+        for (int i = 0; i < _activeObstacleRings.Count; i++)
+        {
+            var ring = _activeObstacleRings[i];
+            if (ring == null)
+                continue;
+
+            float dz = ring.transform.position.z - playerZ;
+            if (dz >= -clearBehindDistance && dz <= clearAheadDistance)
+            {
+                _tempAheadRingsBuffer.Add(ring);
+            }
+        }
+
+        if (_tempAheadRingsBuffer.Count == 0)
+            return;
+
+        _tempAheadRingsBuffer.Sort((a, b) =>
+            a.transform.position.z.CompareTo(b.transform.position.z));
+
+        for (int i = 0; i < _tempAheadRingsBuffer.Count; i++)
+        {
+            var ring = _tempAheadRingsBuffer[i];
+            if (ring == null)
+                continue;
+
+            var visuals = ring.GetComponent<ObstacleRingVisuals>();
+            var ringToRelease = ring;
+
+            if (visuals != null && dissolveDuration > 0f)
+            {
+                visuals.PlayFadeOut(dissolveDuration, disableObjectAtEnd: true);
+                _activeObstacleRings.Remove(ringToRelease);
+                ReleaseObstacleRing(ringToRelease);
+            }
+            else
+            {
+                _activeObstacleRings.Remove(ringToRelease);
+                ReleaseObstacleRing(ringToRelease);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Legacy API: clears the next N rings ahead of the player.
+    /// Kept for compatibility; ClearRingsAroundPlayer is more robust.
+    /// </summary>
+    internal void DissolveNextRings(int startClearRings, float dissolveDuration)
+    {
+        if (playerTransform == null || startClearRings <= 0)
+            return;
+
+        float playerZ = playerTransform.position.z;
+
+        _tempAheadRingsBuffer.Clear();
+
+        for (int i = 0; i < _activeObstacleRings.Count; i++)
+        {
+            var ring = _activeObstacleRings[i];
+            if (ring == null)
+                continue;
+
+            // Slightly expand the window to include rings just behind the player
+            if (ring.transform.position.z >= playerZ - obstacleRingSpacing * 0.5f)
+            {
+                _tempAheadRingsBuffer.Add(ring);
+            }
+        }
+
+        if (_tempAheadRingsBuffer.Count == 0)
+            return;
+
+        _tempAheadRingsBuffer.Sort((a, b) =>
+            a.transform.position.z.CompareTo(b.transform.position.z));
+
+        int count = Mathf.Min(startClearRings, _tempAheadRingsBuffer.Count);
+
+        for (int i = 0; i < count; i++)
+        {
+            var ring = _tempAheadRingsBuffer[i];
+            if (ring == null)
+                continue;
+
+            var visuals = ring.GetComponent<ObstacleRingVisuals>();
+            var ringToRelease = ring;
+
+            if (visuals != null && dissolveDuration > 0f)
+            {
+                visuals.PlayFadeOut(dissolveDuration, disableObjectAtEnd: true);
+                _activeObstacleRings.Remove(ringToRelease);
+                ReleaseObstacleRing(ringToRelease);
+            }
+            else
+            {
+                _activeObstacleRings.Remove(ringToRelease);
+                ReleaseObstacleRing(ringToRelease);
+            }
+        }
+    }
+
     #endregion
 
     #region Pickup Rings (Placement & Pooling)
@@ -556,6 +737,14 @@ public class ObstacleRingGenerator : MonoBehaviour
         if (pickupRingPrefab == null)
             return;
 
+        // Avoid placing a pickup ring too close to an obstacle ring along Z.
+        int safety = 0;
+        while (IsTooCloseToObstacle(_nextPickupSpawnZ) && safety < 4)
+        {
+            _nextPickupSpawnZ += pickupRingSpacing;
+            safety++;
+        }
+
         var ring = GetPickupRingInstance();
         if (ring == null)
             return;
@@ -569,7 +758,6 @@ public class ObstacleRingGenerator : MonoBehaviour
         float scale = CalculatePickupRingScale();
         ring.transform.localScale = Vector3.one * scale;
 
-        // Spawn pickups onto this pickup ring using its spawn points
         ConfigurePickupRingPickups(ring);
 
         _activePickupRings.Add(ring);
@@ -577,9 +765,27 @@ public class ObstacleRingGenerator : MonoBehaviour
         _nextPickupSpawnZ += pickupRingSpacing;
     }
 
+    private bool IsTooCloseToObstacle(float z)
+    {
+        if (minPickupObstacleSeparation <= 0f)
+            return false;
+
+        for (int i = 0; i < _activeObstacleRings.Count; i++)
+        {
+            var ring = _activeObstacleRings[i];
+            if (ring == null) continue;
+
+            float dz = Mathf.Abs(ring.transform.position.z - z);
+            if (dz < minPickupObstacleSeparation)
+                return true;
+        }
+
+        return false;
+    }
+
     internal void SetPickupRadiusMultiplier(float pickupMultiplier)
     {
-        // TODO: Can't recall what this is for anymore. I think it's when you upgrade the magnet powerup.
+        // TODO: Implement if magnet / pickup radius upgrades need to adjust spacing or spawn patterns.
     }
 
     private PickupRing GetPickupRingInstance()
@@ -605,7 +811,6 @@ public class ObstacleRingGenerator : MonoBehaviour
         if (ring == null)
             return;
 
-        // Clear any pickups parented to this ring
         ClearPickupsUnder(ring.transform);
 
         ring.gameObject.SetActive(false);
@@ -622,6 +827,34 @@ public class ObstacleRingGenerator : MonoBehaviour
         float t = Mathf.InverseLerp(startingDifficulty, difficultyForMinPickupScale, _currentDifficulty);
         float scale = Mathf.Lerp(startingPickupRingScale, minPickupRingScale, t);
         return Mathf.Clamp(scale, minPickupRingScale, startingPickupRingScale);
+    }
+
+    /// <summary>
+    /// Clears pickup rings within a Z window around the player.
+    /// </summary>
+    public void ClearPickupRingsAroundPlayer(float clearAheadDistance, float clearBehindDistance = 0f)
+    {
+        if (playerTransform == null)
+            return;
+
+        float playerZ = playerTransform.position.z;
+
+        for (int i = _activePickupRings.Count - 1; i >= 0; i--)
+        {
+            var ring = _activePickupRings[i];
+            if (ring == null)
+            {
+                _activePickupRings.RemoveAt(i);
+                continue;
+            }
+
+            float dz = ring.transform.position.z - playerZ;
+            if (dz >= -clearBehindDistance && dz <= clearAheadDistance)
+            {
+                ReleasePickupRing(ring);
+                _activePickupRings.RemoveAt(i);
+            }
+        }
     }
 
     #endregion
@@ -691,6 +924,7 @@ public class ObstacleRingGenerator : MonoBehaviour
         // Advance chain (so we eventually end and get a gap).
         AdvancePickupChain();
     }
+
     private PickupPatternType ChoosePickupPatternType()
     {
         _patternTypesBuffer.Clear();
@@ -702,7 +936,6 @@ public class ObstacleRingGenerator : MonoBehaviour
 
         if (_patternTypesBuffer.Count == 0)
         {
-            // Fallback to a sensible default.
             _patternTypesBuffer.Add(PickupPatternType.Arc);
         }
 
@@ -763,72 +996,6 @@ public class ObstacleRingGenerator : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Dissolves and clears the next N obstacle rings ahead of the player.
-    /// Typically called at run start so the player doesn't spawn inside a hazard.
-    /// </summary>
-    internal void DissolveNextRings(int startClearRings, float dissolveDuration)
-    {
-        if (playerTransform == null || startClearRings <= 0)
-            return;
-
-        float playerZ = playerTransform.position.z;
-
-        _tempAheadRingsBuffer.Clear();
-
-        // Collect rings that are in front of the player.
-        for (int i = 0; i < _activeObstacleRings.Count; i++)
-        {
-            var ring = _activeObstacleRings[i];
-            if (ring == null)
-                continue;
-
-            if (ring.transform.position.z >= playerZ)
-            {
-                _tempAheadRingsBuffer.Add(ring);
-            }
-        }
-
-        if (_tempAheadRingsBuffer.Count == 0)
-            return;
-
-        // Sort by distance along Z so we clear the closest ones first.
-        _tempAheadRingsBuffer.Sort((a, b) =>
-            a.transform.position.z.CompareTo(b.transform.position.z));
-
-        int count = Mathf.Min(startClearRings, _tempAheadRingsBuffer.Count);
-
-        for (int i = 0; i < count; i++)
-        {
-            var ring = _tempAheadRingsBuffer[i];
-            if (ring == null)
-                continue;
-
-            var visuals = ring.GetComponent<ObstacleRingVisuals>();
-
-            // Capture local variable for closure
-            var ringToRelease = ring;
-
-            if (visuals != null && dissolveDuration > 0f)
-            {
-                // Fade out, then pool the ring once fully dissolved.
-                visuals.PlayFadeOut(dissolveDuration, disableObjectAtEnd: true);
-
-                // We can't hook directly into the coroutine completion without extending the API,
-                // so we remove & pool immediately after starting the fade,
-                // relying on colliders being disabled at the start of fade.
-                _activeObstacleRings.Remove(ringToRelease);
-                ReleaseObstacleRing(ringToRelease);
-            }
-            else
-            {
-                // No visuals: just remove immediately.
-                _activeObstacleRings.Remove(ringToRelease);
-                ReleaseObstacleRing(ringToRelease);
-            }
-        }
-    }
-
     private void ConfigureObstacleRingPickups(ObstacleRingController ring)
     {
         if (ring == null || pickupPrefab == null)
@@ -881,7 +1048,6 @@ public class ObstacleRingGenerator : MonoBehaviour
             if (IsPickupBlocked(worldPos))
                 continue;
 
-            // Local position relative to ring
             Vector3 localPos = parent.InverseTransformPoint(worldPos);
 
             var pickup = GetPickupInstance();
@@ -891,7 +1057,6 @@ public class ObstacleRingGenerator : MonoBehaviour
             pickup.transform.SetParent(parent, false);
             pickup.transform.localPosition = localPos;
 
-            // Face roughly inward toward the tube center
             Vector3 upDir = localPos.sqrMagnitude > 0.0001f ? -localPos.normalized : Vector3.up;
             pickup.transform.localRotation = Quaternion.LookRotation(Vector3.forward, upDir);
 
@@ -1096,6 +1261,7 @@ public class ObstacleRingGenerator : MonoBehaviour
         minClusterSize = Mathf.Max(1, minClusterSize);
         maxClusterSize = Mathf.Max(minClusterSize, maxClusterSize);
 
+        minPickupObstacleSeparation = Mathf.Max(0f, minPickupObstacleSeparation);
     }
 #endif
 }
