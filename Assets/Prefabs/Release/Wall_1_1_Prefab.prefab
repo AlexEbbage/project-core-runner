@@ -144,6 +144,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5672717737492442613}
   - component: {fileID: 3747299471640386807}
+  - component: {fileID: -843823281343620004}
   m_Layer: 0
   m_Name: Wall_1_1_Prefab
   m_TagString: Untagged
@@ -224,6 +225,28 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &-843823281343620004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5565880339667569230}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a96ebe410e6a0e4f8143f6d26aedf55, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dissolvePropertyName: _Dissolve
+  visibleValue: 0
+  hiddenValue: 1
+  targetRenderers:
+  - {fileID: 4370471609381610585}
+  - {fileID: 5189530347847053160}
+  targetColliders:
+  - {fileID: 3085919607933301837}
+  - {fileID: 4570974661847234111}
+  controlColliders: 1
 --- !u!1 &8092111268823243626
 GameObject:
   m_ObjectHideFlags: 0

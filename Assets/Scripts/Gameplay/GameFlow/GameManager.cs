@@ -44,7 +44,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private RewardedRunPromptUI rewardedRunPromptUI;
 
     [Header("Rewarded Run Prompt")]
-    [SerializeField] private bool rewardedRunPromptEnabled = true;
+    [SerializeField] private bool rewardedRunPromptEnabled = false;
     [SerializeField] private float rewardedRunPromptDelaySeconds = 45f;
     [SerializeField] private bool rewardedRunPromptPausesGameplay = false;
     [SerializeField] private float rewardedRunPromptAutoDismissSeconds = 8f;
@@ -257,10 +257,10 @@ public class GameManager : MonoBehaviour
             _elapsedTime += Time.deltaTime;
         }
 
-        if (ShouldTriggerRewardedRunPrompt())
-        {
-            ShowRewardedRunPrompt();
-        }
+        //if (ShouldTriggerRewardedRunPrompt())
+        //{
+        //    ShowRewardedRunPrompt();
+        //}
     }
 
     private void TransitionToState(GameState newState, float timeScale)

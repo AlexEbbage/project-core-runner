@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 622518432862072372}
   - component: {fileID: 4711176572310546957}
+  - component: {fileID: 2763087469045521149}
   m_Layer: 0
   m_Name: Door_Prefab
   m_TagString: Untagged
@@ -96,6 +97,28 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &2763087469045521149
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2720628498696872096}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a96ebe410e6a0e4f8143f6d26aedf55, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dissolvePropertyName: _Dissolve
+  visibleValue: 0
+  hiddenValue: 1
+  targetRenderers:
+  - {fileID: 4913255836445407406}
+  - {fileID: 3654119803770441874}
+  targetColliders:
+  - {fileID: 2833911721955470186}
+  - {fileID: 5924280192567190881}
+  controlColliders: 1
 --- !u!1 &2849036341989315710
 GameObject:
   m_ObjectHideFlags: 0

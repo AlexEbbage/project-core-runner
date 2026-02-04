@@ -51,6 +51,9 @@ public class ObstacleRingGenerator : MonoBehaviour
     [Tooltip("Difficulty level at which pickup rings will reach their minimum scale.")]
     [SerializeField] private float difficultyForMinPickupScale = 100f;
 
+    [Header("Obstacle Dissolve")]
+    [SerializeField] private float ringSpawnFadeInDuration = 0.35f;
+
     [Header("Difficulty Progression")]
     [Tooltip("Starting difficulty level for this run.")]
     [SerializeField] private float startingDifficulty = 0f;
@@ -147,6 +150,7 @@ public class ObstacleRingGenerator : MonoBehaviour
     private float _nextPickupSpawnZ;
 
     // Pools & active lists
+    private readonly List<ObstacleRingController> _tempAheadRingsBuffer = new List<ObstacleRingController>();
     private readonly Dictionary<ObstacleRingConfig, Queue<ObstacleRingController>> _obstaclePools
         = new Dictionary<ObstacleRingConfig, Queue<ObstacleRingController>>();
     private readonly List<ObstacleRingController> _activeObstacleRings
@@ -335,6 +339,15 @@ public class ObstacleRingGenerator : MonoBehaviour
             float initialTime = -distanceAhead * doorPhaseDelayPerUnitZ;
             ring.SetInitialDoorTime(initialTime);
         }
+
+        var visuals = ring.GetComponent<ObstacleRingVisuals>(); 
+        if (visuals != null)
+        {
+            visuals.SetHiddenImmediate();
+            visuals.PlayFadeIn(ringSpawnFadeInDuration);
+        }
+
+
 
         // Optionally spawn pickups on this obstacle ring
         //ConfigureObstacleRingPickups(ring);
@@ -750,9 +763,70 @@ public class ObstacleRingGenerator : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Dissolves and clears the next N obstacle rings ahead of the player.
+    /// Typically called at run start so the player doesn't spawn inside a hazard.
+    /// </summary>
     internal void DissolveNextRings(int startClearRings, float dissolveDuration)
     {
-        // TODO: Clear next rings. Use dissolve shader on obstacle ring meshes.
+        if (playerTransform == null || startClearRings <= 0)
+            return;
+
+        float playerZ = playerTransform.position.z;
+
+        _tempAheadRingsBuffer.Clear();
+
+        // Collect rings that are in front of the player.
+        for (int i = 0; i < _activeObstacleRings.Count; i++)
+        {
+            var ring = _activeObstacleRings[i];
+            if (ring == null)
+                continue;
+
+            if (ring.transform.position.z >= playerZ)
+            {
+                _tempAheadRingsBuffer.Add(ring);
+            }
+        }
+
+        if (_tempAheadRingsBuffer.Count == 0)
+            return;
+
+        // Sort by distance along Z so we clear the closest ones first.
+        _tempAheadRingsBuffer.Sort((a, b) =>
+            a.transform.position.z.CompareTo(b.transform.position.z));
+
+        int count = Mathf.Min(startClearRings, _tempAheadRingsBuffer.Count);
+
+        for (int i = 0; i < count; i++)
+        {
+            var ring = _tempAheadRingsBuffer[i];
+            if (ring == null)
+                continue;
+
+            var visuals = ring.GetComponent<ObstacleRingVisuals>();
+
+            // Capture local variable for closure
+            var ringToRelease = ring;
+
+            if (visuals != null && dissolveDuration > 0f)
+            {
+                // Fade out, then pool the ring once fully dissolved.
+                visuals.PlayFadeOut(dissolveDuration, disableObjectAtEnd: true);
+
+                // We can't hook directly into the coroutine completion without extending the API,
+                // so we remove & pool immediately after starting the fade,
+                // relying on colliders being disabled at the start of fade.
+                _activeObstacleRings.Remove(ringToRelease);
+                ReleaseObstacleRing(ringToRelease);
+            }
+            else
+            {
+                // No visuals: just remove immediately.
+                _activeObstacleRings.Remove(ringToRelease);
+                ReleaseObstacleRing(ringToRelease);
+            }
+        }
     }
 
     private void ConfigureObstacleRingPickups(ObstacleRingController ring)

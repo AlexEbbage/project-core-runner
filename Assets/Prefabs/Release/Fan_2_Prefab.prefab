@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7905868943763027604}
   - component: {fileID: 2388782694193008444}
+  - component: {fileID: 6494235049048677263}
   m_Layer: 0
   m_Name: Fan_2_Prefab
   m_TagString: Untagged
@@ -91,6 +92,30 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &6494235049048677263
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 905085002100805724}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a96ebe410e6a0e4f8143f6d26aedf55, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dissolvePropertyName: _Dissolve
+  visibleValue: 0
+  hiddenValue: 1
+  targetRenderers:
+  - {fileID: 3082552490483562972}
+  - {fileID: 2037691415996268542}
+  - {fileID: 4827910300045253851}
+  targetColliders:
+  - {fileID: 3483950075843446879}
+  - {fileID: 3777007580655755600}
+  - {fileID: 733074722931034134}
+  controlColliders: 1
 --- !u!1 &4977677518771532121
 GameObject:
   m_ObjectHideFlags: 0
@@ -370,7 +395,7 @@ PrefabInstance:
       objectReference: {fileID: 9204016370977807232, guid: 76ade85a94989024897eb3abc11885e2, type: 3}
     - target: {fileID: 919132149155446097, guid: 98a0aa0afba97b64aa50d70aa2fe4d2d, type: 3}
       propertyPath: m_Name
-      value: Blade
+      value: Blade2
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 98a0aa0afba97b64aa50d70aa2fe4d2d, type: 3}
       propertyPath: m_TagString
@@ -444,6 +469,11 @@ Rigidbody:
 --- !u!4 &868202244226286737 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 98a0aa0afba97b64aa50d70aa2fe4d2d, type: 3}
+  m_PrefabInstance: {fileID: 830562468571079546}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &2037691415996268542 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: 98a0aa0afba97b64aa50d70aa2fe4d2d, type: 3}
   m_PrefabInstance: {fileID: 830562468571079546}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &4397475356259788120
@@ -520,7 +550,7 @@ PrefabInstance:
       objectReference: {fileID: 9204016370977807232, guid: 76ade85a94989024897eb3abc11885e2, type: 3}
     - target: {fileID: 919132149155446097, guid: 98a0aa0afba97b64aa50d70aa2fe4d2d, type: 3}
       propertyPath: m_Name
-      value: Blade
+      value: Blade1
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 98a0aa0afba97b64aa50d70aa2fe4d2d, type: 3}
       propertyPath: m_TagString
@@ -537,6 +567,11 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 1119477510147909328}
   m_SourcePrefab: {fileID: 100100000, guid: 98a0aa0afba97b64aa50d70aa2fe4d2d, type: 3}
+--- !u!23 &3082552490483562972 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: 98a0aa0afba97b64aa50d70aa2fe4d2d, type: 3}
+  m_PrefabInstance: {fileID: 4397475356259788120}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &3586995436481353737 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 98a0aa0afba97b64aa50d70aa2fe4d2d, type: 3}
