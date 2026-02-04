@@ -27,6 +27,10 @@ public class ObstacleRingGenerator : MonoBehaviour
     [Tooltip("When an obstacle ring is this far behind the player on Z, recycle it.")]
     [SerializeField] private float obstacleRecycleDistanceBehind = 20f;
 
+    [Header("Obstacle Activation")]
+    [Tooltip("Rings will have colliders disabled and visuals hidden until within this distance ahead of the player.")]
+    [SerializeField] private float obstacleActivationDistance = 40f;
+
     [Header("Door Phase")]
     [Tooltip("Seconds of door-cycle delay per unit of distance along +Z. Farther rings get more negative initial time, so they close later.")]
     [SerializeField] private float doorPhaseDelayPerUnitZ = 0.2f;
@@ -164,7 +168,7 @@ public class ObstacleRingGenerator : MonoBehaviour
     private readonly Queue<PickupRing> _pickupRingPool = new Queue<PickupRing>();
     private readonly List<PickupRing> _activePickupRings = new List<PickupRing>();
 
-    // Individual pickup objects
+    // Individual pickups
     private readonly Queue<Pickup> _pickupObjectPool = new Queue<Pickup>();
 
     // Pattern state
@@ -227,6 +231,8 @@ public class ObstacleRingGenerator : MonoBehaviour
 
         EnsureObstacleRingsAhead(playerZ);
         EnsurePickupRingsAhead(playerZ);
+
+        ActivateObstacleRings(playerZ);
     }
 
     #endregion
@@ -406,6 +412,9 @@ public class ObstacleRingGenerator : MonoBehaviour
         float speed = Random.Range(_currentPatternDifficultyConfig.minSpeed, _currentPatternDifficultyConfig.maxSpeed);
         ring.SetupForPattern(speed, directionSign);
 
+        // Colliders off until the ring is close enough to the player.
+        ring.SetCollidersEnabled(false);
+
         // Door phasing
         if (ring.Type == ObstacleType.Doors && doorPhaseDelayPerUnitZ > 0f)
         {
@@ -417,8 +426,8 @@ public class ObstacleRingGenerator : MonoBehaviour
         var visuals = ring.GetComponent<ObstacleRingVisuals>();
         if (visuals != null)
         {
+            // Start fully hidden; fade in when we activate near the player.
             visuals.SetHiddenImmediate();
-            visuals.PlayFadeIn(ringSpawnFadeInDuration);
         }
 
         // Optional: pickups on obstacle rings (currently disabled).
@@ -585,6 +594,42 @@ public class ObstacleRingGenerator : MonoBehaviour
 
         ring.gameObject.SetActive(false);
         queue.Enqueue(ring);
+    }
+
+    /// <summary>
+    /// Activates rings (enables colliders and plays fade-in) once they are within
+    /// obstacleActivationDistance ahead of the player.
+    /// </summary>
+    private void ActivateObstacleRings(float playerZ)
+    {
+        if (obstacleActivationDistance <= 0f)
+            return;
+
+        float activationZ = playerZ + obstacleActivationDistance;
+
+        for (int i = 0; i < _activeObstacleRings.Count; i++)
+        {
+            var ring = _activeObstacleRings[i];
+            if (ring == null)
+                continue;
+
+            if (ring.CollidersEnabled)
+                continue;
+
+            float ringZ = ring.transform.position.z;
+            if (ringZ <= activationZ)
+            {
+                // Enable colliders
+                ring.SetCollidersEnabled(true);
+
+                // Play fade-in if visuals available
+                var visuals = ring.GetComponent<ObstacleRingVisuals>();
+                if (visuals != null)
+                {
+                    visuals.PlayFadeIn(ringSpawnFadeInDuration);
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -1262,6 +1307,7 @@ public class ObstacleRingGenerator : MonoBehaviour
         maxClusterSize = Mathf.Max(minClusterSize, maxClusterSize);
 
         minPickupObstacleSeparation = Mathf.Max(0f, minPickupObstacleSeparation);
+        obstacleActivationDistance = Mathf.Max(0f, obstacleActivationDistance);
     }
 #endif
 }

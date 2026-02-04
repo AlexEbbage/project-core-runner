@@ -29,9 +29,12 @@ public class ObstacleRingController : MonoBehaviour
 
     [Header("Fan Setup")]
     [Tooltip("Rotating parts of the fan obstacle.")]
-    [SerializeField] private List<Transform> fanRotors = new List<Transform>();[Header("Fan Timing")]
+    [SerializeField] private List<Transform> fanRotors = new List<Transform>();
+
+    [Header("Fan Timing")]
     [Tooltip("If true, fan speed is derived from timePerRotationSeconds instead of using 'speed' as degrees/second.")]
     [SerializeField] private bool useTimePerRotation = false;
+
     [Tooltip("Base time (in seconds) for the fan to complete one full 360° rotation when speed = 1.")]
     [SerializeField] private float timePerRotationSeconds = 1f;
 
@@ -41,23 +44,31 @@ public class ObstacleRingController : MonoBehaviour
     [Header("Door Setup")]
     [Tooltip("Door pieces that will move from open to closed.")]
     [SerializeField] private DoorPanel[] doorPanels;
+
     [Tooltip("Total duration of a full open/close cycle (open hold + close + closed hold + open). Used when useWeightedDurations is true.")]
     [SerializeField] private float cycleDuration = 3f;
+
     [SerializeField] private float openHoldDuration = 1.2f;
     [SerializeField] private float closedHoldDuration = 0.8f;
     [SerializeField] private float transitionDuration = 0.4f;
+
     [SerializeField] private bool useWeightedDurations = false;
+
     [Tooltip("Relative weight for how long doors stay open in a full cycle.")]
     [SerializeField] private float openHoldWeight = 1f;
+
     [Tooltip("Relative weight for how long doors stay closed in a full cycle.")]
     [SerializeField] private float closedHoldWeight = 1f;
+
     [Tooltip("Relative weight for a single transition (open->closed or closed->open). There are two transitions per cycle.")]
     [SerializeField] private float transitionWeight = 1f;
+
     [SerializeField] private bool startOpen = true;
     [SerializeField] private bool openOrCloseOnce = true;
     [SerializeField] private bool randomizePhaseOnEnable = false;
     [SerializeField] private AnimationCurve doorMotionCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
+    // Cache for doors
     private Vector3[] _closedPositions;
     private Quaternion[] _closedRotations;
     private float _cycleTimer;
@@ -67,16 +78,22 @@ public class ObstacleRingController : MonoBehaviour
     // Optional link back to config for pooling.
     public ObstacleRingConfig SourceConfig { get; private set; }
 
+    // Colliders for activation/fade-in control
+    private Collider[] _colliders;
+    private bool _collidersEnabled = true;
+
     public string RingName => ringName;
     public ObstacleType Type => obstacleType;
     public IReadOnlyList<Transform> PickupSpawnPoints => pickupSpawnPoints;
     public float CurrentSpeed => speed;
     public float CurrentDirection => direction;
+    public bool CollidersEnabled => _collidersEnabled;
 
     private void Awake()
     {
         CacheClosedTransforms();
         UpdateCycleDuration();
+        CacheCollidersIfNeeded();
     }
 
     private void OnEnable()
@@ -88,9 +105,6 @@ public class ObstacleRingController : MonoBehaviour
     private void OnValidate()
     {
         timePerRotationSeconds = Mathf.Max(0.01f, timePerRotationSeconds);
-        //openHoldDuration = Mathf.Max(0f, openHoldDuration);
-        //closedHoldDuration = Mathf.Max(0f, closedHoldDuration);
-        //transitionDuration = Mathf.Max(0f, transitionDuration);
     }
 
     private void Update()
@@ -115,7 +129,6 @@ public class ObstacleRingController : MonoBehaviour
                 _cycleTimer += Time.deltaTime;
                 float rawAmount = GetOpenAmount(_cycleTimer);
                 ApplyDoorAmount(rawAmount);
-
                 break;
 
             case ObstacleType.Laser:
@@ -144,6 +157,37 @@ public class ObstacleRingController : MonoBehaviour
         // If direction is 0, default to +1.
         direction = Mathf.Approximately(patternDirection, 0f) ? 1f : patternDirection;
     }
+
+    #region Collider Activation
+
+    private void CacheCollidersIfNeeded()
+    {
+        if (_colliders == null)
+        {
+            _colliders = GetComponentsInChildren<Collider>(true);
+        }
+    }
+
+    /// <summary>
+    /// Enables or disables all colliders under this ring.
+    /// Used by the generator to keep far-away rings non-lethal until near the player.
+    /// </summary>
+    public void SetCollidersEnabled(bool enabled)
+    {
+        CacheCollidersIfNeeded();
+        _collidersEnabled = enabled;
+
+        if (_colliders == null)
+            return;
+
+        for (int i = 0; i < _colliders.Length; i++)
+        {
+            if (_colliders[i] == null) continue;
+            _colliders[i].enabled = enabled;
+        }
+    }
+
+    #endregion
 
     #region Fans
 
@@ -187,7 +231,6 @@ public class ObstacleRingController : MonoBehaviour
             rotor.localRotation = rotation * rotor.localRotation;
         }
     }
-
 
     #endregion
 
@@ -343,11 +386,9 @@ public class ObstacleRingController : MonoBehaviour
             }
         }
 
-        // LOOPING BEHAVIOUR (old logic) ----------------------------
-
+        // LOOPING BEHAVIOUR
         if (_cycleDuration <= 0f)
         {
-            // Just stay in the start state when not one-shot
             return startOpen ? 1f : 0f;
         }
 
@@ -397,10 +438,9 @@ public class ObstacleRingController : MonoBehaviour
             if (loopT < transitionDuration)
                 return EvaluateTransition(loopT, transitionDuration, 1f, 0f);
 
-            return 0f;
+            return 1f;
         }
     }
-
 
     private float EvaluateTransition(float t, float duration, float from, float to)
     {
@@ -463,8 +503,9 @@ public class ObstacleRingController : MonoBehaviour
         {
             foreach (var t in doorPanels)
             {
+                if (t.panel == null) continue;
                 Gizmos.color = Color.cyan;
-                Gizmos.DrawWireCube(t.panel.localPosition, Vector3.one * 0.2f);
+                Gizmos.DrawWireCube(t.panel.position, Vector3.one * 0.2f);
             }
         }
     }
