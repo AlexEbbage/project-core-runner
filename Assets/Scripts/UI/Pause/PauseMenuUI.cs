@@ -14,6 +14,7 @@ public class PauseMenuUI : MonoBehaviour
     [Header("Buttons")]
     [SerializeField] private Button resumeButton;
     [SerializeField] private Button menuButton;
+    [SerializeField] private Button settingsButton;
 
     private void Awake()
     {
@@ -36,6 +37,8 @@ public class PauseMenuUI : MonoBehaviour
         {
             menuButton.onClick.AddListener(OnMenuPressed);
         }
+
+        EnsureSettingsButton();
     }
 
     public void Show()
@@ -64,5 +67,13 @@ public class PauseMenuUI : MonoBehaviour
         {
             gameManager.OnMenuButtonPressedFromPause();
         }
+    }
+
+    private void EnsureSettingsButton()
+    {
+        if (settingsButton != null || rootPanel == null)
+            return;
+
+        settingsButton = SettingsModalController.CreateCogButton(rootPanel.transform, new Vector2(-20f, -20f));
     }
 }

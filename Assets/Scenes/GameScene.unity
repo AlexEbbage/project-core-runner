@@ -6688,7 +6688,7 @@ MonoBehaviour:
   restorePurchasesButtonRoot: {fileID: 2100000100}
   premiumBadgeRoot: {fileID: 2100000200}
   thankYouPopup: {fileID: 1689040174}
-  hidePremiumUserIAPButton: 1
+  hidePremiumUserIAPButton: 0
   hideRestorePurchasesButton: 1
 --- !u!1 &1563094308
 GameObject:

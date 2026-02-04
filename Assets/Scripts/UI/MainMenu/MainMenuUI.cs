@@ -23,6 +23,7 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private GameManager gameManager;
     [SerializeField] private GameObject rootPanel;
     [SerializeField] private TMP_Text bestScoreText;
+    [SerializeField] private Button settingsButton;
 
     [Header("Level Select UI")]
     [SerializeField] private TMP_Text levelNameText;
@@ -77,6 +78,8 @@ public class MainMenuUI : MonoBehaviour
 
         if (rightArrowButton != null)
             rightArrowButton.onClick.AddListener(OnNextLevel);
+
+        EnsureSettingsButton();
     }
 
     private void OnEnable()
@@ -257,6 +260,14 @@ public class MainMenuUI : MonoBehaviour
 
         if (premiumBadgeRoot != null)
             premiumBadgeRoot.SetActive(hasRemoveAds);
+    }
+
+    private void EnsureSettingsButton()
+    {
+        if (settingsButton != null || rootPanel == null)
+            return;
+
+        settingsButton = SettingsModalController.CreateCogButton(rootPanel.transform, new Vector2(-20f, -20f));
     }
 
     public void OnRemoveAdsButtonPressed()

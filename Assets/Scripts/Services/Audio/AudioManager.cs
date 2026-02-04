@@ -34,6 +34,8 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioClip buttonClickSfx;
     [SerializeField] private AudioClip speedUpSfx;
     [SerializeField] private AudioClip countdownTimerSfx;
+    [Header("SFX Pitch Variance")]
+    [SerializeField] private Vector2 pickupPitchRange = new Vector2(0.95f, 1.05f);
 
     internal void SetMusicVolume(float musicVolume)
     {
@@ -337,7 +339,7 @@ public class AudioManager : MonoBehaviour
 
     // ---------------- SFX PUBLIC API ----------------
 
-    public void PlayPickup() => PlaySfx(pickupSfx);
+    public void PlayPickup() => PlaySfx(pickupSfx, pickupPitchRange);
     public void PlayHit() => PlaySfx(hitSfx);
     public void PlayButtonClick() => PlaySfx(buttonClickSfx);
     public void PlaySpeedUp() => PlaySfx(speedUpSfx);
@@ -348,6 +350,22 @@ public class AudioManager : MonoBehaviour
     {
         if (sfxSource == null || clip == null) return;
         sfxSource.PlayOneShot(clip);
+    }
+
+    private void PlaySfx(AudioClip clip, Vector2 pitchRange)
+    {
+        if (sfxSource == null || clip == null) return;
+
+        float originalPitch = sfxSource.pitch;
+        float minPitch = Mathf.Min(pitchRange.x, pitchRange.y);
+        float maxPitch = Mathf.Max(pitchRange.x, pitchRange.y);
+        if (!Mathf.Approximately(minPitch, 1f) || !Mathf.Approximately(maxPitch, 1f))
+        {
+            sfxSource.pitch = Mathf.Clamp(Random.Range(minPitch, maxPitch), -3f, 3f);
+        }
+
+        sfxSource.PlayOneShot(clip);
+        sfxSource.pitch = originalPitch;
     }
 
     // ---------------- LOWPASS / MUFFLE API ----------------

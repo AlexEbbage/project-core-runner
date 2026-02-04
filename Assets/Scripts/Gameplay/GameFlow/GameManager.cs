@@ -437,6 +437,22 @@ public class GameManager : MonoBehaviour
         if (!CanDoubleRunRewards)
             return;
 
+        if (AdsConfig.RemoveAds)
+        {
+            if (logStateChanges)
+            {
+                Debug.Log("GameManager: Remove Ads active, skipping double rewards ad.");
+            }
+
+            LogAnalyticsEvent("ad_bypassed", new Dictionary<string, object>
+            {
+                { "source", "double_rewards" },
+                { "reason", "remove_ads" }
+            });
+
+            return;
+        }
+
         if (_services?.RewardedAds == null)
         {
             if (logStateChanges)
