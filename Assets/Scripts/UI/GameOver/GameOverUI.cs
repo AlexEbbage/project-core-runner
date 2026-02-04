@@ -125,6 +125,12 @@ public class GameOverUI : MonoBehaviour
         if (doubleRewardsButton == null)
             return;
 
+        if (AdsConfig.RemoveAds)
+        {
+            doubleRewardsButton.gameObject.SetActive(false);
+            return;
+        }
+
         bool canDouble = gameManager != null && gameManager.CanDoubleRunRewards;
         doubleRewardsButton.gameObject.SetActive(canDouble);
         doubleRewardsButton.interactable = canDouble && gameManager != null && gameManager.IsDoubleRewardsAdReady();
