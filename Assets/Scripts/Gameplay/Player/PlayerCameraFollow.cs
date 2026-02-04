@@ -129,6 +129,8 @@ public class PlayerCameraFollow : MonoBehaviour
             return;
 
         float dt = Time.deltaTime;
+        float positionT = 1f - Mathf.Exp(-positionLerpSpeed * dt);
+        float rotationT = 1f - Mathf.Exp(-rotationLerpSpeed * dt);
 
         // Radial vector pointing from player towards tunnel centre
         Vector3 toCenter = new Vector3(-target.position.x, -target.position.y, 0f);
@@ -149,10 +151,10 @@ public class PlayerCameraFollow : MonoBehaviour
             + up * heightAlongRadial
             - up * radialOffset;
 
-        transform.position = Vector3.Lerp(transform.position, desiredPos, positionLerpSpeed * dt);
+        transform.position = Vector3.Lerp(transform.position, desiredPos, positionT);
 
         Quaternion desiredRot = Quaternion.LookRotation(forward, up);
-        transform.rotation = Quaternion.Slerp(transform.rotation, desiredRot, rotationLerpSpeed * dt);
+        transform.rotation = Quaternion.Slerp(transform.rotation, desiredRot, rotationT);
     }
 
     public void SetTarget(Transform newTarget)
