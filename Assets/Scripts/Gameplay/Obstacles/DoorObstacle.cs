@@ -24,6 +24,12 @@ public class DoorObstacle : MonoBehaviour
     [SerializeField] private bool startOpen = true;
     [SerializeField] private bool randomizePhaseOnEnable = true;
 
+    [Header("Distance Trigger")]
+    [SerializeField] private bool useDistanceBasedClosing = true;
+    [SerializeField] private float closeLeadTimeSeconds = 5f;
+    [SerializeField] private PlayerController playerController;
+    [SerializeField] private RunSpeedController runSpeedController;
+
     [Header("Motion")]
     [SerializeField] private AnimationCurve doorMotionCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
@@ -31,12 +37,20 @@ public class DoorObstacle : MonoBehaviour
     private Quaternion[] _closedRotations;
     private float _cycleTimer;
     private float _cycleDuration;
+    private bool _isClosing;
+    private bool _isClosed;
+    private float _closeStartTime;
+    private float _startOpenAmount;
 
     private void Awake()
     {
         CacheClosedTransforms();
         UpdateCycleDuration();
         ApplyDoorAmount(startOpen ? 1f : 0f);
+        _startOpenAmount = startOpen ? 1f : 0f;
+
+        if (useDistanceBasedClosing)
+            EnsureDistanceReferences();
     }
 
     private void OnEnable()
@@ -49,12 +63,19 @@ public class DoorObstacle : MonoBehaviour
         openHoldDuration = Mathf.Max(0f, openHoldDuration);
         closedHoldDuration = Mathf.Max(0f, closedHoldDuration);
         transitionDuration = Mathf.Max(0f, transitionDuration);
+        closeLeadTimeSeconds = Mathf.Max(0f, closeLeadTimeSeconds);
     }
 
     private void Update()
     {
         if (!Application.isPlaying)
             return;
+
+        if (useDistanceBasedClosing)
+        {
+            UpdateDistanceClosing();
+            return;
+        }
 
         if (_cycleDuration <= 0f)
             return;
@@ -69,6 +90,13 @@ public class DoorObstacle : MonoBehaviour
         CacheClosedTransforms();
         UpdateCycleDuration();
 
+        if (useDistanceBasedClosing)
+        {
+            EnsureDistanceReferences();
+            ResetDistanceState();
+            return;
+        }
+
         if (_cycleDuration <= 0f)
         {
             ApplyDoorAmount(startOpen ? 1f : 0f);
@@ -81,6 +109,24 @@ public class DoorObstacle : MonoBehaviour
 
         float rawAmount = GetOpenAmount(_cycleTimer);
         ApplyDoorAmount(rawAmount);
+    }
+
+    private void EnsureDistanceReferences()
+    {
+        if (playerController == null)
+            playerController = FindFirstObjectByType<PlayerController>();
+
+        if (runSpeedController == null)
+            runSpeedController = FindFirstObjectByType<RunSpeedController>();
+    }
+
+    private void ResetDistanceState()
+    {
+        _isClosing = false;
+        _isClosed = !startOpen;
+        _closeStartTime = 0f;
+        _startOpenAmount = startOpen ? 1f : 0f;
+        ApplyDoorAmount(_startOpenAmount);
     }
 
     private void CacheClosedTransforms()
@@ -167,6 +213,61 @@ public class DoorObstacle : MonoBehaviour
 
         float normalized = Mathf.Clamp01(t / duration);
         return Mathf.Lerp(from, to, normalized);
+    }
+
+    private void UpdateDistanceClosing()
+    {
+        if (_isClosed)
+            return;
+
+        if (playerController == null)
+            return;
+
+        float playerZ = playerController.transform.position.z;
+        float doorZ = transform.position.z;
+        float distance = doorZ - playerZ;
+
+        if (distance <= 0f)
+        {
+            ApplyDoorAmount(0f);
+            _isClosing = true;
+            _isClosed = true;
+            return;
+        }
+
+        if (!_isClosing)
+        {
+            float speed = runSpeedController != null
+                ? runSpeedController.CurrentSpeed
+                : playerController.GetCurrentForwardSpeed();
+
+            if (speed > 0f)
+            {
+                float triggerDistance = speed * closeLeadTimeSeconds;
+                if (distance <= triggerDistance)
+                {
+                    _isClosing = true;
+                    _closeStartTime = Time.time;
+                }
+                else
+                {
+                    ApplyDoorAmount(_startOpenAmount);
+                    return;
+                }
+            }
+            else
+            {
+                ApplyDoorAmount(_startOpenAmount);
+                return;
+            }
+        }
+
+        float elapsed = Time.time - _closeStartTime;
+        float rawAmount = EvaluateTransition(elapsed, transitionDuration, 1f, 0f);
+        ApplyDoorAmount(rawAmount);
+
+        if (elapsed >= transitionDuration)
+            _isClosed = true;
     }
 
     private void ApplyDoorAmount(float rawAmount)
