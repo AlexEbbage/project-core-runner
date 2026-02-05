@@ -361,7 +361,7 @@ public class AudioManager : MonoBehaviour
         float maxPitch = Mathf.Max(pitchRange.x, pitchRange.y);
         if (!Mathf.Approximately(minPitch, 1f) || !Mathf.Approximately(maxPitch, 1f))
         {
-            sfxSource.pitch = Mathf.Clamp(Random.Range(minPitch, maxPitch), -3f, 3f);
+            sfxSource.pitch = Mathf.Clamp(UnityEngine.Random.Range(minPitch, maxPitch), -3f, 3f);
         }
 
         sfxSource.PlayOneShot(clip);
