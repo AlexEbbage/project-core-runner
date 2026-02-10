@@ -69,7 +69,7 @@ public class PlayerCollisionHandler : MonoBehaviour
             { AnalyticsEventNames.Params.Type, ringName }
         });
 
-        Debug.Log($"[PlayerCollisionHandler] Hit obstacle '{ringName}' (alignment={alignment})");
+        //Debug.Log($"[PlayerCollisionHandler] Hit obstacle '{ringName}' (alignment={alignment})");
     }
 
     private void HandleTriggerHit(Collider other)

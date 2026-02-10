@@ -167,7 +167,7 @@ public class RunZoneManager : MonoBehaviour
             audioManager.SetMusicLevelForZone(_currentZoneIndex);
         }
 
-        Debug.Log($"Zone changed to: {zone.name}");
+        //Debug.Log($"Zone changed to: {zone.name}");
     }
 
     private void ApplyZoneVfx(RunZone zone)
