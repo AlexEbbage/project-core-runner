@@ -10,7 +10,7 @@ public class SettingsMenuUI : MonoBehaviour
 
     [SerializeField] private AudioManager audioManager;
     
-    private float _lastMusicVolume = 1f;
+    private float _lastMusicVolume = .8f;
     private float _lastSfxVolume = 1f;
 
     private void Awake()
@@ -29,8 +29,6 @@ public class SettingsMenuUI : MonoBehaviour
 
         if (vibrateToggle != null)
             vibrateToggle.isOn = SettingsData.VibrateEnabled;
-
-        ApplyToAudio();
     }
 
     public void OnMusicToggleChanged(bool isOn)
@@ -45,7 +43,7 @@ public class SettingsMenuUI : MonoBehaviour
             SettingsData.MusicVolume = 0f;
         }
 
-        ApplyToAudio();
+        ApplyMusicSetting();
     }
 
     public void OnSfxToggleChanged(bool isOn)
@@ -60,7 +58,7 @@ public class SettingsMenuUI : MonoBehaviour
             SettingsData.SfxVolume = 0f;
         }
 
-        ApplyToAudio();
+        ApplySfxSetting();
     }
 
     //public void OnSensitivitySliderChanged(float value)
@@ -85,12 +83,19 @@ public class SettingsMenuUI : MonoBehaviour
             : SettingsData.TouchInputMode.Drag;
     }
 
-    private void ApplyToAudio()
+    private void ApplyMusicSetting()
     {
         if (audioManager == null)
             return;
 
         audioManager.SetMusicVolume(SettingsData.MusicVolume);
+    }
+
+    private void ApplySfxSetting()
+    {
+        if (audioManager == null)
+            return;
+
         audioManager.SetSfxVolume(SettingsData.SfxVolume);
     }
 

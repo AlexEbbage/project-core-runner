@@ -108,12 +108,12 @@ MonoBehaviour:
   visibleValue: 0
   hiddenValue: 1
   targetRenderers:
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 2346249007270679481}
+  - {fileID: 4644369463492881982}
   - {fileID: 4827910300045253851}
   targetColliders:
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 7041100018917927450}
+  - {fileID: 1408667319995666663}
   - {fileID: 733074722931034134}
   controlColliders: 1
 --- !u!1 &1366700352682860643
@@ -131,7 +131,7 @@ GameObject:
   - component: {fileID: 8868135040858613618}
   m_Layer: 0
   m_Name: Blade
-  m_TagString: Untagged
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -373,7 +373,7 @@ GameObject:
   - component: {fileID: 4894770139816379694}
   m_Layer: 0
   m_Name: Blade
-  m_TagString: Untagged
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

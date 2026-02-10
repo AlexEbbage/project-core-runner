@@ -31,7 +31,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Player Visuals (optional)")]
     [SerializeField] private PlayerVisual playerVisual;
-    [SerializeField] private Collider playerCollider;
+    [SerializeField] private BoxCollider[] playerColliders;
 
     [Header("References - UI (GameManager-driven)")]
     // Run UI controller stack removed; use HUD/GameOver/Pause components wired here.
@@ -171,9 +171,9 @@ public class GameManager : MonoBehaviour
             playerVisual = playerController.GetComponentInChildren<PlayerVisual>();
         }
 
-        if (playerCollider == null && playerController != null)
+        if (playerColliders == null && playerController != null)
         {
-            playerCollider = playerController.GetComponent<Collider>();
+            playerColliders = playerController.GetComponents<BoxCollider>();
         }
 
         if (mainMenuUI == null) mainMenuUI = FindFirstObjectByType<MainMenuUI>();
@@ -1064,9 +1064,12 @@ public class GameManager : MonoBehaviour
 
     private void SetPlayerCollidable(bool enabled)
     {
-        if (playerCollider != null)
+        if (playerColliders != null && playerColliders.Length > 0)
         {
-            playerCollider.enabled = enabled;
+            foreach (var collider in playerColliders)
+            {
+                collider.enabled = enabled;
+            }
         }
     }
 

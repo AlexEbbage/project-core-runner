@@ -180,6 +180,13 @@ public class PlayerController : MonoBehaviour
 
         float dt = Time.deltaTime;
 
+#if UNITY_ANDROID || UNITY_IOS
+        if (Touchscreen.current == null)
+        {
+            Debug.LogWarning("Touchscreen.current is NULL");
+        }
+#endif
+
         // 1. AutoPilot overrides everything
         if (_autoPilotActive)
         {
@@ -190,22 +197,22 @@ public class PlayerController : MonoBehaviour
         bool inputDrivenThisFrame = false;
 
         // 2. Touch input (buttons or virtual joystick)
-        if (UseTouchButtonsMode())
+        //if (UseTouchButtonsMode())
+        //{
+        //    if (TryGetTouchButtonsInput(out float buttons))
+        //    {
+        //        _moveInputTarget = buttons;
+        //        inputDrivenThisFrame = true;
+        //    }
+        //}
+        //else if (useVirtualJoystickOnTouch)
+        //{
+        if (TryGetVirtualJoystickInput(out float joystick))
         {
-            if (TryGetTouchButtonsInput(out float buttons))
-            {
-                _moveInputTarget = buttons;
-                inputDrivenThisFrame = true;
-            }
+            _moveInputTarget = joystick;
+            inputDrivenThisFrame = true;
         }
-        else if (useVirtualJoystickOnTouch)
-        {
-            if (TryGetVirtualJoystickInput(out float joystick))
-            {
-                _moveInputTarget = joystick;
-                inputDrivenThisFrame = true;
-            }
-        }
+        //}
 
         // 3. Keyboard fallback (Editor / Standalone only)
 #if ENABLE_LEGACY_INPUT_MANAGER && (UNITY_EDITOR || UNITY_STANDALONE)

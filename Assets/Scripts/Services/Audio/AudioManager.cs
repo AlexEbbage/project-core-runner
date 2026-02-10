@@ -34,29 +34,9 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioClip buttonClickSfx;
     [SerializeField] private AudioClip speedUpSfx;
     [SerializeField] private AudioClip countdownTimerSfx;
+
     [Header("SFX Pitch Variance")]
     [SerializeField] private Vector2 pickupPitchRange = new Vector2(0.95f, 1.05f);
-
-    internal void SetMusicVolume(float musicVolume)
-    {
-        _musicVolume = Mathf.Clamp01(musicVolume);
-
-        if (musicSourceA != null)
-        {
-            musicSourceA.volume = _musicVolume; 
-        }
-
-        if (musicSourceB != null)
-        {
-            musicSourceB.volume = _musicVolume;
-        }
-    }
-
-    internal void SetSfxVolume(float sfxVolume)
-    {
-        if (sfxSource == null) return;
-        sfxSource.volume = sfxVolume;
-    }
 
     [SerializeField] private AudioClip countdownGoSfx;
 
@@ -64,37 +44,25 @@ public class AudioManager : MonoBehaviour
     private bool _isInMenu = true;
     private int _currentGameplayIndex = -1;
     private bool _useA = true; // which music source is "active"
-    private float _musicVolume = 1f;
+    private float _musicVolume = .8f;
     private Coroutine _crossfadeRoutine;
     private Coroutine _lowpassRoutine;
 
     // For debug overlay
     public bool IsInMenu => _isInMenu;
 
-    public string CurrentTrackName
-    {
-        get
-        {
-            if (_isInMenu)
-                return menuMusic != null ? $"Menu: {menuMusic.name}" : "Menu: None";
-            if (gameplayTracks == null || gameplayTracks.Length == 0)
-                return "Gameplay: None";
-            var track = gameplayTracks[Mathf.Clamp(_currentGameplayIndex, 0, gameplayTracks.Length - 1)];
-            return track.clip != null ? track.clip.name : "Gameplay: None";
-        }
-    }
+    private AudioSource ActiveMusicSource => _useA ? musicSourceA : musicSourceB;
+    private AudioSource InactiveMusicSource => _useA ? musicSourceB : musicSourceA;
 
-    public int CurrentTrackBPM
-    {
-        get
-        {
-            if (_isInMenu) return 95; // menu BPM from design
-            if (gameplayTracks == null || gameplayTracks.Length == 0)
-                return 0;
-            int idx = Mathf.Clamp(_currentGameplayIndex, 0, gameplayTracks.Length - 1);
-            return gameplayTracks[idx].bpm;
-        }
-    }
+    [Header("Lowpass Settings")]
+    [SerializeField] private float lowpassNormalCutoff = 22000f;
+    [SerializeField] private float lowpassMuffledCutoff = 800f;
+    [SerializeField] private float lowpassTransitionTime = 0.12f;
+    [SerializeField] private float lowpassHoldTime = 0.25f;
+    [SerializeField] private AudioMixerSnapshot lowpassNormalSnapshot;
+    [SerializeField] private AudioMixerSnapshot lowpassMuffledSnapshot;
+
+    [SerializeField] private bool isLoggingEnabled;
 
     private void Awake()
     {
@@ -136,8 +104,10 @@ public class AudioManager : MonoBehaviour
         if (musicSourceA != null)
         {
             musicSourceA.playOnAwake = false;
+
             if (musicSourceA.isPlaying)
                 musicSourceA.Stop();
+
             musicSourceA.loop = false;
             musicSourceA.volume = _musicVolume;
         }
@@ -145,8 +115,10 @@ public class AudioManager : MonoBehaviour
         if (musicSourceB != null)
         {
             musicSourceB.playOnAwake = false;
+
             if (musicSourceB.isPlaying)
                 musicSourceB.Stop();
+
             musicSourceB.loop = false;
             musicSourceB.volume = 0f;
         }
@@ -154,16 +126,83 @@ public class AudioManager : MonoBehaviour
         if(sfxSource != null)
         {
             sfxSource.playOnAwake = false;
+
             if (sfxSource.isPlaying)
                 sfxSource.Stop();
+
             sfxSource.volume = SettingsData.SfxVolume;
+        }
+
+        if (isLoggingEnabled)
+        {
+            Debug.Log($"{nameof(AudioManager)} awake: MusicVolume:{SettingsData.MusicVolume}, SfxVolume:{SettingsData.SfxVolume}");
         }
     }
 
-    private AudioSource ActiveMusicSource => _useA ? musicSourceA : musicSourceB;
-    private AudioSource InactiveMusicSource => _useA ? musicSourceB : musicSourceA;
+    internal void SetMusicVolume(float musicVolume)
+    {
+        if (isLoggingEnabled)
+        {
+            Debug.Log($"{nameof(AudioManager)} set Music Volume: {musicVolume}");
+        }
 
-    // ---------------- MUSIC PUBLIC API ----------------
+        _musicVolume = Mathf.Clamp01(musicVolume);
+
+        if (musicSourceA != null)
+        {
+            musicSourceA.volume = _musicVolume;
+        }
+
+        if (musicSourceB != null)
+        {
+            musicSourceB.volume = _musicVolume;
+        }
+    }
+
+    internal void SetSfxVolume(float sfxVolume)
+    {
+        if (isLoggingEnabled)
+        {
+            Debug.Log($"{nameof(AudioManager)} set SFX Volume: {sfxVolume}");
+        }
+
+        if (sfxSource == null) return;
+
+        sfxSource.volume = sfxVolume;
+    }
+
+    public string CurrentTrackName
+    {
+        get
+        {
+            if (_isInMenu)
+                return menuMusic != null ? $"Menu: {menuMusic.name}" : "Menu: None";
+
+            if (gameplayTracks == null || gameplayTracks.Length == 0)
+                return "Gameplay: None";
+
+            var track = gameplayTracks[Mathf.Clamp(_currentGameplayIndex, 0, gameplayTracks.Length - 1)];
+
+            return track.clip != null ? track.clip.name : "Gameplay: None";
+        }
+    }
+
+    public int CurrentTrackBPM
+    {
+        get
+        {
+            if (_isInMenu) return 95; // menu BPM from design
+
+            if (gameplayTracks == null || gameplayTracks.Length == 0)
+                return 0;
+
+            int idx = Mathf.Clamp(_currentGameplayIndex, 0, gameplayTracks.Length - 1);
+
+            return gameplayTracks[idx].bpm;
+        }
+    }
+
+    #region Music
 
     public void PlayMenuMusic()
     {
@@ -337,13 +376,20 @@ public class AudioManager : MonoBehaviour
         _crossfadeRoutine = null;
     }
 
-    // ---------------- SFX PUBLIC API ----------------
+    #endregion
+
+    #region SFX
 
     public void PlayPickup() => PlaySfx(pickupSfx, pickupPitchRange);
+
     public void PlayHit() => PlaySfx(hitSfx);
+
     public void PlayButtonClick() => PlaySfx(buttonClickSfx);
+
     public void PlaySpeedUp() => PlaySfx(speedUpSfx);
+
     public void PlayCountdownTimer() => PlaySfx(countdownTimerSfx);
+
     public void PlayCountdownGo() => PlaySfx(countdownGoSfx);
 
     public void PlaySfx(AudioClip clip)
@@ -368,15 +414,9 @@ public class AudioManager : MonoBehaviour
         sfxSource.pitch = originalPitch;
     }
 
-    // ---------------- LOWPASS / MUFFLE API ----------------
+    #endregion
 
-    [Header("Lowpass Settings")]
-    [SerializeField] private float lowpassNormalCutoff = 22000f;
-    [SerializeField] private float lowpassMuffledCutoff = 800f;
-    [SerializeField] private float lowpassTransitionTime = 0.12f;
-    [SerializeField] private float lowpassHoldTime = 0.25f;
-    [SerializeField] private AudioMixerSnapshot lowpassNormalSnapshot;
-    [SerializeField] private AudioMixerSnapshot lowpassMuffledSnapshot;
+    #region Lowpass & Muffle
 
     /// <summary>
     /// Briefly muffles the music (death, big hit, slow-mo).
@@ -443,4 +483,6 @@ public class AudioManager : MonoBehaviour
 
         mainMixer.SetFloat(musicLowpassParam, to);
     }
+
+    #endregion
 }
