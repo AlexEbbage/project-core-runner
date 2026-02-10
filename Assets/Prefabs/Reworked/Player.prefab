@@ -436,6 +436,10 @@ MonoBehaviour:
   defaultForwardSpeed: 10
   tubeRadius: 5.8
   angularSpeedDegrees: 220
+  profile: {fileID: 0}
+  handlingAngularSpeedBonusPerLevel: 10
+  handlingInputSmoothingReductionPerLevel: 0
+  minInputSmoothingTime: 0.02
   allowKeyboardInputInEditor: 1
   touchInputSensitivity: 1
   touchInputFullScaleFraction: 0.02

@@ -24,20 +24,32 @@ public static class SettingsData
 
     public static float MusicVolume
     {
-        get => PlayerPrefs.GetFloat(MusicVolumeKey, 1f);
-        set { PlayerPrefs.SetFloat(MusicVolumeKey, Mathf.Clamp01(value)); PlayerPrefs.Save(); }
+        get => PlayerPrefs.GetFloat(MusicVolumeKey, .8f);
+        set
+        {
+            PlayerPrefs.SetFloat(MusicVolumeKey, Mathf.Clamp01(value));
+            PlayerPrefs.Save();
+        }
     }
 
     public static float SfxVolume
     {
         get => PlayerPrefs.GetFloat(SfxVolumeKey, 1f);
-        set { PlayerPrefs.SetFloat(SfxVolumeKey, Mathf.Clamp01(value)); PlayerPrefs.Save(); }
+        set
+        {
+            PlayerPrefs.SetFloat(SfxVolumeKey, Mathf.Clamp01(value));
+            PlayerPrefs.Save();
+        }
     }
 
     public static bool VibrateEnabled
     {
         get => PlayerPrefs.GetInt(VibrateKey, 1) == 1;
-        set { PlayerPrefs.SetInt(VibrateKey, value ? 1 : 0); PlayerPrefs.Save(); }
+        set
+        {
+            PlayerPrefs.SetInt(VibrateKey, value ? 1 : 0);
+            PlayerPrefs.Save();
+        }
     }
 
     public static TouchInputMode CurrentTouchInputMode
@@ -47,6 +59,7 @@ public static class SettingsData
             int saved = PlayerPrefs.GetInt(TouchInputModeKey, (int)TouchInputMode.Drag);
             if (!System.Enum.IsDefined(typeof(TouchInputMode), saved))
                 saved = (int)TouchInputMode.Drag;
+
             return (TouchInputMode)saved;
         }
         set
