@@ -129,10 +129,10 @@ public class RunScoreManager : MonoBehaviour
         _comboValue = Mathf.Max(0f, _comboValue - decay);
     }
 
-    public void OnPickupCollected()
+    public float OnPickupCollected()
     {
         if (!_isRunActive)
-            return;
+            return 0f;
 
         _comboValue = Mathf.Min(maxComboValue, _comboValue + comboIncreasePerPickup);
         float added = pickupBaseScore * CurrentMultiplier * _powerupScoreMultiplier * _powerupPickupMultiplier;
@@ -142,6 +142,8 @@ public class RunScoreManager : MonoBehaviour
         {
             Debug.Log($"RunScoreManager: Pickup collected. Combo={_comboValue:F2}, Mult={CurrentMultiplier:F2}, +{added:F1} points.");
         }
+
+        return added;
     }
 
     public void StopRun()

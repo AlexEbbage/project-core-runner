@@ -12,6 +12,11 @@ public class Pickup : MonoBehaviour
     [Header("Audio")]
     [SerializeField] private AudioManager audioManager;
 
+    [Header("Runtime References")]
+    [SerializeField] private RunScoreManager scoreManager;
+    [SerializeField] private RunCurrencyManager currencyManager;
+    [SerializeField] private HudController hudController;
+
     [Header("VFX")]
     [SerializeField] private GameObject coinPickupVfxPrefab;
     [SerializeField] private GameObject powerupPickupVfxPrefab;
@@ -51,6 +56,15 @@ public class Pickup : MonoBehaviour
 
         if (audioManager == null)
             audioManager = FindFirstObjectByType<AudioManager>();
+
+        if (scoreManager == null)
+            scoreManager = FindFirstObjectByType<RunScoreManager>();
+
+        if (currencyManager == null)
+            currencyManager = FindFirstObjectByType<RunCurrencyManager>();
+
+        if (hudController == null)
+            hudController = FindFirstObjectByType<HudController>();
     }
 
     private void Start()
@@ -134,13 +148,12 @@ public class Pickup : MonoBehaviour
 
         _isCollected = true;
 
-        var scoreManager = FindFirstObjectByType<RunScoreManager>();
-        var currencyManager = FindFirstObjectByType<RunCurrencyManager>();
         var powerupController = playerObject != null ? playerObject.GetComponent<PlayerPowerupController>() : null;
 
         if (pickupType == PickupType.Coin)
         {
-            scoreManager?.OnPickupCollected();
+            float pickupScore = scoreManager != null ? scoreManager.OnPickupCollected() : 0f;
+
             if (currencyManager != null)
             {
                 float multiplier = scoreManager != null ? scoreManager.CurrentMultiplier : 1f;
@@ -148,6 +161,8 @@ public class Pickup : MonoBehaviour
                 int bonusValue = Mathf.Max(1, Mathf.RoundToInt(baseValue * multiplier));
                 currencyManager.AddCoins(bonusValue);
             }
+
+            hudController?.ShowPickupScorePopup(pickupScore, transform.position);
         }
         else if (pickupType == PickupType.Powerup)
         {
