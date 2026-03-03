@@ -63,44 +63,89 @@ A skill is production-ready only when all items below are true:
 - [ ] Example invocation is realistic and maps to the documented trigger.
 - [ ] Ownership is clear in the skill catalog entry.
 
-## Skill catalog
+## Skill catalog (grouped by module)
+
+### Gameplay
 
 | Name | Trigger (when to use) | Inputs required | Output artifact | Owner |
 |---|---|---|---|---|
 | Gameplay Feature Change | Adding or modifying runtime gameplay behavior (player, obstacles, pickups, gameflow, gameplay VFX). | Target gameplay module, user story/acceptance criteria, impacted scenes/prefabs. | Updated gameplay scripts/assets in `Assets/Scripts/Gameplay/` (+ notes on validations). | Gameplay Team |
+
+**Do**
+- Keep runtime gameplay orchestration inside Gameplay modules.
+- Communicate with UI/Services/Core via events, interfaces, or explicit public APIs.
+- Preserve prefab/scene bindings and null-guard serialized fields.
+
+**Don't**
+- Access UI/Services internal implementations directly.
+- Introduce circular dependencies with sibling modules.
+- Move gameplay logic into UI components.
+
+### UI
+
+| Name | Trigger (when to use) | Inputs required | Output artifact | Owner |
+|---|---|---|---|---|
 | UI Tweak / Screen Update | Updating HUD, menus, popups, or other presentation behavior. | Target UI screen/component, UX requirement, relevant gameplay/service events. | Updated UI scripts/assets in `Assets/Scripts/UI/` with reactive event wiring. | UI Team |
+
+**Do**
+- Keep UI logic in `Assets/Scripts/UI/` and make it reactive to state/events.
+- Consume gameplay/services through interfaces, events, or explicit APIs.
+- Validate bindings so screens update without breaking inspector links.
+
+**Don't**
+- Put gameplay rules or gameflow decisions in UI code.
+- Reach into Gameplay module internals.
+- Couple UI directly to service implementation details.
+
+### Services
+
+| Name | Trigger (when to use) | Inputs required | Output artifact | Owner |
+|---|---|---|---|---|
 | Service Integration | Adding/changing external-facing integrations (ads, analytics, audio, notifications, monetisation). | Service API contract, environment/config keys, feature flag or call sites. | Updated service adapters/APIs in `Assets/Scripts/Services/` and integration notes. | Services Team |
-| Refactor / Migration | Touching legacy module paths that should move toward `Gameplay/`, `UI/`, `Services/`, or `Core/`. | Legacy path being changed, target module destination, namespace/reference impact. | Scoped relocation + reference updates + migration summary. | Architecture Owners |
+
+**Do**
+- Expose clear public APIs for service consumers.
+- Keep integrations isolated to Services with explicit contracts.
+- Use interface-driven access when reasonable.
+
+**Don't**
+- Create hidden global state unless justified and documented.
+- Create tight service-to-service coupling.
+- Access Gameplay/UI internals from services.
+
+### Core
+
+| Name | Trigger (when to use) | Inputs required | Output artifact | Owner |
+|---|---|---|---|---|
 | Cross-cutting Core Utility | Introducing or adjusting shared minimal utilities (localization, scene management, config, helpers). | Shared use case, consumer modules, non-goal boundaries. | Focused utility updates in `Assets/Scripts/Core/` with dependency rationale. | Core Maintainers |
+
+**Do**
+- Keep Core utilities minimal, shared, and module-agnostic.
+- Prefer narrow APIs consumed through explicit interfaces/events.
+- Confirm at least one real cross-module consumer.
+
+**Don't**
+- Turn Core into a dumping ground for unrelated logic.
+- Add gameplay-specific logic to Core.
+- Bypass module boundaries by exposing internals.
+
+### Cross-cutting (refactor/migration)
+
+| Name | Trigger (when to use) | Inputs required | Output artifact | Owner |
+|---|---|---|---|---|
+| Refactor / Migration | Touching legacy module paths that should move toward `Gameplay/`, `UI/`, `Services/`, or `Core/`. | Legacy path being changed, target module destination, namespace/reference impact. | Scoped relocation + reference updates + migration summary. | Architecture Owners |
+
+**Migration note for legacy folders**
+- Legacy folders may include: `camera/`, `config/`, `debug/`, `feedback/`, `fx/`, `gameplay/`, `localization/`, `meta/`, `monetisation/`, `scenemanagement/`, `services/`, `settings/`, `ui/`.
+- When touching one of these modules, relocate **that touched module only** in the same change when safe.
+- Target destinations: gameplay-driven systems → `Gameplay/`; presentation → `UI/`; platform/external integrations → `Services/`; minimal shared helpers/orchestration → `Core/`.
+- Keep migration scoped: move files, update namespaces/references, preserve scene/prefab integrity, and verify no circular dependencies.
+- Document what moved, why it moved, and any required follow-up in the PR notes.
 
 ## Quick start
 
-### 1) Gameplay feature change
-1. Confirm the work belongs in `Assets/Scripts/Gameplay/`.
-2. Define interfaces/events for cross-module communication.
-3. Implement additive changes and preserve prefab/scene bindings.
-4. Validate impacted gameplay flow and null-guard serialized fields.
-
-### 2) UI tweak
-1. Place UI logic under `Assets/Scripts/UI/`.
-2. Keep UI reactive to state/events; avoid embedding gameplay logic.
-3. Update bindings and verify no direct gameplay internals are accessed.
-4. Validate target screens and event-driven updates.
-
-### 3) Service integration
-1. Implement/extend clear public APIs in `Assets/Scripts/Services/`.
-2. Avoid tight coupling between services.
-3. Wire consumers through interfaces or explicit APIs.
-4. Validate service behavior with local configuration and guarded fallbacks.
-
-### 4) Refactor / migration
-1. If modifying a legacy module, migrate that module in the same scoped change.
-2. Move files to the appropriate target (`Gameplay/`, `UI/`, `Services/`, `Core/`).
-3. Update namespaces/references and verify no circular dependencies are introduced.
-4. Document migration steps in the PR summary.
-
-### 5) Small shared utility
-1. Confirm the change is truly cross-cutting and minimal.
-2. Implement under `Assets/Scripts/Core/` only when module ownership is ambiguous.
-3. Keep APIs narrow and avoid gameplay-specific assumptions.
-4. Validate at least one consuming module path.
+1. Pick the relevant module group (Gameplay, UI, Services, Core, Cross-cutting).
+2. Follow the group's **Do/Don't** boundaries before implementation.
+3. Use events/interfaces/public APIs for all cross-module communication.
+4. If touching a legacy folder, apply the scoped migration note in the same change when safe.
+5. Validate only impacted modules and confirm no boundary/circular-dependency violations.
