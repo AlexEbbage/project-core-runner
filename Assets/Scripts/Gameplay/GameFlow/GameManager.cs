@@ -31,7 +31,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Player Visuals (optional)")]
     [SerializeField] private PlayerVisual playerVisual;
-    [SerializeField] private Collider playerCollider;
+    [SerializeField] private BoxCollider[] playerColliders;
 
     [Header("References - UI (GameManager-driven)")]
     // Run UI controller stack removed; use HUD/GameOver/Pause components wired here.
@@ -44,7 +44,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private RewardedRunPromptUI rewardedRunPromptUI;
 
     [Header("Rewarded Run Prompt")]
-    [SerializeField] private bool rewardedRunPromptEnabled = true;
+    [SerializeField] private bool rewardedRunPromptEnabled = false;
     [SerializeField] private float rewardedRunPromptDelaySeconds = 45f;
     [SerializeField] private bool rewardedRunPromptPausesGameplay = false;
     [SerializeField] private float rewardedRunPromptAutoDismissSeconds = 8f;
@@ -163,11 +163,6 @@ public class GameManager : MonoBehaviour
             maxContinuesPerRun = balanceConfig.maxContinuesPerRun;
             continueRespawnBackDistance = balanceConfig.continueRespawnBackDistance;
             continueRespawnHeightOffset = balanceConfig.continueRespawnHeightOffset;
-            if (obstacleRingGenerator != null)
-            {
-                obstacleRingGenerator.SetPickupFloatHeight(balanceConfig.pickupFloatHeight);
-                obstacleRingGenerator.SetPickupSurfaceOffset(balanceConfig.pickupSurfaceOffset);
-            }
         }
 
 
@@ -176,9 +171,9 @@ public class GameManager : MonoBehaviour
             playerVisual = playerController.GetComponentInChildren<PlayerVisual>();
         }
 
-        if (playerCollider == null && playerController != null)
+        if (playerColliders == null && playerController != null)
         {
-            playerCollider = playerController.GetComponent<Collider>();
+            playerColliders = playerController.GetComponents<BoxCollider>();
         }
 
         if (mainMenuUI == null) mainMenuUI = FindFirstObjectByType<MainMenuUI>();
@@ -262,10 +257,10 @@ public class GameManager : MonoBehaviour
             _elapsedTime += Time.deltaTime;
         }
 
-        if (ShouldTriggerRewardedRunPrompt())
-        {
-            ShowRewardedRunPrompt();
-        }
+        //if (ShouldTriggerRewardedRunPrompt())
+        //{
+        //    ShowRewardedRunPrompt();
+        //}
     }
 
     private void TransitionToState(GameState newState, float timeScale)
@@ -1069,9 +1064,12 @@ public class GameManager : MonoBehaviour
 
     private void SetPlayerCollidable(bool enabled)
     {
-        if (playerCollider != null)
+        if (playerColliders != null && playerColliders.Length > 0)
         {
-            playerCollider.enabled = enabled;
+            foreach (var collider in playerColliders)
+            {
+                collider.enabled = enabled;
+            }
         }
     }
 

@@ -22,6 +22,7 @@ public class MainMenuUI : MonoBehaviour
     [Header("Core References")]
     [SerializeField] private GameManager gameManager;
     [SerializeField] private GameObject rootPanel;
+    [SerializeField] private GameObject settingsPanel;
     [SerializeField] private TMP_Text bestScoreText;
     [SerializeField] private Button settingsButton;
 
@@ -78,8 +79,6 @@ public class MainMenuUI : MonoBehaviour
 
         if (rightArrowButton != null)
             rightArrowButton.onClick.AddListener(OnNextLevel);
-
-        EnsureSettingsButton();
     }
 
     private void OnEnable()
@@ -116,6 +115,14 @@ public class MainMenuUI : MonoBehaviour
     {
         if (rootPanel != null)
             rootPanel.SetActive(false);
+    }
+
+    public void ShowSettings()
+    {
+        if (settingsPanel != null)
+        {
+            settingsPanel.SetActive(true);
+        }
     }
 
     public void OnPlayButtonPressed()
@@ -200,8 +207,8 @@ public class MainMenuUI : MonoBehaviour
         var info = levels[_currentLevelIndex];
         int sides = Mathf.Max(3, info.sides);
 
-        if (obstacleRingGenerator != null)
-            obstacleRingGenerator.RebuildAll(sides);
+        //if (obstacleRingGenerator != null)
+        //    obstacleRingGenerator.RebuildAll(sides);
 
         if (tunnelWallGenerator != null)
             tunnelWallGenerator.Rebuild(sides);
@@ -260,14 +267,6 @@ public class MainMenuUI : MonoBehaviour
 
         if (premiumBadgeRoot != null)
             premiumBadgeRoot.SetActive(hasRemoveAds);
-    }
-
-    private void EnsureSettingsButton()
-    {
-        if (settingsButton != null || rootPanel == null)
-            return;
-
-        settingsButton = SettingsModalController.CreateCogButton(rootPanel.transform, new Vector2(-20f, -20f));
     }
 
     public void OnRemoveAdsButtonPressed()

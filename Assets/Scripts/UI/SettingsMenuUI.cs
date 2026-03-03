@@ -3,70 +3,77 @@ using UnityEngine.UI;
 
 public class SettingsMenuUI : MonoBehaviour
 {
-    [SerializeField] private Slider musicSlider;
-    [SerializeField] private Slider sfxSlider;
-    [SerializeField] private Slider sensitivitySlider;
-    [SerializeField] private Slider runSensitivitySlider;
+    [SerializeField] private GameObject settingsPanel;
+    [SerializeField] private Toggle musicToggle;
+    [SerializeField] private Toggle sfxToggle;
     [SerializeField] private Toggle vibrateToggle;
-    [SerializeField] private Toggle touchInputToggle;
 
     [SerializeField] private AudioManager audioManager;
+    
+    private float _lastMusicVolume = .8f;
+    private float _lastSfxVolume = 1f;
 
     private void Awake()
     {
         if (audioManager == null)
             audioManager = FindFirstObjectByType<AudioManager>();
 
-        // Load
-        if (musicSlider != null)
-            musicSlider.value = SettingsData.MusicVolume;
-        if (sfxSlider != null)
-            sfxSlider.value = SettingsData.SfxVolume;
-        if (sensitivitySlider != null)
-        {
-            sensitivitySlider.minValue = SettingsData.TouchSensitivityMin;
-            sensitivitySlider.maxValue = SettingsData.TouchSensitivityMax;
-            sensitivitySlider.value = SettingsData.TouchSensitivity;
-        }
-        if (runSensitivitySlider != null)
-        {
-            runSensitivitySlider.minValue = SettingsData.RunSensitivityMin;
-            runSensitivitySlider.maxValue = SettingsData.RunSensitivityMax;
-            runSensitivitySlider.value = SettingsData.RunSensitivity;
-        }
+        _lastMusicVolume = SettingsData.MusicVolume > 0f ? SettingsData.MusicVolume : _lastMusicVolume;
+        _lastSfxVolume = SettingsData.SfxVolume > 0f ? SettingsData.SfxVolume : _lastSfxVolume;
+
+        if (musicToggle != null)
+            musicToggle.isOn = SettingsData.MusicVolume > 0.01f;
+
+        if (sfxToggle != null)
+            sfxToggle.isOn = SettingsData.SfxVolume > 0.01f;
+
         if (vibrateToggle != null)
             vibrateToggle.isOn = SettingsData.VibrateEnabled;
-        if (touchInputToggle != null)
-            touchInputToggle.isOn = SettingsData.CurrentTouchInputMode == SettingsData.TouchInputMode.Buttons;
-
-        ApplyToAudio();
     }
 
-    public void OnMusicSliderChanged(float value)
+    public void OnMusicToggleChanged(bool isOn)
     {
-        SettingsData.MusicVolume = value;
-        ApplyToAudio();
+        if (isOn)
+        {
+            SettingsData.MusicVolume = Mathf.Clamp01(_lastMusicVolume <= 0f ? 1f : _lastMusicVolume);
+        }
+        else
+        {
+            _lastMusicVolume = SettingsData.MusicVolume;
+            SettingsData.MusicVolume = 0f;
+        }
+
+        ApplyMusicSetting();
     }
 
-    public void OnSfxSliderChanged(float value)
+    public void OnSfxToggleChanged(bool isOn)
     {
-        SettingsData.SfxVolume = value;
-        ApplyToAudio();
+        if (isOn)
+        {
+            SettingsData.SfxVolume = Mathf.Clamp01(_lastSfxVolume <= 0f ? 1f : _lastSfxVolume);
+        }
+        else
+        {
+            _lastSfxVolume = SettingsData.SfxVolume;
+            SettingsData.SfxVolume = 0f;
+        }
+
+        ApplySfxSetting();
     }
 
-    public void OnSensitivitySliderChanged(float value)
-    {
-        SettingsData.TouchSensitivity = value;
-    }
+    //public void OnSensitivitySliderChanged(float value)
+    //{
+    //    SettingsData.TouchSensitivity = value;
+    //}
 
-    public void OnRunSensitivitySliderChanged(float value)
-    {
-        SettingsData.RunSensitivity = value;
-    }
+    //public void OnRunSensitivitySliderChanged(float value)
+    //{
+    //    SettingsData.RunSensitivity = value;
+    //}
 
-    public void OnVibrateToggleChanged(bool on)
+    public void OnVibrateToggleChanged(bool isOn)
     {
-        SettingsData.VibrateEnabled = on;
+        SettingsData.VibrateEnabled = isOn;
     }
 
     public void OnTouchInputToggleChanged(bool on)
@@ -76,16 +83,30 @@ public class SettingsMenuUI : MonoBehaviour
             : SettingsData.TouchInputMode.Drag;
     }
 
-    private void ApplyToAudio()
+    private void ApplyMusicSetting()
     {
-        if (audioManager == null) return;
+        if (audioManager == null)
+            return;
 
         audioManager.SetMusicVolume(SettingsData.MusicVolume);
+    }
+
+    private void ApplySfxSetting()
+    {
+        if (audioManager == null)
+            return;
+
         audioManager.SetSfxVolume(SettingsData.SfxVolume);
     }
 
     public static void Vibrate()
     {
         VibrationController.Vibrate();
+    }
+
+    public void Hide()
+    {
+        if (settingsPanel != null)
+            settingsPanel.SetActive(false);
     }
 }

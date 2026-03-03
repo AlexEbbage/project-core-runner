@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c5a4c0652a02a54e894dd6f2457470d, type: 3}
+  m_Name: Wall_3_Config
+  m_EditorClassIdentifier: 
+  ringPrefab: {fileID: 1417537402810437890, guid: 1648bd90f307b6245b559a6a93916c33, type: 3}
+  obstacleType: 0
+  difficultyConfigs:
+  - minLevel: 1
+    maxLevel: 2
+    minRotationsPerIteration: 1
+    maxRotationsPerIteration: 2
+    minIterationCount: 3
+    maxIterationCount: 5
+    rotateInOneDirectionPerIteration: 1
+    minSpeed: 0
+    maxSpeed: 0
+  - minLevel: 2
+    maxLevel: 3
+    minRotationsPerIteration: 2
+    maxRotationsPerIteration: 3
+    minIterationCount: 3
+    maxIterationCount: 5
+    rotateInOneDirectionPerIteration: 1
+    minSpeed: 0
+    maxSpeed: 0

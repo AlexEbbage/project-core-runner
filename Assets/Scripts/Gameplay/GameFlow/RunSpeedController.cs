@@ -230,7 +230,7 @@ public class RunSpeedController : MonoBehaviour
         // Optional SFX
         if (audioManager != null && speedUpSfx != null)
         {
-            audioManager.PlaySfx(speedUpSfx);
+            //audioManager.PlaySfx(speedUpSfx);
         }
     }
 
