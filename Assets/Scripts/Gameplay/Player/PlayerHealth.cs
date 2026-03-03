@@ -133,7 +133,8 @@ public class PlayerHealth : MonoBehaviour
             Debug.Log("PlayerHealth: Head-on collision.");
         }
 
-        SpawnVfx(deathImpactVfxPrefab, hitPoint, hitNormal);
+        Vector3 deathVfxPosition = transform.position;
+        SpawnVfx(deathImpactVfxPrefab, deathVfxPosition, hitNormal);
         audioManager?.PlayHit();
 
         if (headOnIsInstantDeath)
