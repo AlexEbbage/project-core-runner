@@ -5248,7 +5248,7 @@ MonoBehaviour:
   highFogDensity: 0.01
   mainDirectionalLight: {fileID: 620520893}
   lowShadowMode: 0
-  highShadowMode: 2
+  highShadowMode: 0
 --- !u!4 &823136362
 Transform:
   m_ObjectHideFlags: 0
@@ -12643,3 +12643,4 @@ SceneRoots:
   - {fileID: 945280082}
   - {fileID: 786114090}
   - {fileID: 302164557}
+  - {fileID: 158949736}
