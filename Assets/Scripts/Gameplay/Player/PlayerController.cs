@@ -52,11 +52,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private bool forceTouchButtonsMode;
 
     [Header("Virtual Joystick (Touch)")]
-    [Tooltip("Enable virtual joystick touch steering (recommended for mobile).")]
-    [SerializeField] private bool useVirtualJoystickOnTouch = true;
-
-    [Tooltip("Control zone in normalized screen fractions (x,y,w,h). Example: (0,0,0.6,0.75) = left 60% + bottom 75%.")]
-    [SerializeField] private Rect controlZoneNormalized = new Rect(0f, 0f, 0.6f, 0.75f);
+    [SerializeField] private RectTransform joystickBackground;
+    [SerializeField] private RectTransform joystickKnob;
+    [SerializeField] private float fixedJoystickRadiusPx = 80f;
 
     [Tooltip("Max horizontal drag (in pixels) to reach full input.")]
     [SerializeField] private float joystickRadiusPx = 220f;
@@ -72,6 +70,9 @@ public class PlayerController : MonoBehaviour
 
     [Tooltip("Ignore touches that start over UI (recommended).")]
     [SerializeField] private bool ignoreTouchesOverUI = true;
+
+    [Tooltip("Control zone in normalized screen fractions (x,y,w,h). Example: (0,0,0.6,0.75) = left 60% + bottom 75%.")]
+    [SerializeField] private Rect controlZoneNormalized = new Rect(0f, 0f, 0.6f, 0.75f);
 
     [Header("Run Control")]
     [Tooltip("If true, movement is enabled immediately at Start. Otherwise, call StartRun() from GameManager.")]
@@ -215,16 +216,28 @@ public class PlayerController : MonoBehaviour
         //}
 
         // 3. Keyboard fallback (Editor / Standalone only)
-#if ENABLE_LEGACY_INPUT_MANAGER && (UNITY_EDITOR || UNITY_STANDALONE)
-    if (!inputDrivenThisFrame && allowKeyboardInputInEditor)
-    {
-        float keyboard = Input.GetAxisRaw("Horizontal"); // A/D, arrows
-        if (Mathf.Abs(keyboard) > 0.01f)
+#if UNITY_EDITOR || UNITY_STANDALONE
+        if (!inputDrivenThisFrame && allowKeyboardInputInEditor)
         {
-            _moveInputTarget = Mathf.Clamp(keyboard, -1f, 1f);
-            inputDrivenThisFrame = true;
+            float keyboard = 0f;
+
+            if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed)
+                keyboard = -1f;
+
+            if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed)
+                keyboard = 1f;
+
+            if (Mathf.Abs(keyboard) > 0.01f)
+            {
+                _moveInputTarget = keyboard;
+
+                if (joystickKnob != null)
+                    joystickKnob.anchoredPosition =
+                        new Vector2(keyboard * fixedJoystickRadiusPx, 0f);
+
+                inputDrivenThisFrame = true;
+            }
         }
-    }
 #endif
 
         // 4. Smooth and apply movement
@@ -359,34 +372,31 @@ public class PlayerController : MonoBehaviour
         input = 0f;
 
         var ts = Touchscreen.current;
-        if (ts == null)
+        if (ts == null || joystickBackground == null || joystickKnob == null)
         {
             ResetJoystickState();
             return false;
         }
 
-        // Acquire a joystick touch if we don't have one
+        // Acquire joystick touch if not active
         if (!_joystickActive)
         {
             foreach (var t in ts.touches)
             {
-                if (!t.press.isPressed) continue;
+                if (!t.press.isPressed)
+                    continue;
 
                 int touchId = t.touchId.ReadValue();
                 Vector2 pos = t.position.ReadValue();
 
-                // Must start inside control zone
                 if (!IsInControlZone(pos))
                     continue;
 
-                // Optional: ignore UI touches
                 if (ignoreTouchesOverUI && IsTouchOverUI(touchId))
                     continue;
 
                 _joystickActive = true;
                 _joystickTouchId = touchId;
-                _joystickOrigin = pos;
-                _joystickCurrent = pos;
                 break;
             }
 
@@ -394,11 +404,13 @@ public class PlayerController : MonoBehaviour
                 return false;
         }
 
-        // Find the active touch by id
+        // Find active touch
         TouchControl activeTouch = null;
         foreach (var t in ts.touches)
         {
-            if (!t.press.isPressed) continue;
+            if (!t.press.isPressed)
+                continue;
+
             if (t.touchId.ReadValue() == _joystickTouchId)
             {
                 activeTouch = t;
@@ -410,31 +422,34 @@ public class PlayerController : MonoBehaviour
         if (activeTouch == null)
         {
             ResetJoystickState();
-            input = 0f;
             return true;
         }
 
-        _joystickCurrent = activeTouch.position.ReadValue();
+        Vector2 screenPos = activeTouch.position.ReadValue();
 
-        // (Optional) keep origin drifting toward finger so you don't hit the edge
-        if (joystickRecenter > 0f)
-            _joystickOrigin = Vector2.Lerp(_joystickOrigin, _joystickCurrent, joystickRecenter * Time.deltaTime);
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            joystickBackground,
+            screenPos,
+            null,
+            out Vector2 localPoint);
 
-        float dx = _joystickCurrent.x - _joystickOrigin.x;
+        float clampedX = Mathf.Clamp(localPoint.x, -fixedJoystickRadiusPx, fixedJoystickRadiusPx);
 
-        // deadzone in pixels
-        if (Mathf.Abs(dx) < joystickDeadZonePx)
+        // Pixel dead zone
+        if (Mathf.Abs(clampedX) < joystickDeadZonePx)
         {
+            joystickKnob.anchoredPosition = Vector2.zero;
             input = 0f;
             return true;
         }
 
-        float raw = Mathf.Clamp(dx / Mathf.Max(joystickRadiusPx, 1f), -1f, 1f);
+        float raw = clampedX / Mathf.Max(fixedJoystickRadiusPx, 1f);
 
-        // response curve
         float sign = Mathf.Sign(raw);
         float mag = Mathf.Pow(Mathf.Abs(raw), joystickResponseExponent);
         input = sign * mag;
+
+        joystickKnob.anchoredPosition = new Vector2(clampedX, 0f);
 
         return true;
     }
@@ -445,6 +460,9 @@ public class PlayerController : MonoBehaviour
         _joystickTouchId = -1;
         _joystickOrigin = Vector2.zero;
         _joystickCurrent = Vector2.zero;
+
+        if (joystickKnob != null)
+            joystickKnob.anchoredPosition = Vector2.zero;
     }
 
     private bool IsInControlZone(Vector2 screenPos)
