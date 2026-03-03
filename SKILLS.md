@@ -262,3 +262,85 @@ Every skill catalog entry must include and maintain:
 3. Use events/interfaces/public APIs for all cross-module communication.
 4. If touching a legacy folder, apply the scoped migration note in the same change when safe.
 5. Validate only impacted modules and confirm no boundary/circular-dependency violations.
+
+## Module-Scoped Unity Test Gates
+
+### Intent
+Define minimal, consistent Unity test gates by change type so contributors can validate only impacted modules while maintaining reliable quality signals.
+
+### Scope boundaries
+- In scope: module-scoped test expectations for Gameplay, Services, and UI script changes; Unity batchmode command templates; test naming/location conventions; Android fast-fail guidance for platform-specific service paths.
+- Out of scope: mandatory full-regression suites, unrelated module validation, or broad end-to-end certification gates.
+
+### Preconditions
+- Unity Editor version is known for the project and available on the machine (for command execution).
+- Contributor can identify changed script module(s): `Assets/Scripts/Gameplay`, `Assets/Scripts/Services`, `Assets/Scripts/UI`, or legacy paths being migrated.
+- `Assets/Tests` exists (create scoped subfolders if missing) and target assembly definitions are configured for EditMode/PlayMode where applicable.
+
+### Steps
+1. Classify the change by module and apply the matrix below:
+   - Gameplay scripts: run a PlayMode smoke path for the touched loop plus targeted EditMode tests for changed logic seams.
+   - Services scripts: run adapter/unit tests for changed service wrappers and callback lifecycle checks (subscribe/unsubscribe, init/dispose, success/failure callbacks).
+   - UI scripts: run presenter/controller logic checks (state mapping, event reaction, view-model/output formatting), avoiding gameplay orchestration assertions.
+2. Place or update tests under `Assets/Tests` using the naming and folder conventions below.
+3. Execute module-scoped batchmode test commands and export results for CI/local evidence.
+4. If Android-specific paths are touched (for example Java bridge vibration/service adapters), run fast-fail checks first; stop and report blockers before wider test execution.
+5. Report only module-scoped validation evidence and explicitly mark intentionally skipped broad suites.
+
+### Validation checklist
+- [ ] Change-type matrix applied correctly for each touched module (Gameplay/Services/UI).
+- [ ] Tests are stored under `Assets/Tests/<Module>/EditMode` or `Assets/Tests/<Module>/PlayMode` with required naming pattern.
+- [ ] Unity batchmode command output includes exported result files for executed suites.
+- [ ] Android-specific bridge/service changes include fast-fail lifecycle and availability checks before deeper runs.
+- [ ] Validation notes confirm that broad/unrelated testing was not required, consistent with module-scoped AGENTS validation policy.
+
+### Rollback/safety notes
+- Keep new tests additive and module-local; if flaky or blocking, revert only newly added test files and preserve production code fixes.
+- For Android bridge integrations, guard platform-specific calls behind runtime checks and feature toggles; if lifecycle checks fail, disable the affected adapter path and document follow-up rather than expanding unrelated test scope.
+
+### Example invocation
+"Use the Module-Scoped Unity Test Gates skill for a Services vibration adapter change: add callback lifecycle unit coverage, run EditMode batchmode tests with XML export, run Android fast-fail bridge checks, and skip unrelated Gameplay/UI suites."
+
+#### Batchmode test command templates
+
+Use project-root commands and adjust `<UNITY_EDITOR>`, `<RESULTS_DIR>`, and optional filters:
+
+- EditMode:
+  - `<UNITY_EDITOR> -batchmode -nographics -quit -projectPath "$(pwd)" -runTests -testPlatform EditMode -testResults "<RESULTS_DIR>/editmode-results.xml" -logFile "<RESULTS_DIR>/editmode.log"`
+- PlayMode:
+  - `<UNITY_EDITOR> -batchmode -nographics -quit -projectPath "$(pwd)" -runTests -testPlatform PlayMode -testResults "<RESULTS_DIR>/playmode-results.xml" -logFile "<RESULTS_DIR>/playmode.log"`
+
+Optional narrowing flags for module-scoped execution:
+- `-testFilter "<NamespaceOrClassPattern>"` to target changed module tests.
+- `-assemblyNames "<TestAssemblyName>"` when module tests are isolated in dedicated test assemblies.
+
+#### Naming and folder conventions under `Assets/Tests`
+
+- Folder layout:
+  - `Assets/Tests/Gameplay/EditMode`
+  - `Assets/Tests/Gameplay/PlayMode`
+  - `Assets/Tests/Services/EditMode`
+  - `Assets/Tests/UI/EditMode`
+  - Add `PlayMode` subfolders only where runtime behavior needs coverage.
+- File naming:
+  - EditMode: `<FeatureOrClass>Tests.cs`
+  - PlayMode smoke: `<FeatureOrFlow>PlayModeSmokeTests.cs`
+  - Android fast-fail: `<AdapterOrBridge>AndroidFastFailTests.cs`
+- Test method naming:
+  - `MethodName_StateUnderTest_ExpectedBehavior`
+  - Lifecycle checks should explicitly encode stage transitions, e.g., `Initialize_WhenCalledTwice_DoesNotDoubleSubscribe`.
+
+#### Android-specific fast-fail guidance (vibration/services)
+
+- Run first for touched Android bridge/service adapters:
+  - Availability guard checks (platform and class/method resolution).
+  - Java bridge null/exception path checks.
+  - Callback lifecycle checks (init, pause/resume if relevant, dispose/unsubscribe).
+- If any fast-fail check fails:
+  - Stop broad test expansion.
+  - Document failure scope and exact adapter/bridge path.
+  - Provide minimal reproduction command and logs, then hand off for Android-environment follow-up.
+
+#### No broad testing required rule
+
+Unless explicitly requested by product/release criteria, contributors should validate only the touched module(s) and directly affected integration seams. Full-project regression, unrelated module suites, and exhaustive platform matrices are not required for routine scoped changes, matching AGENTS guidance to validate only the module being changed.
