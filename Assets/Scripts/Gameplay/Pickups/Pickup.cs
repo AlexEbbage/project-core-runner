@@ -162,6 +162,9 @@ public class Pickup : MonoBehaviour
                 currencyManager.AddCoins(bonusValue);
             }
 
+            if (hudController == null)
+                hudController = FindFirstObjectByType<HudController>();
+
             hudController?.ShowPickupScorePopup(pickupScore, transform.position);
         }
         else if (pickupType == PickupType.Powerup)

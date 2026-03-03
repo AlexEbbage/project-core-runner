@@ -50,8 +50,6 @@ public class HudController : MonoBehaviour
     [SerializeField] private Vector2 pickupScorePopupSpawnOffset = new Vector2(0f, 80f);
     [SerializeField] private float pickupScorePopupDuration = 0.7f;
 
-    private Camera _uiCamera;
-
     private void Awake()
     {
         if (gameManager == null) gameManager = FindFirstObjectByType<GameManager>();
@@ -61,11 +59,6 @@ public class HudController : MonoBehaviour
 
         if (rootPanel == null) rootPanel = gameObject;
 
-        var canvas = GetComponentInParent<Canvas>();
-        if (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
-        {
-            _uiCamera = canvas.worldCamera;
-        }
     }
 
     private void OnEnable()
@@ -181,6 +174,7 @@ public class HudController : MonoBehaviour
 
         RectTransform popupRect = popupInstance.rectTransform;
         popupRect.anchoredPosition = WorldToCanvasPosition(worldPosition) + pickupScorePopupSpawnOffset;
+        popupRect.localScale = Vector3.one;
 
         float safeDuration = Mathf.Max(0.01f, pickupScorePopupDuration);
         StartCoroutine(AnimatePickupScorePopup(popupInstance, popupRect, safeDuration));
@@ -203,6 +197,7 @@ public class HudController : MonoBehaviour
             float easedT = Mathf.SmoothStep(0f, 1f, t);
 
             popupRect.anchoredPosition = Vector2.Lerp(startPosition, endPosition, easedT);
+            popupRect.localScale = Vector3.Lerp(Vector3.one, Vector3.one * 0.6f, easedT);
 
             Color color = baseColor;
             color.a = 1f - t;
@@ -219,20 +214,24 @@ public class HudController : MonoBehaviour
         if (pickupScorePopupContainer == null)
             return Vector2.zero;
 
-        Vector2 screenPosition = RectTransformUtility.WorldToScreenPoint(_uiCamera, worldPosition);
-        if (_uiCamera != null)
+        Camera eventCamera = GetCanvasEventCamera();
+        Camera worldCamera = Camera.main;
+
+        if (worldCamera != null)
         {
-            Vector3 viewportPoint = _uiCamera.WorldToViewportPoint(worldPosition);
+            Vector3 viewportPoint = worldCamera.WorldToViewportPoint(worldPosition);
             if (viewportPoint.z < 0f)
             {
                 return GetScoreAnchorPosition(Vector2.zero);
             }
         }
 
+        Vector2 screenPosition = RectTransformUtility.WorldToScreenPoint(worldCamera, worldPosition);
+
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 pickupScorePopupContainer,
                 screenPosition,
-                _uiCamera,
+                eventCamera,
                 out Vector2 localPoint))
         {
             return localPoint;
@@ -246,17 +245,32 @@ public class HudController : MonoBehaviour
         if (scoreUiAnchor == null)
             return fallback;
 
-        Vector2 screenPosition = RectTransformUtility.WorldToScreenPoint(_uiCamera, scoreUiAnchor.position);
+        Camera eventCamera = GetCanvasEventCamera();
+        Vector2 screenPosition = RectTransformUtility.WorldToScreenPoint(eventCamera, scoreUiAnchor.position);
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 pickupScorePopupContainer,
                 screenPosition,
-                _uiCamera,
+                eventCamera,
                 out Vector2 localPoint))
         {
             return localPoint;
         }
 
         return fallback;
+    }
+
+    private Camera GetCanvasEventCamera()
+    {
+        var canvas = pickupScorePopupContainer != null
+            ? pickupScorePopupContainer.GetComponentInParent<Canvas>()
+            : GetComponentInParent<Canvas>();
+
+        if (canvas == null)
+            return null;
+
+        return canvas.renderMode == RenderMode.ScreenSpaceOverlay
+            ? null
+            : canvas.worldCamera;
     }
 
     private void UpdatePowerupIndicators()
