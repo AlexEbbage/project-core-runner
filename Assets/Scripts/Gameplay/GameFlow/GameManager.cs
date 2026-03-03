@@ -650,6 +650,7 @@ public class GameManager : MonoBehaviour
         speedController?.StartRun();
         statsTracker?.StartRun();
         runZoneManager?.StartRun();
+        obstacleRingGenerator?.StartRun();
     }
 
     public void ContinueRun()
@@ -673,6 +674,7 @@ public class GameManager : MonoBehaviour
         speedController?.ResumeAfterContinue();
         statsTracker?.ResumeRun();
         runZoneManager?.StartRun();
+        obstacleRingGenerator?.StartRun();
     }
 
     private void PauseGame()
@@ -687,6 +689,7 @@ public class GameManager : MonoBehaviour
         scoreManager?.StopRun();
         speedController?.StopRun();
         playerController?.StopRun();
+        obstacleRingGenerator?.StopRun();
         statsTracker?.PauseRun();
     }
 
@@ -706,6 +709,7 @@ public class GameManager : MonoBehaviour
         scoreManager?.StartRun();
         speedController?.StartRun();
         runZoneManager?.StartRun();
+        obstacleRingGenerator?.StartRun();
 
         _gameTimerEnabled = true;
     }
@@ -730,6 +734,9 @@ public class GameManager : MonoBehaviour
 
         _gameTimerEnabled = false;
         TransitionToState(GameState.GameOver, 0.2f);
+        scoreManager?.StopRun();
+        speedController?.StopRun();
+        obstacleRingGenerator?.StopRun();
         playerController?.StopRun();
         playerVisual.SetVisible(false);
 
@@ -932,6 +939,7 @@ public class GameManager : MonoBehaviour
         scoreManager?.StopRun();
         speedController?.StopRun();
         playerController?.StopRun();
+        obstacleRingGenerator?.StopRun();
         statsTracker?.PauseRun();
     }
 
@@ -947,6 +955,7 @@ public class GameManager : MonoBehaviour
         speedController?.StartRun();
         playerController?.StartRun();
         runZoneManager?.StartRun();
+        obstacleRingGenerator?.StartRun();
         statsTracker?.ResumeRun();
 
         _rewardedRunPromptPausedRun = false;

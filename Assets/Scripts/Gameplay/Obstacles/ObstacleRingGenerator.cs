@@ -192,6 +192,8 @@ public class ObstacleRingGenerator : MonoBehaviour
     // Spawn chance multiplier, tweakable externally
     private float _pickupSpawnChanceMultiplier = 1f;
 
+    private bool _isRunActive;
+
     private enum PickupPatternType
     {
         FullRing,
@@ -215,6 +217,7 @@ public class ObstacleRingGenerator : MonoBehaviour
         }
 
         InitializeForRun();
+        _isRunActive = false;
     }
 
     private void Update()
@@ -222,7 +225,10 @@ public class ObstacleRingGenerator : MonoBehaviour
         if (playerTransform == null)
             return;
 
-        UpdateDifficulty();
+        if (_isRunActive)
+        {
+            UpdateDifficulty();
+        }
 
         float playerZ = playerTransform.position.z;
 
@@ -269,6 +275,8 @@ public class ObstacleRingGenerator : MonoBehaviour
         {
             SpawnNextPickupRing();
         }
+
+        _isRunActive = false;
     }
 
     /// <summary>
@@ -331,6 +339,16 @@ public class ObstacleRingGenerator : MonoBehaviour
 
         if (_currentDifficulty < 0f)
             _currentDifficulty = 0f;
+    }
+
+    public void StartRun()
+    {
+        _isRunActive = true;
+    }
+
+    public void StopRun()
+    {
+        _isRunActive = false;
     }
 
     /// <summary>
