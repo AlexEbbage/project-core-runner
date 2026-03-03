@@ -80,6 +80,7 @@ public class Pickup : MonoBehaviour
 
         if (hudController == null)
             hudController = FindFirstObjectByType<HudController>();
+
     }
 
     private void Start()
@@ -170,6 +171,8 @@ public class Pickup : MonoBehaviour
 
         var powerupController = playerObject != null ? playerObject.GetComponent<PlayerPowerupController>() : null;
 
+        Vector3 pickupPosition = transform.position;
+
         if (pickupType == PickupType.Coin)
         {
             float pickupScore = scoreManager != null ? scoreManager.OnPickupCollected() : 0f;
@@ -193,7 +196,7 @@ public class Pickup : MonoBehaviour
         }
 
         audioManager?.PlayPickup();
-        SpawnPickupVfx();
+        SpawnPickupVfx(pickupPosition);
         StartCoroutine(PlayCollectAnimationAndDestroy());
     }
 
@@ -257,7 +260,7 @@ public class Pickup : MonoBehaviour
         }
     }
 
-    private void SpawnPickupVfx()
+    private void SpawnPickupVfx(Vector3 pickupPosition)
     {
         GameObject vfxPrefab = null;
         switch (pickupType)
@@ -276,7 +279,7 @@ public class Pickup : MonoBehaviour
         if (vfxPrefab == null)
             return;
 
-        Instantiate(vfxPrefab, transform.position, transform.rotation);
+        Instantiate(vfxPrefab, pickupPosition, transform.rotation);
     }
 
     private static float GetColliderRadius(Collider collider)
