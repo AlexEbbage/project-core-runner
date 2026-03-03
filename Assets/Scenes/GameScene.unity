@@ -7127,7 +7127,6 @@ GameObject:
   - component: {fileID: 1349098828}
   - component: {fileID: 1349098827}
   - component: {fileID: 1349098825}
-  - component: {fileID: 1349098829}
   m_Layer: 5
   m_Name: DebugPanel
   m_TagString: Untagged
