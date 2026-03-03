@@ -75,6 +75,7 @@ public class RunSpeedController : MonoBehaviour
         _nextSpeedMilestone = startingSpeed + speedMilestoneStep;
 
         ResetRunSpeed();
+        _isRunActive = false;
     }
 
     private void OnDisable()
@@ -173,6 +174,7 @@ public class RunSpeedController : MonoBehaviour
     public void ResetForNewRun()
     {
         ResetRunSpeed();
+        _isRunActive = false;
     }
 
     public void ResumeAfterContinue()

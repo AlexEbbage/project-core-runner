@@ -32,7 +32,7 @@ public class RunScoreManager : MonoBehaviour
     private float _comboValue;
     private float _lastPlayerZ;
 
-    private bool _isRunActive = true;
+    private bool _isRunActive;
     private float _powerupScoreMultiplier = 1f;
     private float _powerupPickupMultiplier = 1f;
 
@@ -74,6 +74,7 @@ public class RunScoreManager : MonoBehaviour
         }
 
         ResetRunState();
+        _isRunActive = false;
     }
 
     private void OnDisable()
@@ -183,6 +184,7 @@ public class RunScoreManager : MonoBehaviour
     public void ResetRun()
     {
         ResetRunState();
+        _isRunActive = false;
     }
 
     public void ResumeAfterContinue()
