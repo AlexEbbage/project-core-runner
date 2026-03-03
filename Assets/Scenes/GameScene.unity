@@ -2218,6 +2218,11 @@ MonoBehaviour:
   healthSlider: {fileID: 4543295508101249765}
   speedText: {fileID: 805871179}
   powerupIndicators: []
+  pickupScorePopupContainer: {fileID: 338262361}
+  pickupScorePopupPrefab: {fileID: 5867050886701244883, guid: 925f619e4299b4949b8c694a303db3a2, type: 3}
+  scoreUiAnchor: {fileID: 1190181908}
+  pickupScorePopupSpawnOffset: {x: 0, y: 80}
+  pickupScorePopupDuration: 0.7
 --- !u!114 &338262365
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12643,4 +12648,3 @@ SceneRoots:
   - {fileID: 945280082}
   - {fileID: 786114090}
   - {fileID: 302164557}
-  - {fileID: 158949736}

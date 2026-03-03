@@ -65,6 +65,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 2100000, guid: c2eb95f0589c21f47830d905684c2124, type: 2}
     - target: {fileID: 919132149155446097, guid: 551c4f3fb3d959348bf546d4fed51a3d, type: 3}
+      propertyPath: m_Icon
+      value: 
+      objectReference: {fileID: 1206586993520771344, guid: 0000000000000000d000000000000000, type: 0}
+    - target: {fileID: 919132149155446097, guid: 551c4f3fb3d959348bf546d4fed51a3d, type: 3}
       propertyPath: m_Name
       value: CoinPickup
       objectReference: {fileID: 0}
@@ -120,6 +124,9 @@ MonoBehaviour:
   pickupType: 0
   powerupType: 1
   audioManager: {fileID: 0}
+  scoreManager: {fileID: 0}
+  currencyManager: {fileID: 0}
+  hudController: {fileID: 0}
   coinPickupVfxPrefab: {fileID: 6602472304470955431, guid: aa0fdb9a759848e0ad127fadf532c5dc, type: 3}
   powerupPickupVfxPrefab: {fileID: 6602472304470955431, guid: aa0fdb9a759848e0ad127fadf532c5dc, type: 3}
   defaultPickupVfxPrefab: {fileID: 6602472304470955431, guid: aa0fdb9a759848e0ad127fadf532c5dc, type: 3}
