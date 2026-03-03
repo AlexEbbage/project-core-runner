@@ -9,6 +9,60 @@ Skills are lightweight, repeatable workflows that help contributors make consist
 - **For developers**: use skills as implementation playbooks during feature work, bug fixes, and refactors.
 - **For agents**: use skills as execution triggers to choose the right workflow, validations, and output format automatically.
 
+## Skill entry template (required)
+
+Every new or updated skill entry **must** use the template below with all headings present.
+
+```md
+## <Skill name>
+
+### Intent
+<What this skill is designed to achieve.>
+
+### Scope boundaries
+<What is in scope and explicitly out of scope.>
+
+### Preconditions
+<Required context, inputs, tools, or repository state before starting.>
+
+### Steps
+1. <Ordered action>
+2. <Ordered action>
+3. <Ordered action>
+
+### Validation checklist
+- [ ] <Check proving the change works as intended>
+- [ ] <Check proving architecture/module boundaries are respected>
+- [ ] <Check proving no regressions were introduced>
+
+### Rollback/safety notes
+- <How to back out safely if validation fails>
+- <Any guardrails, feature flags, or migration cautions>
+
+### Example invocation
+<Concrete example showing how someone should trigger/use this skill>
+```
+
+### Review gate for skill entries
+
+- Reject any skill PR/review item that omits one or more mandatory headings above.
+- Reject entries that leave mandatory sections blank or with placeholder-only content.
+- Reject entries without an actionable validation checklist.
+- Require rollback/safety notes for any skill that changes assets, scripts, or module structure.
+
+## Definition of done for skills
+
+A skill is production-ready only when all items below are true:
+
+- [ ] Uses the required template with all mandatory headings.
+- [ ] Intent and scope boundaries are specific and non-overlapping with existing skills.
+- [ ] Preconditions list concrete inputs/dependencies.
+- [ ] Steps are deterministic, ordered, and implementable.
+- [ ] Validation checklist is measurable and aligned to architectural rules.
+- [ ] Rollback/safety notes explain a safe recovery path.
+- [ ] Example invocation is realistic and maps to the documented trigger.
+- [ ] Ownership is clear in the skill catalog entry.
+
 ## Skill catalog
 
 | Name | Trigger (when to use) | Inputs required | Output artifact | Owner |
@@ -50,4 +104,3 @@ Skills are lightweight, repeatable workflows that help contributors make consist
 2. Implement under `Assets/Scripts/Core/` only when module ownership is ambiguous.
 3. Keep APIs narrow and avoid gameplay-specific assumptions.
 4. Validate at least one consuming module path.
-
