@@ -743,6 +743,37 @@ public class ObstacleRingGenerator : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Clears the next N pickup rings ahead of the player.
+    /// Used at run start/continue to match obstacle ring spawn offset.
+    /// </summary>
+    internal void ClearNextPickupRings(int startClearRings)
+    {
+        if (playerTransform == null || startClearRings <= 0)
+            return;
+
+        float playerZ = playerTransform.position.z;
+        _activePickupRings.Sort((a, b) => a.transform.position.z.CompareTo(b.transform.position.z));
+
+        int clearedCount = 0;
+
+        for (int i = 0; i < _activePickupRings.Count && clearedCount < startClearRings; i++)
+        {
+            var ring = _activePickupRings[i];
+            if (ring == null)
+                continue;
+
+            if (ring.transform.position.z < playerZ - pickupRingSpacing * 0.5f)
+                continue;
+
+            ReleasePickupRing(ring);
+            _activePickupRings[i] = null;
+            clearedCount++;
+        }
+
+        _activePickupRings.RemoveAll(ring => ring == null);
+    }
+
     #endregion
 
     #region Pickup Rings (Placement & Pooling)

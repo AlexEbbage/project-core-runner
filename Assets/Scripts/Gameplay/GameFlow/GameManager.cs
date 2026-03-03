@@ -636,6 +636,7 @@ public class GameManager : MonoBehaviour
         });
 
         obstacleRingGenerator.DissolveNextRings(startClearRings, dissolveDuration);
+        obstacleRingGenerator.ClearNextPickupRings(startClearRings);
         playerController?.RefreshHandlingFromProfile();
         playerController?.StartRun();
 
@@ -657,6 +658,7 @@ public class GameManager : MonoBehaviour
         _gameTimerEnabled = false;
 
         obstacleRingGenerator.DissolveNextRings(startClearRings, dissolveDuration);
+        obstacleRingGenerator.ClearNextPickupRings(startClearRings);
         playerController?.RefreshHandlingFromProfile();
         playerController?.StartRun();
         playerVisual.SetVisible(true);
