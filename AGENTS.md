@@ -1,29 +1,26 @@
 # AGENTS.md
 
-## Purpose and Architectural Baseline
+## Purpose and Architectural Direction
 
-This repository hosts the **project-core-runner** Unity project.
+This repository hosts the project-core-runner Unity project.
 
-The project follows a **Clean, modular, Unity-first architecture**.
+The project follows a **Clean, small-project modular architecture** optimized for clarity and maintainability.
 
-This is NOT a layered DDD structure.
-This is a **feature-oriented modular structure** designed for:
+Primary top-level structure target:
 
-- Easy feature isolation
-- Low coupling
-- High replaceability
-- Fast iteration
-- Clear ownership per module
+Assets/Scripts/
+- Gameplay/
+- UI/
+- Services/
+- Core/ (optional, minimal shared utilities)
+
+This structure keeps the project simple while maintaining strong modular boundaries.
 
 ---
 
-## Primary Structure
+## Transitional Architecture Policy
 
-All runtime code lives under:
-
-Assets/Scripts/
-
-Top-level modules:
+The current repository may contain legacy top-level folders such as:
 
 - camera/
 - config/
@@ -39,127 +36,145 @@ Top-level modules:
 - settings/
 - ui/
 
-Each folder represents a **self-contained functional module**.
+These will be **gradually refactored** into the new structure.
 
-Modules should not tightly depend on internal implementation details of other modules.
+### Migration Rule
 
-Cross-module communication should happen via:
-- Events
-- Interfaces
-- Clearly defined service APIs
+If a change is made to a module that does not align with:
 
----
+- Gameplay/
+- UI/
+- Services/
+- Core/
 
-## Gameplay Module Structure
+Then that module should be relocated as part of the same change,
+provided the relocation is scoped and safe.
 
-Gameplay is further modularised:
+Examples:
 
-Assets/Scripts/gameplay/
+- localization/ → move under Core/ or Services/ (depending on responsibility).
+- monetisation/ → move under Services/.
+- scenemanagement/ → move under Core/ or Gameplay/ (based on orchestration role).
+- camera/ → move under Gameplay/ if gameplay-driven.
+- settings/ → move under Core/ or UI/ depending on usage.
 
-Submodules:
+Do not perform broad, unrelated migration work.
+Only migrate the module being actively modified.
 
-- environment/
-- gameflow/
-- obstacles/
-- pickups/
-- player/
-- powerups/
-- vfx/
-
-Each submodule should:
-- Own its logic
-- Avoid reaching into sibling submodules directly
-- Communicate via gameflow or defined contracts
-
-Gameflow acts as the coordinator/orchestrator.
+This ensures gradual convergence without disruptive large-scale refactors.
 
 ---
 
-## Services Module Structure
+## Architectural Rules
 
-Assets/Scripts/services/
+### 1. Gameplay/
 
-Submodules:
+Contains all runtime gameplay systems:
 
-- ads/
-- analytics/
-- audio/
-- notifications/
+- Environment
+- Gameflow
+- Obstacles
+- Pickups
+- Player
+- Powerups
+- Gameplay VFX
 
 Rules:
-- Services expose clear public APIs.
-- Other modules depend only on service interfaces, not internal implementations.
+- Gameflow acts as gameplay orchestrator.
+- Submodules must not reach into sibling internals.
+- Communication via events or defined interfaces.
+- No gameplay logic inside UI.
+
+---
+
+### 2. UI/
+
+Contains all UI logic:
+
+- HUD
+- Screens
+- Menus
+- Popups
+
+Rules:
+- UI reacts to gameplay state.
+- UI must not directly control gameplay systems.
+- UI communicates via events or service APIs.
+
+---
+
+### 3. Services/
+
+Contains external-facing and platform services:
+
+- Ads
+- Analytics
+- Audio
+- Notifications
+- Monetisation
+
+Rules:
+- Expose clear public APIs.
 - Avoid service-to-service tight coupling.
-- No hidden global singletons unless explicitly justified.
+- No hidden global state unless justified.
+- Prefer interface-driven access when reasonable.
 
 ---
 
-## Clean Unity Guidelines (Project-Specific)
+### 4. Core/ (Optional)
 
-- Prefer modular feature folders over horizontal layering.
-- Avoid creating artificial Core/Domain layers.
-- MonoBehaviours are acceptable within modules.
-- Keep classes small and focused.
-- Prefer events over polling.
-- Prefer composition over inheritance.
-- Use ScriptableObjects for configuration where useful.
-- Avoid cross-module circular dependencies.
-- Keep modules replaceable.
+Contains small, shared cross-cutting utilities:
 
-Do not introduce over-engineered abstraction.
+- Localization
+- Scene management
+- Shared configuration
+- Lightweight helpers
 
----
-
-## Allowed Actions
-
-- Make minimal, focused edits.
-- Modify project-owned code inside Assets/Scripts/.
-- Improve modular boundaries when directly related to the task.
-- Add small supporting interfaces/events within a module.
-- Add documentation or clarifying comments.
-- Run lightweight validation already supported in the repo.
+Rules:
+- Keep minimal.
+- Avoid turning Core into a dumping ground.
+- No gameplay-specific logic here.
 
 ---
 
-## Restricted Actions
+## Module Boundary Enforcement
 
-- Do not install packages or SDKs unless explicitly requested.
-- Do not restructure top-level module folders without approval.
-- Do not introduce large architectural shifts.
-- Do not modify vendor or plugin-managed folders.
-- Do not introduce secrets or machine-specific paths.
+- Do not access another module’s internal implementation.
+- Communicate across modules via:
+  - Interfaces
+  - Events
+  - Explicit public APIs
+- Avoid circular dependencies.
+- Prefer additive, non-breaking changes.
+
+---
+
+## Refactor Philosophy
+
+- No large, sweeping refactors unless explicitly requested.
+- Refactor opportunistically when touching a module.
+- Keep migrations scoped to the area being modified.
+- Maintain scene/prefab integrity during moves.
 
 ---
 
 ## Validation Expectations
 
-- Validate only the changed module.
-- Avoid full-project scans unless necessary.
-- If Unity Editor validation is unavailable:
-  - State what was validated.
-  - State limitations clearly.
+- Validate only the module being changed.
+- Null-guard serialized fields.
+- Avoid breaking inspector bindings.
+- Verify moved namespaces and references update correctly.
+- Ensure no circular dependencies introduced.
 
 ---
 
-## Code Change Principles
-
-- One logical concern per change.
-- Avoid mixing refactor and feature work.
-- Keep module boundaries clean.
-- Avoid global static state unless justified.
-- Guard serialized fields against null.
-- Keep public APIs minimal and intentional.
-
----
-
-## Commit and PR Standards
+## Commit Standards
 
 Commit format:
 
 <type>: <short summary>
 
-Where <type> is:
-
+Types:
 - feat
 - fix
 - refactor
@@ -168,19 +183,7 @@ Where <type> is:
 - chore
 
 PR must include:
-
 - What changed
-- Why it changed
+- Why
 - Validation performed
-- Limitations or follow-ups
-
-Keep PRs single-purpose and scoped.
-
----
-
-## Performance Guardrails
-
-- Use rg for search instead of broad recursive scans.
-- Avoid repo-wide find/ls unless necessary.
-- Limit command output to relevant paths.
-- Keep validation targeted to the changed module.
+- Any migration steps required
