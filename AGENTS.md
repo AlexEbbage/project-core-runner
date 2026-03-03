@@ -168,6 +168,11 @@ Rules:
 
 ---
 
+
+## Documentation
+
+- [Skills catalog](./SKILLS.md)
+
 ## Commit Standards
 
 Commit format:

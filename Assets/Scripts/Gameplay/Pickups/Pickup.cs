@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -32,6 +33,16 @@ public class Pickup : MonoBehaviour
     [SerializeField] private float yRotationAmplitude = 25f;
     [SerializeField] private float yRotationFrequency = 0.1f;
 
+    [Header("Collect Animation")]
+    [SerializeField] private float collectAnimationDuration = 0.35f;
+    [SerializeField] private Vector3 collectMoveOffset = new Vector3(0f, 1.2f, 0f);
+    [SerializeField] private AnimationCurve collectMoveCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+    [SerializeField] private AnimationCurve collectScaleCurve = new AnimationCurve(
+        new Keyframe(0f, 1f),
+        new Keyframe(0.25f, 1.18f),
+        new Keyframe(1f, 0f));
+    [SerializeField] private AnimationCurve collectFadeCurve = AnimationCurve.EaseInOut(0f, 1f, 1f, 0f);
+
     private Vector3 _baseLocalPosition;
     private Quaternion _baseLocalRotation;
     private float _bobPhaseOffset;
@@ -39,6 +50,8 @@ public class Pickup : MonoBehaviour
     private Transform _playerTransform;
     private float _baseMagnetRadius = 0.5f;
     private bool _isCollected;
+    private Renderer[] _pickupRenderers;
+    private MaterialPropertyBlock _propertyBlock;
 
     public static float MagnetRadiusMultiplier { get; private set; } = 1f;
 
@@ -47,6 +60,8 @@ public class Pickup : MonoBehaviour
         _pickupCollider = GetComponent<Collider>();
         _pickupCollider.isTrigger = true;
         _baseMagnetRadius = GetColliderRadius(_pickupCollider);
+        _pickupRenderers = GetComponentsInChildren<Renderer>();
+        _propertyBlock = new MaterialPropertyBlock();
 
         var playerController = FindFirstObjectByType<PlayerController>();
         if (playerController != null)
@@ -88,6 +103,9 @@ public class Pickup : MonoBehaviour
 
     private void Update()
     {
+        if (_isCollected)
+            return;
+
         float bobOffset = Mathf.Sin(Time.time * bobFrequency + _bobPhaseOffset) * bobAmplitude;
         transform.localPosition = _baseLocalPosition + Vector3.up * bobOffset;
 
@@ -147,6 +165,8 @@ public class Pickup : MonoBehaviour
             return;
 
         _isCollected = true;
+        if (_pickupCollider != null)
+            _pickupCollider.enabled = false;
 
         var powerupController = playerObject != null ? playerObject.GetComponent<PlayerPowerupController>() : null;
 
@@ -174,7 +194,67 @@ public class Pickup : MonoBehaviour
 
         audioManager?.PlayPickup();
         SpawnPickupVfx();
+        StartCoroutine(PlayCollectAnimationAndDestroy());
+    }
+
+    private IEnumerator PlayCollectAnimationAndDestroy()
+    {
+        Vector3 startPosition = transform.localPosition;
+        Quaternion startRotation = transform.localRotation;
+        Vector3 startScale = transform.localScale;
+
+        float duration = Mathf.Max(collectAnimationDuration, 0.01f);
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float normalizedTime = Mathf.Clamp01(elapsed / duration);
+
+            float moveT = collectMoveCurve.Evaluate(normalizedTime);
+            float scaleT = collectScaleCurve.Evaluate(normalizedTime);
+            float alpha = Mathf.Clamp01(collectFadeCurve.Evaluate(normalizedTime));
+
+            transform.localPosition = startPosition + collectMoveOffset * moveT;
+            transform.localScale = startScale * Mathf.Max(scaleT, 0f);
+            transform.localRotation = startRotation;
+
+            ApplyRendererAlpha(alpha);
+            yield return null;
+        }
+
         Destroy(gameObject);
+    }
+
+    private void ApplyRendererAlpha(float alpha)
+    {
+        if (_pickupRenderers == null)
+            return;
+
+        for (int i = 0; i < _pickupRenderers.Length; i++)
+        {
+            Renderer currentRenderer = _pickupRenderers[i];
+            if (currentRenderer == null)
+                continue;
+
+            currentRenderer.GetPropertyBlock(_propertyBlock);
+
+            if (currentRenderer.sharedMaterial != null && currentRenderer.sharedMaterial.HasProperty("_BaseColor"))
+            {
+                Color baseColor = currentRenderer.sharedMaterial.GetColor("_BaseColor");
+                baseColor.a = alpha;
+                _propertyBlock.SetColor("_BaseColor", baseColor);
+            }
+
+            if (currentRenderer.sharedMaterial != null && currentRenderer.sharedMaterial.HasProperty("_Color"))
+            {
+                Color color = currentRenderer.sharedMaterial.GetColor("_Color");
+                color.a = alpha;
+                _propertyBlock.SetColor("_Color", color);
+            }
+
+            currentRenderer.SetPropertyBlock(_propertyBlock);
+        }
     }
 
     private void SpawnPickupVfx()
