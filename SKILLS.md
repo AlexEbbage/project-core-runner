@@ -262,3 +262,75 @@ Every skill catalog entry must include and maintain:
 3. Use events/interfaces/public APIs for all cross-module communication.
 4. If touching a legacy folder, apply the scoped migration note in the same change when safe.
 5. Validate only impacted modules and confirm no boundary/circular-dependency violations.
+
+## Android-only Runtime Guardrails
+
+### Intent
+Implement Android-specific runtime behavior safely by isolating platform API access behind compile-time guards, runtime checks, and deterministic fallbacks so Editor and non-Android builds never crash.
+
+### Scope boundaries
+In scope:
+- Runtime code paths that call Android platform APIs, JNI bridges, or Android SDK adapters.
+- Service adapters that use external platform SDKs from `Assets/Scripts/Services/`.
+- Feedback adapter behavior in `Assets/Scripts/Feedback/VibrationController.cs`.
+
+Out of scope:
+- iOS/native Objective-C integrations.
+- Broad architectural migrations unrelated to touched Android-facing modules.
+- UI-only behavior that does not invoke platform APIs.
+
+### Preconditions
+- Identify each Android-only call site in touched files.
+- Confirm a safe no-op or alternate behavior for Editor and non-Android runtime.
+- Confirm minimum Android API level assumptions for each feature.
+- Have a logging category/tag ready for platform bridge failures.
+
+### Steps
+1. Wrap Android API access with preprocessor directives and runtime guards.
+   - Compile gate all Android bridge code with `#if UNITY_ANDROID && !UNITY_EDITOR`.
+   - Inside the gated block, guard runtime assumptions (`Application.platform == RuntimePlatform.Android`, non-null activity/context, non-empty class/method names).
+   - Keep Android-specific code in a small adapter method so consumers call a platform-agnostic public API.
+2. Define fallback behavior for Editor and non-Android platforms.
+   - Return success/failure values explicitly (avoid implicit exceptions or null propagation).
+   - Implement no-op behavior for unsupported platforms when side effects are optional (for example vibration/haptics).
+   - Provide deterministic fallback outputs for mandatory flows (for example cached/default value, disabled state, or feature flag off path).
+3. Standardize JNI/Java bridge error handling and logging.
+   - Catch `AndroidJavaException` at the adapter boundary and prevent propagation into gameplay/UI callers.
+   - Log one concise error with action context, class/method, and failure reason.
+   - Log only once per action path unless state changes; avoid per-frame spam.
+   - Include actionable remediation hints when context/activity/class lookup fails.
+4. Apply target-location conventions and examples.
+   - For `Assets/Scripts/Feedback/VibrationController.cs`, expose one public vibration API and route Android calls through a private guarded method.
+   - For service adapters (ads, analytics, notifications, monetisation, or other SDK wrappers), keep platform calls in adapter internals and expose interface/public API to callers.
+   - Do not let Gameplay/UI modules call JNI/`AndroidJavaObject` directly.
+5. Run the Android runtime safety checklist before completion.
+   - Validate activity/context acquisition path (null-safe and guarded).
+   - Validate API-level support checks before method invocation.
+   - Validate behavior when app is backgrounded/resumed if the bridge depends on current activity.
+   - Validate fallback behavior in Editor and non-Android play paths.
+
+### Validation checklist
+- [ ] Every Android API/JNI call is inside `#if UNITY_ANDROID && !UNITY_EDITOR`.
+- [ ] Runtime checks prevent using missing activity/context/class/method references.
+- [ ] Android bridge failures are caught, logged once per action, and do not crash callers.
+- [ ] Editor and non-Android flows are deterministic (no-op or explicit fallback).
+- [ ] Minimum API-level checks exist for Android features that are not universally supported.
+- [ ] Module boundaries are preserved (Gameplay/UI consume only public APIs from Feedback/Services adapters).
+
+### Rollback/safety notes
+- If runtime regressions appear, disable Android call sites behind a feature flag and fall back to no-op while preserving public API contracts.
+- Revert only the touched adapter/module path; avoid broad SDK refactors during incident mitigation.
+- Keep logs at warning/error level only for failure paths to reduce runtime noise.
+- If activity/context instability is observed, short-circuit on null and retry only on next explicit user action.
+
+### Example invocation
+"Use the Android-only Runtime Guardrails skill to update `Assets/Scripts/Feedback/VibrationController.cs` so vibration works on Android via JNI, gracefully no-ops in Editor/iOS, and logs actionable errors when activity/context or Java calls fail. Apply the same adapter pattern to touched service SDK wrappers under `Assets/Scripts/Services/`."
+
+### Skill owner
+Services Team (with Feedback module maintainers)
+
+### Last-reviewed date
+2026-03-03
+
+### Review cadence
+Every sprint
