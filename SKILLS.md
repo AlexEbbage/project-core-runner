@@ -190,6 +190,89 @@ Every skill catalog entry must include and maintain:
 - Create tight service-to-service coupling.
 - Access Gameplay/UI internals from services.
 
+## Monetization + Analytics Service Change Standard
+
+### Intent
+Standardize how contributors modify monetization and analytics services so ad, purchase, and analytics integrations remain stable, testable, and module-boundary compliant.
+
+### Scope boundaries
+In scope:
+- Changes to rewarded ads, remove-ads purchase handling, and analytics dispatch paths.
+- Integration validation and regression checks for those three service areas.
+- Service-facing notes about SDK configuration locations.
+
+Out of scope:
+- Broad gameplay/UI refactors unrelated to service integration.
+- Replacing ad/analytics/IAP providers end-to-end.
+- Unrelated migration of legacy folders not touched by the service change.
+
+### Preconditions
+- Identify impacted service paths and call sites before editing:
+  - `Assets/Scripts/Services/Ads/LevelPlayRewardedAdsService.cs`
+  - `Assets/Scripts/Monetisation/RemoveAdsIAPManager.cs`
+  - `Assets/Scripts/Services/Analytics/FirebaseAnalyticsService.cs`
+- Confirm SDK settings assets are available and mapped to the target environment (for example `Assets/LevelPlay/Resources/LevelPlayMediationSettings.asset`).
+- Confirm the consumer path uses only service public APIs/events (no direct access to private fields or SDK wrappers).
+
+### Steps
+1. Build an integration map before making changes:
+   - Document entry points, initialization order, public API surface, and event/callback outputs for each service file.
+   - Identify all UI callers and ensure they consume only public service APIs/events.
+2. Implement service changes with lifecycle safety:
+   - Validate initialization path for each service.
+   - Verify callback registration/unregistration lifecycle symmetry.
+   - Add or maintain null/ready-state guards for SDK objects and async responses.
+   - Preserve platform guards (`UNITY_ANDROID`) and defined editor fallback behavior.
+3. Run module-scoped validation for each service:
+   - Rewarded ads: initialization, load/show callbacks, reward callback integrity, and unsubscribe behavior on disable/destroy.
+   - Remove-ads IAP: purchase initialization, purchase success/failure callback handling, and restoration/no-ads state propagation.
+   - Firebase analytics: service initialization, event dispatch path, and no-op/fallback behavior when SDK is unavailable.
+4. Execute regression checklist and document evidence:
+   - Rewarded flow should still grant rewards exactly once on successful completion.
+   - Remove-ads purchase flow should still disable ads after purchase/restore and persist expected state.
+   - Analytics events should still emit expected names/parameters without throwing in editor or unsupported platforms.
+5. Record configuration notes and migration impact:
+   - Note touched SDK settings locations (for example `Assets/LevelPlay/Resources/LevelPlayMediationSettings.asset`) and any required environment value changes.
+   - If changes touched a legacy monetisation path, include scoped migration notes for moving that touched module under `Assets/Scripts/Services/` when safe.
+
+### Validation checklist
+- [ ] **Integration map complete:** all touched entry points and callbacks documented for ads, IAP, and analytics services.
+- [ ] **Initialization verified:** each service has a deterministic initialization path with safe re-entry behavior.
+- [ ] **Lifecycle safe:** callback subscriptions are paired with unsubscriptions in teardown paths.
+- [ ] **Ready-state safe:** null checks and SDK-ready guards prevent invalid calls.
+- [ ] **Platform behavior verified:** `UNITY_ANDROID` guarded paths and editor behavior are explicitly validated.
+- [ ] **UI decoupling maintained:** UI only uses service public APIs/events and does not touch service internals.
+- [ ] **Rewarded regression pass:** reward granted once, failure path does not grant reward, and ad availability state recovers.
+- [ ] **Remove-ads regression pass:** purchase/restore flow updates ad-disable state and no lingering ad requests remain.
+- [ ] **Analytics regression pass:** required events dispatch with expected payload and graceful fallback when provider is unavailable.
+
+### Rollback/safety notes
+- Revert touched service scripts and settings assets together if lifecycle or initialization regressions appear to avoid mixed SDK state.
+- Keep provider keys and mediation settings in versioned assets; avoid temporary local-only config edits.
+- If runtime validation is blocked, ship only with static verification plus a documented follow-up runtime checklist.
+
+### Example invocation
+"Use the Monetization + Analytics Service Change Standard skill to update rewarded ad completion handling and ensure remove-ads + analytics flows keep lifecycle-safe callbacks and platform guards."
+
+**Skill owner:** Services Team
+**Last-reviewed date:** 2026-03-03
+**Review cadence:** Monthly
+
+#### UI decoupling checklist (service boundaries)
+- [ ] UI triggers rewarded ads only through `LevelPlayRewardedAdsService` public methods/events.
+- [ ] UI reads remove-ads state only through `RemoveAdsIAPManager` public API/event contract.
+- [ ] UI emits analytics only through `FirebaseAnalyticsService` (or its interface) public methods.
+- [ ] UI does not reference SDK-specific classes, enums, or callback delegates directly.
+- [ ] Cross-module communication remains event/API-driven with no reflection/singleton internals access.
+
+#### Regression checklist (focused flows)
+- [ ] Rewarded ad flow: load → show → completion callback grants reward once.
+- [ ] Rewarded ad cancellation/failure: no reward granted; availability state/event updates correctly.
+- [ ] Remove-ads purchase flow: successful purchase disables ad requests and persists state.
+- [ ] Remove-ads restore flow: restored entitlement disables ads consistently across app relaunch.
+- [ ] Analytics dispatch: key monetization events (reward started/completed/failed, remove-ads purchased/restored) are emitted with expected parameters.
+- [ ] Editor behavior: analytics/ads paths fail gracefully or no-op without hard exceptions.
+
 ### Core
 
 | Name | Trigger (when to use) | Inputs required | Output artifact | Owner |
