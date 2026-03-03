@@ -255,6 +255,83 @@ Every skill catalog entry must include and maintain:
 - Keep migration scoped: move files, update namespaces/references, preserve scene/prefab integrity, and verify no circular dependencies.
 - Document what moved, why it moved, and any required follow-up in the PR notes.
 
+## Legacy Module Scoped Migration Guard
+
+### Intent
+Provide a deterministic workflow that enforces scoped migration whenever a legacy module under `Assets/Scripts` is edited, while preserving module boundaries and Unity asset integrity.
+
+### Scope boundaries
+In scope:
+- Changes that touch scripts/assets in legacy module paths under `Assets/Scripts`.
+- Scoped relocation of only the touched legacy module into `Assets/Scripts/Gameplay`, `Assets/Scripts/UI`, `Assets/Scripts/Services`, or `Assets/Scripts/Core`.
+- Namespace/reference updates and module-scoped verification.
+
+Out of scope:
+- Broad repo-wide restructures unrelated to the touched module.
+- Refactors across untouched legacy folders.
+- Behavioral rewrites beyond what is required to keep migration safe and compiling.
+
+### Preconditions
+- Identify each touched legacy folder (for example: `camera/`, `config/`, `debug/`, `feedback/`, `fx/`, `gameplay/`, `localization/`, `meta/`, `monetisation/`, `scenemanagement/`, `services/`, `settings/`, `ui/`).
+- Choose a target module destination using the mapping rules below:
+  - `camera/` → `Gameplay/` (when gameplay-driven).
+  - `gameplay/` and gameplay `fx/` → `Gameplay/`.
+  - `ui/` and presentation `feedback/` → `UI/`.
+  - `services/` and `monetisation/` → `Services/`.
+  - `localization/`, `scenemanagement/`, shared `config/`, shared `settings/`, and lightweight `meta/` utilities → `Core/` (or `Services/`/`UI/` only when responsibility is clearly service/presentation specific).
+  - `debug/` utilities → `Core/` unless tightly coupled to one destination module.
+- Confirm migration is safe and scoped to only currently touched modules.
+
+### Steps
+1. **Plan scoped relocation**
+   - Record source→target moves for touched legacy paths only.
+   - Keep directory depth and file naming stable where possible to reduce reference churn.
+2. **Perform safe move playbook**
+   - Move files and `.meta` files together to preserve Unity GUIDs.
+   - Update namespaces to match the new module path.
+   - Update all affected `using` directives, type references, asmdef references, and public API call sites.
+   - Avoid changing serialized field names/types unless required; if required, add migration-safe attributes (`FormerlySerializedAs`) where applicable.
+   - Do not delete or rewrite unrelated prefabs/scenes.
+3. **Enforce boundary rules**
+   - Remove any sibling-internal access introduced by the move.
+   - Route cross-module communication through interfaces, events, or explicit public APIs.
+   - Check for new circular dependencies before finalizing.
+4. **Prepare PR migration summary**
+   - Add a dedicated section named `Migration steps performed` using this template:
+
+```md
+### Migration steps performed
+- Legacy module touched: `<path>`
+- Destination chosen: `<Gameplay|UI|Services|Core>/<subpath>`
+- Files moved: `<source>` → `<target>`
+- Namespace/reference updates: `<summary>`
+- Inspector/prefab/scene binding safeguards: `<what was preserved/checked>`
+- Follow-up required: `<none or explicit item>`
+```
+
+5. **Run lightweight touched-module verification**
+   - Compile-check only moved/edited scripts.
+   - Verify namespace and reference resolution for touched modules.
+   - Validate serialized field null-guards in changed components.
+   - Smoke-check only impacted scenes/prefabs for binding continuity.
+   - Document any blocked runtime verification with exact reason and next command for maintainers.
+
+### Validation checklist
+- [ ] Touched legacy module(s) were migrated to `Gameplay/`, `UI/`, `Services/`, or `Core/` when safe.
+- [ ] Files + `.meta` moved together and namespaces/usings/references were updated.
+- [ ] Prefab/scene inspector bindings were preserved (or explicitly repaired and documented).
+- [ ] No sibling-internal module access exists after migration.
+- [ ] Cross-module communication uses events/interfaces/public APIs.
+- [ ] Verification was limited to touched modules and results were recorded.
+
+### Rollback/safety notes
+- If compilation or bindings fail, revert the move commit, restore original paths with matching `.meta` files, and re-apply migration in smaller scoped batches.
+- Keep each legacy-module migration isolated so rollback can be done per module without affecting unrelated systems.
+- Avoid simultaneous asset renames plus behavioral rewrites in one step; perform relocation first, then behavior changes.
+
+### Example invocation
+"Use **Legacy Module Scoped Migration Guard** while editing `Assets/Scripts/localization/LocaleProvider.cs`; move it under `Assets/Scripts/Core/Localization/`, update namespaces/usings, validate the touched localization flow, and include the `Migration steps performed` section in the PR."
+
 ## Quick start
 
 1. Pick the relevant module group (Gameplay, UI, Services, Core, Cross-cutting).
