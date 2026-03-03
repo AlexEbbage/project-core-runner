@@ -943,17 +943,13 @@ public class ObstacleRingGenerator : MonoBehaviour
             if (IsPickupBlocked(worldPos))
                 continue;
 
-            Vector3 localPos = ring.transform.InverseTransformPoint(worldPos);
-
             var pickup = GetPickupInstance();
             if (pickup == null)
                 continue;
 
-            pickup.transform.SetParent(ring.transform, false);
-            pickup.transform.localPosition = localPos;
-
-            Vector3 upDir = localPos.sqrMagnitude > 0.0001f ? -localPos.normalized : Vector3.up;
-            pickup.transform.localRotation = Quaternion.LookRotation(Vector3.forward, upDir);
+            pickup.transform.SetParent(spawn, false);
+            pickup.transform.localPosition = Vector3.zero;
+            pickup.transform.localRotation = Quaternion.identity;
 
             bool spawnPowerup = ShouldSpawnPowerupInChain() && Random.value <= powerupSpawnChance;
             if (spawnPowerup)
@@ -1093,17 +1089,13 @@ public class ObstacleRingGenerator : MonoBehaviour
             if (IsPickupBlocked(worldPos))
                 continue;
 
-            Vector3 localPos = parent.InverseTransformPoint(worldPos);
-
             var pickup = GetPickupInstance();
             if (pickup == null)
                 return false;
 
-            pickup.transform.SetParent(parent, false);
-            pickup.transform.localPosition = localPos;
-
-            Vector3 upDir = localPos.sqrMagnitude > 0.0001f ? -localPos.normalized : Vector3.up;
-            pickup.transform.localRotation = Quaternion.LookRotation(Vector3.forward, upDir);
+            pickup.transform.SetParent(spawn, false);
+            pickup.transform.localPosition = Vector3.zero;
+            pickup.transform.localRotation = Quaternion.identity;
 
             bool spawnPowerup = allowPowerup && Random.value <= powerupSpawnChance;
             if (spawnPowerup)
