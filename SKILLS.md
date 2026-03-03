@@ -63,6 +63,29 @@ A skill is production-ready only when all items below are true:
 - [ ] Example invocation is realistic and maps to the documented trigger.
 - [ ] Ownership is clear in the skill catalog entry.
 
+## Skill maintenance policy
+
+Every skill catalog entry must include and maintain:
+
+- **Skill owner**: named team or person accountable for correctness and updates.
+- **Last-reviewed date**: date of the most recent explicit review.
+- **Review cadence**: expected review frequency (for example, every sprint or monthly).
+
+### Staleness policy
+
+- A skill is considered **stale** when it is not reviewed within its declared cadence.
+- Stale skills must be marked with a deprecation note and replacement guidance (if available).
+- Deprecated skills should include:
+  - Date deprecated.
+  - Reason for deprecation.
+  - Replacement skill/reference, or explicit archival status when no replacement exists.
+- Remove or archive obsolete skills only after replacement guidance has been documented to avoid workflow gaps.
+
+### Architecture/process change requirement
+
+- Any PR that changes project architecture, module boundaries, or contribution process **must update affected skills in the same PR**.
+- Reviews should block architecture/process PRs when related skill entries are missing required updates.
+
 ## Skill catalog (grouped by module)
 
 ### Gameplay
