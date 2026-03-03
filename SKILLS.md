@@ -262,3 +262,109 @@ Every skill catalog entry must include and maintain:
 3. Use events/interfaces/public APIs for all cross-module communication.
 4. If touching a legacy folder, apply the scoped migration note in the same change when safe.
 5. Validate only impacted modules and confirm no boundary/circular-dependency violations.
+
+### Release engineering
+
+| Name | Trigger (when to use) | Inputs required | Output artifact | Owner |
+|---|---|---|---|---|
+| Android + PC Pre-release Validation | Preparing Android (AAB/APK) and PC builds for release candidate sign-off, PR approval, or store submission readiness checks. | Target Unity branch/commit, expected `bundleVersion`, expected Android version code, target package identifier, keystore/alias credentials source, and expected build output paths. | Completed pre-release checklist for Android and PC attached to PR/release notes, including pass/fail status and follow-up actions. | Release Engineering |
+
+**Metadata**
+- **Skill owner**: Release Engineering
+- **Last-reviewed date**: 2026-03-03
+- **Review cadence**: Every release sprint
+
+## Android + PC Pre-release Validation
+
+### Intent
+Provide a deterministic pre-release validation workflow for Android and PC outputs so versioning, signing readiness, artifact correctness, and store-facing constraints are verified before merge and release.
+
+### Scope boundaries
+In scope: Unity Player Settings and build-configuration checks for Android and Standalone/PC outputs, verification of generated artifacts, and creation of a release-ready checklist section for PRs/release notes.
+
+Out of scope: gameplay QA, monetization/business validation, live-ops content review, and post-publish monitoring.
+
+### Preconditions
+- Unity project is in a releasable state and target branch is up to date.
+- Planned release values are known:
+  - `bundleVersion` (semantic/app version string).
+  - `AndroidBundleVersionCode` (monotonic integer for Android store builds).
+  - Expected package identifier (for example `com.company.game`).
+- Access to in-project keystore path and alias name intended for release signing.
+- Build commands/profile for both Android and PC are available.
+- Output directory for build artifacts is known and writable.
+
+### Steps
+1. **Run version bump protocol before building.**
+   - Open version settings and set `bundleVersion` to the planned release version.
+   - Set `AndroidBundleVersionCode` to the planned monotonically increasing integer.
+   - Record old/new values in the PR draft so reviewers can verify version progression.
+2. **Run signing readiness checks for Android release.**
+   - Confirm Custom Keystore is enabled for release builds.
+   - Verify keystore file exists in the expected in-project location and is not missing from CI/runtime context.
+   - Verify keystore alias is configured and non-empty.
+   - Verify keystore password and alias password are resolvable from the approved secret source (never commit secrets).
+3. **Generate Android and PC artifacts using release-intended configuration.**
+   - Build Android target artifact(s) (AAB/APK as required by release lane).
+   - Build PC target artifact (Windows/Mac/Linux as applicable for this release).
+4. **Run build artifact verification checklist.**
+   - Verify each artifact reports the correct application identifier/package name.
+   - Verify architecture targets match release expectations (for example ARM64 for Android, x86_64 for PC).
+   - Verify development flags are disabled for release candidates (`Development Build`, script debugging, and deep profiling off unless explicitly required).
+   - Verify artifact filenames and output paths match release naming conventions.
+5. **Run store-facing sanity checks (Android-focused, plus shared naming checks).**
+   - Validate Android minimum SDK version matches store policy and project release baseline.
+   - Validate install location setting matches expected store policy/product decision.
+   - Validate package name is final release package and consistent with store listing.
+6. **Publish final release checklist for PR/release notes.**
+   - Add the checklist section below to the PR description or release notes.
+   - Mark each line pass/fail/blocked and include evidence (file path, screenshot, or command output).
+
+### Validation checklist
+- [ ] `bundleVersion` updated to the intended release version and documented.
+- [ ] `AndroidBundleVersionCode` incremented correctly and documented.
+- [ ] Android signing readiness confirmed: keystore file present, alias configured, secret source verified.
+- [ ] Android artifact identifier and architecture validated against release target.
+- [ ] PC artifact identifier/build target/architecture validated against release target.
+- [ ] Development-only build flags are disabled for release artifacts.
+- [ ] Store-facing values validated (min SDK, install location, package name).
+- [ ] Final checklist posted in PR/release notes with pass/fail status and follow-ups.
+
+### Rollback/safety notes
+- If any validation item fails, stop release promotion and revert Player Settings changes to the last known-good release commit.
+- Never commit keystore passwords or alias passwords; keep secret injection in CI or local secure secret storage only.
+- If package identifier/version code is wrong after build, correct settings and rebuild all affected artifacts rather than patching metadata manually.
+
+### Example invocation
+Use **Android + PC Pre-release Validation** before creating a release PR: "Run the pre-release validation skill for release `1.9.0`, set `AndroidBundleVersionCode` to `190`, verify signing and artifacts, and paste the final checklist into the PR description."
+
+### Final release checklist (copy/paste for PR descriptions and release notes)
+```md
+## Pre-release Validation (Android + PC)
+
+### Versioning
+- [ ] `bundleVersion` = `<value>`
+- [ ] `AndroidBundleVersionCode` = `<value>` (increment verified)
+
+### Signing readiness (Android)
+- [ ] Custom keystore enabled
+- [ ] Keystore file present at `<path>`
+- [ ] Alias configured (`<alias>`)
+- [ ] Keystore + alias passwords resolved from approved secret source
+
+### Build artifact verification
+- [ ] Android artifact produced: `<AAB/APK path>`
+- [ ] PC artifact produced: `<output path>`
+- [ ] Identifier/package verified: `<identifier>`
+- [ ] Architecture verified: `<architecture>`
+- [ ] Development flags OFF for release artifact(s)
+
+### Store-facing sanity
+- [ ] Min SDK validated: `<value>`
+- [ ] Install location validated: `<value>`
+- [ ] Package name matches store listing
+
+### Outcome
+- [ ] Ready to release
+- [ ] Blocked (reason + follow-up owner)
+```
