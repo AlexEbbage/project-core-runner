@@ -192,7 +192,9 @@ public class HudController : MonoBehaviour
         float elapsed = 0f;
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime;
+            // Continue animating even when gameplay is paused/timeScale is set to 0
+            // (for example, right after a crash/game over).
+            elapsed += Time.unscaledDeltaTime;
             float t = Mathf.Clamp01(elapsed / duration);
             float easedT = Mathf.SmoothStep(0f, 1f, t);
 
