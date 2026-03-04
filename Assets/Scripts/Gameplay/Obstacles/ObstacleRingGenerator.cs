@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -61,7 +62,8 @@ public class ObstacleRingGenerator : MonoBehaviour
     [SerializeField] private float difficultyForMinPickupSpacing = 100f;
 
     [Header("Obstacle Dissolve")]
-    [SerializeField] private float ringSpawnFadeInDuration = 0.35f;
+    [Tooltip("Seconds for obstacle rings to dissolve from hidden to visible when they activate.")]
+    [SerializeField] private float ringSpawnFadeInDuration = 0.75f;
 
     [Header("Difficulty Progression")]
     [Tooltip("Starting difficulty level for this run.")]
@@ -696,9 +698,9 @@ public class ObstacleRingGenerator : MonoBehaviour
 
             if (visuals != null && dissolveDuration > 0f)
             {
-                visuals.PlayFadeOut(dissolveDuration, disableObjectAtEnd: true);
                 _activeObstacleRings.Remove(ringToRelease);
-                ReleaseObstacleRing(ringToRelease);
+                visuals.PlayFadeOut(dissolveDuration, disableObjectAtEnd: false);
+                StartCoroutine(ReleaseObstacleRingAfterDissolve(ringToRelease, dissolveDuration));
             }
             else
             {
@@ -706,6 +708,12 @@ public class ObstacleRingGenerator : MonoBehaviour
                 ReleaseObstacleRing(ringToRelease);
             }
         }
+    }
+
+    private IEnumerator ReleaseObstacleRingAfterDissolve(ObstacleRingController ring, float dissolveDuration)
+    {
+        yield return new WaitForSeconds(Mathf.Max(0f, dissolveDuration));
+        ReleaseObstacleRing(ring);
     }
 
     /// <summary>
@@ -1304,6 +1312,7 @@ public class ObstacleRingGenerator : MonoBehaviour
 
         minPickupObstacleSeparation = Mathf.Max(0f, minPickupObstacleSeparation);
         obstacleActivationDistance = Mathf.Max(0f, obstacleActivationDistance);
+        ringSpawnFadeInDuration = Mathf.Max(0f, ringSpawnFadeInDuration);
     }
 #endif
 }
