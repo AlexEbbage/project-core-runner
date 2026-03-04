@@ -5889,8 +5889,6 @@ MonoBehaviour:
   pickupRecycleDistanceBehind: 20
   minPickupObstacleSeparation: 3
   startingPickupRingScale: 1
-  minPickupRingScale: 0.5
-  difficultyForMinPickupScale: 100
   ringSpawnFadeInDuration: 0.35
   startingDifficulty: 0
   useTimeBasedDifficulty: 1
