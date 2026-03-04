@@ -3,9 +3,11 @@
 [RequireComponent(typeof(ParticleSystem))]
 public class SpeedParticlesController : MonoBehaviour
 {
+    [Header("Speed Normalization")]
     [SerializeField] private float minSpeed = 10f;
     [SerializeField] private float maxSpeed = 40f;
 
+    [Header("Particles")]
     [SerializeField] private float minParticleSpeed = 8f;
     [SerializeField] private float maxParticleSpeed = 25f;
 
@@ -21,6 +23,12 @@ public class SpeedParticlesController : MonoBehaviour
         _ps = GetComponent<ParticleSystem>();
         _main = _ps.main;
         _emission = _ps.emission;
+    }
+
+    public void SetSpeedRange(float zoneMinSpeed, float zoneMaxSpeed)
+    {
+        minSpeed = Mathf.Max(0f, zoneMinSpeed);
+        maxSpeed = Mathf.Max(minSpeed + 0.01f, zoneMaxSpeed);
     }
 
     public void SetRunSpeed(float speed)

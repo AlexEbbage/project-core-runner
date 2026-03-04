@@ -13,6 +13,7 @@ public class RunSpeedController : MonoBehaviour
     [SerializeField] private PlayerHealth playerHealth;
     [SerializeField] private RunScoreManager scoreManager;
     [SerializeField] private SpeedScalingConfig speedConfig;
+    [SerializeField] private RunZoneManager runZoneManager;
 
     [Header("Camera")]
     [SerializeField] private CameraFovController cameraFovController;
@@ -50,6 +51,7 @@ public class RunSpeedController : MonoBehaviour
         if (playerController == null) playerController = FindFirstObjectByType<PlayerController>();
         if (playerHealth == null) playerHealth = FindFirstObjectByType<PlayerHealth>();
         if (scoreManager == null) scoreManager = FindFirstObjectByType<RunScoreManager>();
+        if (runZoneManager == null) runZoneManager = FindFirstObjectByType<RunZoneManager>();
         if (cameraFovController == null) cameraFovController = FindFirstObjectByType<CameraFovController>();
         if (speedParticles == null) speedParticles = FindFirstObjectByType<SpeedParticlesController>();
 
@@ -147,18 +149,34 @@ public class RunSpeedController : MonoBehaviour
 
     private float CalculateCurrentSpeed()
     {
-        float baseSpeed = speedConfig.baseForwardSpeed;
+        float minSpeed = speedConfig.baseForwardSpeed;
+        float maxSpeed = speedConfig.maxForwardSpeed;
+        float timeToReachMaxSpeed = 0f;
+        float zoneElapsedTime = _elapsedRunTime;
 
-        float timeScale = speedConfig.EvaluateTimeScale(_elapsedRunTime);
-        float timeBasedIncrease = speedConfig.speedIncreasePerSecond * _elapsedRunTime * timeScale;
+        if (runZoneManager != null && runZoneManager.TryGetCurrentZoneSpeedSettings(out float zoneMinSpeed, out float zoneMaxSpeed, out float zoneRampTime, out float elapsedInZone))
+        {
+            minSpeed = zoneMinSpeed;
+            maxSpeed = zoneMaxSpeed;
+            timeToReachMaxSpeed = zoneRampTime;
+            zoneElapsedTime = elapsedInZone;
+        }
+
+        float rampT = timeToReachMaxSpeed <= 0f ? 1f : Mathf.Clamp01(zoneElapsedTime / timeToReachMaxSpeed);
+        float baseSpeed = Mathf.Lerp(minSpeed, maxSpeed, rampT);
 
         float comboValue = GetComboValue();
         float comboBonus = comboValue * speedConfig.comboSpeedFactor;
         comboBonus = Mathf.Clamp(comboBonus, 0f, speedConfig.comboMaxSpeedBonus);
 
-        float speed = baseSpeed + timeBasedIncrease + comboBonus;
+        float speed = baseSpeed + comboBonus;
         speed *= _powerupSpeedMultiplier;
-        speed = Mathf.Clamp(speed, 0f, speedConfig.maxForwardSpeed);
+
+        float configMaxSpeed = Mathf.Max(minSpeed, speedConfig.maxForwardSpeed);
+        float hardMaxSpeed = Mathf.Max(maxSpeed, configMaxSpeed);
+        speed = Mathf.Clamp(speed, 0f, hardMaxSpeed);
+
+        speedParticles?.SetSpeedRange(minSpeed, maxSpeed);
 
         return speed;
     }

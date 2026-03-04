@@ -28,6 +28,14 @@ public class RunZone
     [Tooltip("Index into AudioManager gameplay tracks.")]
     public int musicTrackIndex = 0;
 
+    [Header("Speed Progression")]
+    [Tooltip("Player speed at the start of this zone.")]
+    public float minSpeed = 12f;
+    [Tooltip("Maximum player speed reached inside this zone.")]
+    public float maxSpeed = 20f;
+    [Tooltip("Seconds to ramp from minSpeed to maxSpeed.")]
+    public float timeToReachMaxSpeed = 30f;
+
     [Header("Zone VFX + Intensity")]
     public ZoneVfxSettings vfxSettings = new ZoneVfxSettings();
 
@@ -84,14 +92,14 @@ public class RunZoneManager : MonoBehaviour
         if (!_runActive || zones == null || zones.Length == 0)
             return;
 
+        _runTime += Time.deltaTime;
+
         if (lockToSingleZone)
         {
             if (_currentZoneIndex != 0)
                 ApplyZone(0);
             return;
         }
-
-        _runTime += Time.deltaTime;
 
         int newZoneIndex = GetZoneIndexForTime(_runTime);
         if (newZoneIndex != _currentZoneIndex)
@@ -244,4 +252,32 @@ public class RunZoneManager : MonoBehaviour
     (_currentZoneIndex >= 0 && _currentZoneIndex < zones.Length)
         ? zones[_currentZoneIndex].name
         : "None";
+
+    public bool TryGetCurrentZoneSpeedSettings(out float minSpeed, out float maxSpeed, out float timeToReachMaxSpeed, out float zoneElapsedTime)
+    {
+        minSpeed = 0f;
+        maxSpeed = 0f;
+        timeToReachMaxSpeed = 0f;
+        zoneElapsedTime = 0f;
+
+        if (zones == null || zones.Length == 0)
+            return false;
+
+        int zoneIndex = _currentZoneIndex;
+        if (zoneIndex < 0 || zoneIndex >= zones.Length)
+            zoneIndex = GetZoneIndexForTime(_runTime);
+
+        if (zoneIndex < 0 || zoneIndex >= zones.Length)
+            return false;
+
+        RunZone zone = zones[zoneIndex];
+        if (zone == null)
+            return false;
+
+        minSpeed = Mathf.Max(0f, zone.minSpeed);
+        maxSpeed = Mathf.Max(minSpeed, zone.maxSpeed);
+        timeToReachMaxSpeed = Mathf.Max(0f, zone.timeToReachMaxSpeed);
+        zoneElapsedTime = Mathf.Max(0f, _runTime - zone.startTime);
+        return true;
+    }
 }
