@@ -1781,7 +1781,7 @@ MonoBehaviour:
   obstacleRingGenerator: {fileID: 883196105}
   statsTracker: {fileID: 69424008}
   powerupController: {fileID: 130950851}
-  playerProfile: {fileID: 0}
+  playerProfile: {fileID: 11400000, guid: e5b84828c3ea70849b8c40ed5268900a, type: 2}
   playerVisual: {fileID: 7848395938132188012}
   playerColliders:
   - {fileID: 7848395938132188023}
@@ -1813,7 +1813,7 @@ MonoBehaviour:
   continueRespawnBackDistance: 8
   continueRespawnHeightOffset: 0.5
   continueRespawnVfxPrefab: {fileID: 6602472304470955431, guid: aa0fdb9a759848e0ad127fadf532c5dc, type: 3}
-  startClearRings: 5
+  preRunCountdownSeconds: 3
   dissolveDuration: 0.4
   logStateChanges: 0
 --- !u!1 &302164554
@@ -5889,6 +5889,8 @@ MonoBehaviour:
   pickupRecycleDistanceBehind: 20
   minPickupObstacleSeparation: 3
   startingPickupRingScale: 1
+  minPickupRingSpacing: 4
+  difficultyForMinPickupSpacing: 100
   ringSpawnFadeInDuration: 0.35
   startingDifficulty: 0
   useTimeBasedDifficulty: 1

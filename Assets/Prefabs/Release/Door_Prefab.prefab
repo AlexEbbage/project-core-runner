@@ -57,10 +57,10 @@ MonoBehaviour:
   fanRotationAxis: {x: 0, y: 0, z: 1}
   doorPanels:
   - panel: {fileID: 8155547715722958743}
-    openLocalOffset: {x: -3, y: 0, z: 0}
+    openLocalOffset: {x: -2.5, y: 0, z: 0}
     openLocalEulerOffset: {x: 0, y: 0, z: 0}
   - panel: {fileID: 3734140629298369390}
-    openLocalOffset: {x: 3, y: 0, z: 0}
+    openLocalOffset: {x: 2.5, y: 0, z: 0}
     openLocalEulerOffset: {x: 0, y: 0, z: 0}
   cycleDuration: 10
   openHoldDuration: 1

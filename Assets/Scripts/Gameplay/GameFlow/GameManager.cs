@@ -73,6 +73,7 @@ public class GameManager : MonoBehaviour
     [Header("Continue VFX")]
     [SerializeField] private GameObject continueRespawnVfxPrefab;
     [SerializeField] private float preRunCountdownSeconds = 3f;
+    [SerializeField] private float preRunClearOffset = 2f;
     [SerializeField] private float dissolveDuration = 0.4f;
 
     [Header("Debug")]
@@ -671,7 +672,7 @@ public class GameManager : MonoBehaviour
 
     private float GetPreRunClearDistance()
     {
-        float countdownDuration = Mathf.Max(0f, preRunCountdownSeconds);
+        float countdownDuration = Mathf.Max(preRunClearOffset, preRunCountdownSeconds + preRunClearOffset);
         float runSpeed = speedController != null ? Mathf.Max(0f, speedController.CurrentSpeed) : 0f;
         return countdownDuration * runSpeed;
     }

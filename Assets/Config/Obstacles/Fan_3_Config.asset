@@ -34,7 +34,7 @@ MonoBehaviour:
     minSpeed: 1
     maxSpeed: 1.2
   - minLevel: 3
-    maxLevel: 6
+    maxLevel: 4
     minRotationsPerIteration: 1
     maxRotationsPerIteration: 2
     minIterationCount: 2
@@ -42,3 +42,21 @@ MonoBehaviour:
     rotateInOneDirectionPerIteration: 0
     minSpeed: 1.2
     maxSpeed: 1.4
+  - minLevel: 4
+    maxLevel: 5
+    minRotationsPerIteration: 1
+    maxRotationsPerIteration: 2
+    minIterationCount: 2
+    maxIterationCount: 5
+    rotateInOneDirectionPerIteration: 0
+    minSpeed: 1.4
+    maxSpeed: 1.6
+  - minLevel: 5
+    maxLevel: 6
+    minRotationsPerIteration: 1
+    maxRotationsPerIteration: 2
+    minIterationCount: 2
+    maxIterationCount: 5
+    rotateInOneDirectionPerIteration: 0
+    minSpeed: 1.6
+    maxSpeed: 1.8

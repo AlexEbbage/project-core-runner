@@ -16,7 +16,7 @@ MonoBehaviour:
   obstacleType: 0
   difficultyConfigs:
   - minLevel: 1
-    maxLevel: 999
+    maxLevel: 6
     minRotationsPerIteration: 1
     maxRotationsPerIteration: 1
     minIterationCount: 3
