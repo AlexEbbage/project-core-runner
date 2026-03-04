@@ -654,60 +654,6 @@ public class ObstacleRingGenerator : MonoBehaviour
     /// Clears obstacle rings within a Z window around the player (ahead and slightly behind) with dissolve visuals.
     /// Can be used at run start/continue to guarantee a safe region.
     /// </summary>
-    internal void ClearRingsAroundPlayer(float clearAheadDistance, float clearBehindDistance, float dissolveDuration)
-    {
-        if (playerTransform == null)
-            return;
-
-        float playerZ = playerTransform.position.z;
-        _tempAheadRingsBuffer.Clear();
-
-        for (int i = 0; i < _activeObstacleRings.Count; i++)
-        {
-            var ring = _activeObstacleRings[i];
-            if (ring == null)
-                continue;
-
-            float dz = ring.transform.position.z - playerZ;
-            if (dz >= -clearBehindDistance && dz <= clearAheadDistance)
-            {
-                _tempAheadRingsBuffer.Add(ring);
-            }
-        }
-
-        if (_tempAheadRingsBuffer.Count == 0)
-            return;
-
-        _tempAheadRingsBuffer.Sort((a, b) =>
-            a.transform.position.z.CompareTo(b.transform.position.z));
-
-        for (int i = 0; i < _tempAheadRingsBuffer.Count; i++)
-        {
-            var ring = _tempAheadRingsBuffer[i];
-            if (ring == null)
-                continue;
-
-            var visuals = ring.GetComponent<ObstacleRingVisuals>();
-            var ringToRelease = ring;
-
-            if (visuals != null && dissolveDuration > 0f)
-            {
-                visuals.PlayFadeOut(dissolveDuration, disableObjectAtEnd: true);
-                _activeObstacleRings.Remove(ringToRelease);
-                ReleaseObstacleRing(ringToRelease);
-            }
-            else
-            {
-                _activeObstacleRings.Remove(ringToRelease);
-                ReleaseObstacleRing(ringToRelease);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Legacy API: clears the next N rings ahead of the player.
-    /// Kept for compatibility; ClearRingsAroundPlayer is more robust.
-    /// </summary>
     internal void DissolveNextRings(int startClearRings, float dissolveDuration)
     {
         if (playerTransform == null || startClearRings <= 0)
