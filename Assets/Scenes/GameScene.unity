@@ -824,7 +824,8 @@ MonoBehaviour:
   playerHealth: {fileID: 7848395938132188008}
   scoreManager: {fileID: 775574908}
   speedConfig: {fileID: 11400000, guid: 4dfa3040d7c096845a7fcc563094ac2b, type: 2}
-  cameraFovController: {fileID: 0}
+  runZoneManager: {fileID: 1002440609}
+  cameraFovController: {fileID: 330585553}
   hudController: {fileID: 338262364}
   speedUpFlash: {fileID: 0}
   cameraShake: {fileID: 330585549}
@@ -1814,7 +1815,8 @@ MonoBehaviour:
   continueRespawnHeightOffset: 0.5
   continueRespawnVfxPrefab: {fileID: 6602472304470955431, guid: aa0fdb9a759848e0ad127fadf532c5dc, type: 3}
   preRunCountdownSeconds: 3
-  dissolveDuration: 0.4
+  preRunClearOffset: 2
+  dissolveDuration: 0.75
   logStateChanges: 0
 --- !u!1 &302164554
 GameObject:
@@ -1909,6 +1911,7 @@ GameObject:
   - component: {fileID: 330585549}
   - component: {fileID: 330585552}
   - component: {fileID: 330585551}
+  - component: {fileID: 330585553}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -2108,6 +2111,24 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
+--- !u!114 &330585553
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 330585543}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d74bf3667532d14e890ac53ee2f89e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  minSpeed: 30
+  maxSpeed: 60
+  minFov: 40
+  maxFov: 80
+  fovIncreasePerSpeed: 1
+  lerpSpeed: 0.1
 --- !u!1 &338262360
 GameObject:
   m_ObjectHideFlags: 0
@@ -5882,7 +5903,7 @@ MonoBehaviour:
   obstacleRingSpacing: 30
   obstacleRingsAhead: 20
   obstacleRecycleDistanceBehind: 20
-  obstacleActivationDistance: 40
+  obstacleActivationDistance: 300
   doorPhaseDelayPerUnitZ: 0.02
   pickupRingSpacing: 10
   pickupRingsAhead: 20
@@ -5891,7 +5912,7 @@ MonoBehaviour:
   startingPickupRingScale: 1
   minPickupRingSpacing: 4
   difficultyForMinPickupSpacing: 100
-  ringSpawnFadeInDuration: 0.35
+  ringSpawnFadeInDuration: 3
   startingDifficulty: 0
   useTimeBasedDifficulty: 1
   difficultyIncreasePerSecond: 0.1
@@ -6719,6 +6740,9 @@ MonoBehaviour:
     fogColor: {r: 0, g: 0, b: 0, a: 0}
     fogDensity: 0
     musicTrackIndex: 3
+    minSpeed: 40
+    maxSpeed: 60
+    timeToReachMaxSpeed: 120
     vfxSettings:
       vfxObjects: []
       obstacleContrastMultiplier: 1

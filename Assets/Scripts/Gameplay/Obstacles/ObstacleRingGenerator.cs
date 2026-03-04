@@ -30,7 +30,7 @@ public class ObstacleRingGenerator : MonoBehaviour
 
     [Header("Obstacle Activation")]
     [Tooltip("Rings will have colliders disabled and visuals hidden until within this distance ahead of the player.")]
-    [SerializeField] private float obstacleActivationDistance = 40f;
+    [SerializeField] private float obstacleActivationDistance = 100f;
 
     [Header("Door Phase")]
     [Tooltip("Seconds of door-cycle delay per unit of distance along +Z. Farther rings get more negative initial time, so they close later.")]
@@ -699,7 +699,7 @@ public class ObstacleRingGenerator : MonoBehaviour
             if (visuals != null && dissolveDuration > 0f)
             {
                 _activeObstacleRings.Remove(ringToRelease);
-                visuals.PlayFadeOut(dissolveDuration, disableObjectAtEnd: false);
+                visuals.PlayFadeOut(dissolveDuration, disableObjectAtEnd: true);
                 StartCoroutine(ReleaseObstacleRingAfterDissolve(ringToRelease, dissolveDuration));
             }
             else

@@ -103,7 +103,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a96ebe410e6a0e4f8143f6d26aedf55, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dissolvePropertyName: _Dissolve
+  dissolvePropertyName: _Cutoff
   visibleValue: 0
   hiddenValue: 1
   targetRenderers:

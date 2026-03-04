@@ -7,7 +7,7 @@ public class ObstacleRingVisuals : MonoBehaviour
 {
     [Header("Dissolve Property")]
     [Tooltip("Name of the float property in the dissolve shader (e.g. _Dissolve, _DissolveAmount).")]
-    [SerializeField] private string dissolvePropertyName = "_Dissolve";
+    [SerializeField] private string dissolvePropertyName = "_Cutoff";
 
     [Tooltip("Value when fully visible.")]
     [SerializeField] private float visibleValue = 0f;
