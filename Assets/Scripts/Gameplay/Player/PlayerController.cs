@@ -450,23 +450,23 @@ public class PlayerController : MonoBehaviour
             delta = _joystickCurrent - _joystickOrigin;
         }
 
-        Vector2 clampedDelta = Vector2.ClampMagnitude(delta, joystickRadius);
+        float clampedDeltaX = Mathf.Clamp(delta.x, -joystickRadius, joystickRadius);
 
         // Pixel dead zone
-        if (Mathf.Abs(clampedDelta.x) < joystickDeadZonePx)
+        if (Mathf.Abs(clampedDeltaX) < joystickDeadZonePx)
         {
             joystickKnob.anchoredPosition = Vector2.zero;
             input = 0f;
             return true;
         }
 
-        float raw = clampedDelta.x / joystickRadius;
+        float raw = clampedDeltaX / joystickRadius;
 
         float sign = Mathf.Sign(raw);
         float mag = Mathf.Pow(Mathf.Abs(raw), joystickResponseExponent);
         input = sign * mag;
 
-        joystickKnob.anchoredPosition = clampedDelta;
+        joystickKnob.anchoredPosition = new Vector2(clampedDeltaX, 0f);
 
         return true;
     }
