@@ -49,15 +49,16 @@ public class ObstacleRingGenerator : MonoBehaviour
     [Tooltip("Minimum Z-distance between pickup rings and obstacle rings to avoid overlap.")]
     [SerializeField] private float minPickupObstacleSeparation = 3f;
 
-    [Header("Pickup Ring Difficulty Scaling")]
-    [Tooltip("Initial uniform scale for pickup rings at starting difficulty.")]
+    [Header("Pickup Ring Scale")]
+    [Tooltip("Uniform scale for pickup rings.")]
     [SerializeField] private float startingPickupRingScale = 1.0f;
 
-    [Tooltip("Minimum uniform scale for pickup rings at high difficulty.")]
-    [SerializeField] private float minPickupRingScale = 0.5f;
+    [Header("Pickup Ring Frequency Scaling")]
+    [Tooltip("Minimum spacing between pickup rings at high difficulty.")]
+    [SerializeField] private float minPickupRingSpacing = 4f;
 
-    [Tooltip("Difficulty level at which pickup rings will reach their minimum scale.")]
-    [SerializeField] private float difficultyForMinPickupScale = 100f;
+    [Tooltip("Difficulty level at which pickup rings will reach minimum spacing.")]
+    [SerializeField] private float difficultyForMinPickupSpacing = 100f;
 
     [Header("Obstacle Dissolve")]
     [SerializeField] private float ringSpawnFadeInDuration = 0.35f;
@@ -264,7 +265,7 @@ public class ObstacleRingGenerator : MonoBehaviour
         _currentDifficulty = startingDifficulty;
 
         _nextObstacleSpawnZ = _startPlayerZ + obstacleRingSpacing;
-        _nextPickupSpawnZ = _startPlayerZ + pickupRingSpacing;
+        _nextPickupSpawnZ = _startPlayerZ + CalculateCurrentPickupRingSpacing();
 
         for (int i = 0; i < obstacleRingsAhead; i++)
         {
@@ -727,7 +728,8 @@ public class ObstacleRingGenerator : MonoBehaviour
                 continue;
 
             float ringZ = ring.transform.position.z;
-            if (ringZ < playerZ - pickupRingSpacing * 0.5f || ringZ > maxClearZ)
+            float currentSpacing = CalculateCurrentPickupRingSpacing();
+            if (ringZ < playerZ - currentSpacing * 0.5f || ringZ > maxClearZ)
                 continue;
 
             ReleasePickupRing(ring);
@@ -743,7 +745,8 @@ public class ObstacleRingGenerator : MonoBehaviour
 
     private void EnsurePickupRingsAhead(float playerZ)
     {
-        float targetMaxZ = playerZ + pickupRingsAhead * pickupRingSpacing;
+        float currentSpacing = CalculateCurrentPickupRingSpacing();
+        float targetMaxZ = playerZ + pickupRingsAhead * currentSpacing;
 
         while (_nextPickupSpawnZ <= targetMaxZ)
         {
@@ -780,7 +783,7 @@ public class ObstacleRingGenerator : MonoBehaviour
         int safety = 0;
         while (IsTooCloseToObstacle(_nextPickupSpawnZ) && safety < 4)
         {
-            _nextPickupSpawnZ += pickupRingSpacing;
+            _nextPickupSpawnZ += CalculateCurrentPickupRingSpacing();
             safety++;
         }
 
@@ -801,7 +804,7 @@ public class ObstacleRingGenerator : MonoBehaviour
 
         _activePickupRings.Add(ring);
 
-        _nextPickupSpawnZ += pickupRingSpacing;
+        _nextPickupSpawnZ += CalculateCurrentPickupRingSpacing();
     }
 
     private bool IsTooCloseToObstacle(float z)
@@ -858,14 +861,19 @@ public class ObstacleRingGenerator : MonoBehaviour
 
     private float CalculatePickupRingScale()
     {
-        if (difficultyForMinPickupScale <= 0f)
-        {
-            return Mathf.Clamp(startingPickupRingScale, minPickupRingScale, startingPickupRingScale);
-        }
+        return Mathf.Max(0.01f, startingPickupRingScale);
+    }
 
-        float t = Mathf.InverseLerp(startingDifficulty, difficultyForMinPickupScale, _currentDifficulty);
-        float scale = Mathf.Lerp(startingPickupRingScale, minPickupRingScale, t);
-        return Mathf.Clamp(scale, minPickupRingScale, startingPickupRingScale);
+    private float CalculateCurrentPickupRingSpacing()
+    {
+        float safeMinSpacing = Mathf.Max(0.01f, minPickupRingSpacing);
+        float safeBaseSpacing = Mathf.Max(safeMinSpacing, pickupRingSpacing);
+
+        if (difficultyForMinPickupSpacing <= startingDifficulty)
+            return safeMinSpacing;
+
+        float t = Mathf.InverseLerp(startingDifficulty, difficultyForMinPickupSpacing, _currentDifficulty);
+        return Mathf.Lerp(safeBaseSpacing, safeMinSpacing, t);
     }
 
     /// <summary>
@@ -1273,6 +1281,8 @@ public class ObstacleRingGenerator : MonoBehaviour
     {
         obstacleRingSpacing = Mathf.Max(0.1f, obstacleRingSpacing);
         pickupRingSpacing = Mathf.Max(0.1f, pickupRingSpacing);
+        minPickupRingSpacing = Mathf.Max(0.1f, minPickupRingSpacing);
+        startingPickupRingScale = Mathf.Max(0.01f, startingPickupRingScale);
         obstacleRingsAhead = Mathf.Max(1, obstacleRingsAhead);
         pickupRingsAhead = Mathf.Max(1, pickupRingsAhead);
         obstacleRecycleDistanceBehind = Mathf.Max(1f, obstacleRecycleDistanceBehind);
