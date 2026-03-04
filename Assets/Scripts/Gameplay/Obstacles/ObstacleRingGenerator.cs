@@ -654,12 +654,13 @@ public class ObstacleRingGenerator : MonoBehaviour
     /// Clears obstacle rings within a Z window around the player (ahead and slightly behind) with dissolve visuals.
     /// Can be used at run start/continue to guarantee a safe region.
     /// </summary>
-    internal void DissolveNextRings(int startClearRings, float dissolveDuration)
+    internal void DissolveNextRings(float clearAheadDistance, float dissolveDuration)
     {
-        if (playerTransform == null || startClearRings <= 0)
+        if (playerTransform == null || clearAheadDistance <= 0f)
             return;
 
         float playerZ = playerTransform.position.z;
+        float maxClearZ = playerZ + clearAheadDistance;
 
         _tempAheadRingsBuffer.Clear();
 
@@ -669,8 +670,9 @@ public class ObstacleRingGenerator : MonoBehaviour
             if (ring == null)
                 continue;
 
-            // Slightly expand the window to include rings just behind the player
-            if (ring.transform.position.z >= playerZ - obstacleRingSpacing * 0.5f)
+            float ringZ = ring.transform.position.z;
+            // Slightly expand the window to include rings just behind the player.
+            if (ringZ >= playerZ - obstacleRingSpacing * 0.5f && ringZ <= maxClearZ)
             {
                 _tempAheadRingsBuffer.Add(ring);
             }
@@ -682,9 +684,7 @@ public class ObstacleRingGenerator : MonoBehaviour
         _tempAheadRingsBuffer.Sort((a, b) =>
             a.transform.position.z.CompareTo(b.transform.position.z));
 
-        int count = Mathf.Min(startClearRings, _tempAheadRingsBuffer.Count);
-
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < _tempAheadRingsBuffer.Count; i++)
         {
             var ring = _tempAheadRingsBuffer[i];
             if (ring == null)
@@ -708,31 +708,30 @@ public class ObstacleRingGenerator : MonoBehaviour
     }
 
     /// <summary>
-    /// Clears the next N pickup rings ahead of the player.
-    /// Used at run start/continue to match obstacle ring spawn offset.
+    /// Clears pickup rings in front of the player up to a max forward distance.
+    /// Used at run start/continue to match how far the player can travel during countdown.
     /// </summary>
-    internal void ClearNextPickupRings(int startClearRings)
+    internal void ClearNextPickupRings(float clearAheadDistance)
     {
-        if (playerTransform == null || startClearRings <= 0)
+        if (playerTransform == null || clearAheadDistance <= 0f)
             return;
 
         float playerZ = playerTransform.position.z;
+        float maxClearZ = playerZ + clearAheadDistance;
         _activePickupRings.Sort((a, b) => a.transform.position.z.CompareTo(b.transform.position.z));
 
-        int clearedCount = 0;
-
-        for (int i = 0; i < _activePickupRings.Count && clearedCount < startClearRings; i++)
+        for (int i = 0; i < _activePickupRings.Count; i++)
         {
             var ring = _activePickupRings[i];
             if (ring == null)
                 continue;
 
-            if (ring.transform.position.z < playerZ - pickupRingSpacing * 0.5f)
+            float ringZ = ring.transform.position.z;
+            if (ringZ < playerZ - pickupRingSpacing * 0.5f || ringZ > maxClearZ)
                 continue;
 
             ReleasePickupRing(ring);
             _activePickupRings[i] = null;
-            clearedCount++;
         }
 
         _activePickupRings.RemoveAll(ring => ring == null);

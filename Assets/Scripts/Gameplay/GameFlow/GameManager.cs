@@ -72,7 +72,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Continue VFX")]
     [SerializeField] private GameObject continueRespawnVfxPrefab;
-    [SerializeField] private int startClearRings = 5;
+    [SerializeField] private float preRunCountdownSeconds = 3f;
     [SerializeField] private float dissolveDuration = 0.4f;
 
     [Header("Debug")]
@@ -635,12 +635,13 @@ public class GameManager : MonoBehaviour
             { "phase", "start" }
         });
 
-        obstacleRingGenerator.DissolveNextRings(startClearRings, dissolveDuration);
-        obstacleRingGenerator.ClearNextPickupRings(startClearRings);
+        float preRunClearDistance = GetPreRunClearDistance();
+        obstacleRingGenerator.DissolveNextRings(preRunClearDistance, dissolveDuration);
+        obstacleRingGenerator.ClearNextPickupRings(preRunClearDistance);
         playerController?.RefreshHandlingFromProfile();
         playerController?.StartRun();
 
-        countdownUIController.BeginCountdown(3, OnStartCountdownComplete);
+        countdownUIController.BeginCountdown(Mathf.CeilToInt(preRunCountdownSeconds), OnStartCountdownComplete);
     }
 
     private void OnStartCountdownComplete()
@@ -658,13 +659,21 @@ public class GameManager : MonoBehaviour
         TransitionToState(GameState.Playing, 1f);
         _gameTimerEnabled = false;
 
-        obstacleRingGenerator.DissolveNextRings(startClearRings, dissolveDuration);
-        obstacleRingGenerator.ClearNextPickupRings(startClearRings);
+        float preRunClearDistance = GetPreRunClearDistance();
+        obstacleRingGenerator.DissolveNextRings(preRunClearDistance, dissolveDuration);
+        obstacleRingGenerator.ClearNextPickupRings(preRunClearDistance);
         playerController?.RefreshHandlingFromProfile();
         playerController?.StartRun();
         playerVisual.SetVisible(true);
 
-        countdownUIController.BeginCountdown(3, OnContinueCountdownComplete);
+        countdownUIController.BeginCountdown(Mathf.CeilToInt(preRunCountdownSeconds), OnContinueCountdownComplete);
+    }
+
+    private float GetPreRunClearDistance()
+    {
+        float countdownDuration = Mathf.Max(0f, preRunCountdownSeconds);
+        float runSpeed = speedController != null ? Mathf.Max(0f, speedController.CurrentSpeed) : 0f;
+        return countdownDuration * runSpeed;
     }
 
     private void OnContinueCountdownComplete()
