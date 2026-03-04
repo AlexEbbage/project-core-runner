@@ -102,6 +102,7 @@ public class PlayerController : MonoBehaviour
     private int _joystickTouchId = -1;
     private Vector2 _joystickOrigin;
     private Vector2 _joystickCurrent;
+    private Vector2 _joystickBackgroundOrigin;
 
     private void Awake()
     {
@@ -127,6 +128,9 @@ public class PlayerController : MonoBehaviour
             _angleDegrees = Mathf.Atan2(pos.y, pos.x) * Mathf.Rad2Deg;
         else
             _angleDegrees = 0f;
+
+        if (joystickBackground != null)
+            _joystickBackgroundOrigin = joystickBackground.anchoredPosition;
     }
 
     private void OnEnable()
@@ -397,6 +401,10 @@ public class PlayerController : MonoBehaviour
 
                 _joystickActive = true;
                 _joystickTouchId = touchId;
+                _joystickOrigin = pos;
+                _joystickCurrent = pos;
+                SetJoystickBackgroundScreenPosition(pos);
+                joystickKnob.anchoredPosition = Vector2.zero;
                 break;
             }
 
@@ -426,30 +434,39 @@ public class PlayerController : MonoBehaviour
         }
 
         Vector2 screenPos = activeTouch.position.ReadValue();
+        _joystickCurrent = screenPos;
 
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            joystickBackground,
-            screenPos,
-            null,
-            out Vector2 localPoint);
+        float joystickRadius = Mathf.Max(fixedJoystickRadiusPx, 1f);
+        Vector2 delta = _joystickCurrent - _joystickOrigin;
+        float distance = delta.magnitude;
 
-        float clampedX = Mathf.Clamp(localPoint.x, -fixedJoystickRadiusPx, fixedJoystickRadiusPx);
+        if (distance > joystickRadius)
+        {
+            float overflow = distance - joystickRadius;
+            float followFactor = joystickRecenter > 0f ? joystickRecenter : 1f;
+            Vector2 originShift = delta.normalized * overflow * followFactor;
+            _joystickOrigin += originShift;
+            SetJoystickBackgroundScreenPosition(_joystickOrigin);
+            delta = _joystickCurrent - _joystickOrigin;
+        }
+
+        Vector2 clampedDelta = Vector2.ClampMagnitude(delta, joystickRadius);
 
         // Pixel dead zone
-        if (Mathf.Abs(clampedX) < joystickDeadZonePx)
+        if (Mathf.Abs(clampedDelta.x) < joystickDeadZonePx)
         {
             joystickKnob.anchoredPosition = Vector2.zero;
             input = 0f;
             return true;
         }
 
-        float raw = clampedX / Mathf.Max(fixedJoystickRadiusPx, 1f);
+        float raw = clampedDelta.x / joystickRadius;
 
         float sign = Mathf.Sign(raw);
         float mag = Mathf.Pow(Mathf.Abs(raw), joystickResponseExponent);
         input = sign * mag;
 
-        joystickKnob.anchoredPosition = new Vector2(clampedX, 0f);
+        joystickKnob.anchoredPosition = clampedDelta;
 
         return true;
     }
@@ -461,8 +478,26 @@ public class PlayerController : MonoBehaviour
         _joystickOrigin = Vector2.zero;
         _joystickCurrent = Vector2.zero;
 
+        if (joystickBackground != null)
+            joystickBackground.anchoredPosition = _joystickBackgroundOrigin;
+
         if (joystickKnob != null)
             joystickKnob.anchoredPosition = Vector2.zero;
+    }
+
+    private void SetJoystickBackgroundScreenPosition(Vector2 screenPos)
+    {
+        if (joystickBackground == null)
+            return;
+
+        RectTransform parentRect = joystickBackground.parent as RectTransform;
+        if (parentRect == null)
+            return;
+
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(parentRect, screenPos, null, out Vector2 localPoint))
+            return;
+
+        joystickBackground.anchoredPosition = localPoint;
     }
 
     private bool IsInControlZone(Vector2 screenPos)
@@ -556,7 +591,7 @@ public class PlayerController : MonoBehaviour
         Gizmos.DrawWireSphere(Vector3.zero, tubeRadius);
 
         // Draw control zone overlay (approx) in Scene view only (not game view accurate)
-        // Kept minimal—control zone is screen-space, so this is just a reminder.
+        // Kept minimalÂ—control zone is screen-space, so this is just a reminder.
     }
 #endif
 }
