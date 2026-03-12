@@ -317,60 +317,6 @@ public class PlayerController : MonoBehaviour
 
     // ---- Touch modes ----
 
-    private bool UseTouchButtonsMode()
-    {
-        if (forceTouchButtonsMode)
-            return true;
-
-        return SettingsData.CurrentTouchInputMode == SettingsData.TouchInputMode.Buttons;
-    }
-
-    private bool TryGetTouchButtonsInput(out float input)
-    {
-        if (Touchscreen.current == null)
-        {
-            input = 0f;
-            return false;
-        }
-
-        bool leftPressed = false;
-        bool rightPressed = false;
-        bool anyPressed = false;
-        float halfWidth = Screen.width * 0.5f;
-
-        foreach (var touch in Touchscreen.current.touches)
-        {
-            if (!touch.press.isPressed)
-                continue;
-
-            // optional: ignore UI touches
-            if (ignoreTouchesOverUI && IsTouchOverUI(touch.touchId.ReadValue()))
-                continue;
-
-            // optional: enforce control zone
-            Vector2 pos = touch.position.ReadValue();
-            if (!IsInControlZone(pos))
-                continue;
-
-            anyPressed = true;
-
-            float x = pos.x;
-            if (x < halfWidth)
-                leftPressed = true;
-            else
-                rightPressed = true;
-        }
-
-        if (!anyPressed || leftPressed == rightPressed)
-        {
-            input = 0f;
-            return anyPressed;
-        }
-
-        input = leftPressed ? -1f : 1f;
-        return true;
-    }
-
     private bool TryGetVirtualJoystickInput(out float input)
     {
         input = 0f;
