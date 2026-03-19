@@ -78,10 +78,13 @@ public class PlayerPowerupController : MonoBehaviour
 
     private readonly System.Collections.Generic.Dictionary<PowerupType, float> _powerupEndTimes =
         new System.Collections.Generic.Dictionary<PowerupType, float>();
+    private readonly System.Collections.Generic.Dictionary<PowerupType, float> _powerupDurations =
+        new System.Collections.Generic.Dictionary<PowerupType, float>();
     private readonly System.Collections.Generic.Dictionary<PowerupType, GameObject> _loopVfxInstances =
         new System.Collections.Generic.Dictionary<PowerupType, GameObject>();
 
     public event System.Action<PowerupType> OnPowerupCollected;
+    public event System.Action<PowerupType> OnPowerupEnded;
     public float ShieldRechargeSeconds => shieldRechargeSeconds;
 
     private readonly struct PowerupTuning
@@ -162,11 +165,17 @@ public class PlayerPowerupController : MonoBehaviour
             playerHealth.OnShieldBroken -= HandleShieldBroken;
         }
 
-        ResetTemporaryEffects();
+        ResetAllPowerups();
     }
 
     public void ActivatePowerup(PowerupType powerupType)
     {
+        if (!PowerupUpgradeConfig.IsTargetGameplayPowerup(powerupType))
+        {
+            Debug.LogWarning($"PlayerPowerupController: Ignoring unsupported powerup type {powerupType}.");
+            return;
+        }
+
         OnPowerupCollected?.Invoke(powerupType);
 
         gameManager?.LogAnalyticsEvent(AnalyticsEventNames.PowerupPickup, new Dictionary<string, object>
@@ -211,10 +220,55 @@ public class PlayerPowerupController : MonoBehaviour
         foreach (var kvp in _powerupEndTimes)
         {
             float remaining = Mathf.Max(0f, kvp.Value - Time.time);
-            list.Add(new PowerupStatus(kvp.Key, remaining, true));
+            float duration = _powerupDurations.TryGetValue(kvp.Key, out float trackedDuration)
+                ? Mathf.Max(0.01f, trackedDuration)
+                : Mathf.Max(0.01f, remaining);
+            list.Add(new PowerupStatus(kvp.Key, remaining, duration, true));
         }
 
         return list.ToArray();
+    }
+
+    public void ResetAllPowerups()
+    {
+        PowerupType[] activeTypes = new PowerupType[_powerupEndTimes.Count];
+        _powerupEndTimes.Keys.CopyTo(activeTypes, 0);
+
+        StopTrackedRoutine(ref _autoPilotRoutine);
+        StopTrackedRoutine(ref _coinMultiplierRoutine);
+        StopTrackedRoutine(ref _scoreMultiplierRoutine);
+        StopTrackedRoutine(ref _magnetRoutine);
+        StopTrackedRoutine(ref _shieldRoutine);
+        StopTrackedRoutine(ref _coinBonanzaRoutine);
+        StopTrackedRoutine(ref _speedBoostRoutine);
+        StopTrackedRoutine(ref _slowMoRoutine);
+
+        if (playerController != null)
+        {
+            playerController.SetAutoPilotActive(false, 0f);
+            playerController.SetAutoPilotInput(0f);
+        }
+
+        playerHealth?.SetShieldActive(false);
+        runScoreManager?.SetPowerupScoreMultiplier(1f);
+        runScoreManager?.SetPowerupPickupMultiplier(1f);
+        obstacleRingGenerator?.SetPickupSpawnChanceMultiplier(1f);
+
+        foreach (var instance in _loopVfxInstances.Values)
+        {
+            if (instance != null)
+                Destroy(instance);
+        }
+
+        _loopVfxInstances.Clear();
+        _powerupEndTimes.Clear();
+        _powerupDurations.Clear();
+        ResetTemporaryEffects();
+
+        for (int i = 0; i < activeTypes.Length; i++)
+        {
+            OnPowerupEnded?.Invoke(activeTypes[i]);
+        }
     }
 
     private void RestartRoutine(ref Coroutine routine, IEnumerator newRoutine)
@@ -223,6 +277,15 @@ public class PlayerPowerupController : MonoBehaviour
             StopCoroutine(routine);
 
         routine = StartCoroutine(newRoutine);
+    }
+
+    private void StopTrackedRoutine(ref Coroutine routine)
+    {
+        if (routine == null)
+            return;
+
+        StopCoroutine(routine);
+        routine = null;
     }
 
     private IEnumerator AutoPilotRoutine()
@@ -420,15 +483,23 @@ public class PlayerPowerupController : MonoBehaviour
     private void BeginPowerup(PowerupType type, float duration)
     {
         StopLoopEffect(type);
-        _powerupEndTimes[type] = Time.time + duration;
+        float safeDuration = Mathf.Max(0.01f, duration);
+        _powerupEndTimes[type] = Time.time + safeDuration;
+        _powerupDurations[type] = safeDuration;
         PlayPowerupStartEffects(type);
     }
 
     private void EndPowerup(PowerupType type)
     {
-        _powerupEndTimes.Remove(type);
+        bool wasTracked = _powerupEndTimes.Remove(type);
+        _powerupDurations.Remove(type);
         StopLoopEffect(type);
         PlayPowerupEndEffects(type);
+
+        if (wasTracked)
+        {
+            OnPowerupEnded?.Invoke(type);
+        }
     }
 
     private void PlayPowerupStartEffects(PowerupType type)
@@ -648,10 +719,20 @@ public class PlayerPowerupController : MonoBehaviour
     {
         PowerupTuning tuning = GetDefaultPowerupTuning(powerupType);
 
-        if (powerupUpgradeConfig == null || playerProfile == null)
+        if (playerProfile == null)
             return tuning;
 
-        if (!powerupUpgradeConfig.TryGetUpgrade(powerupType, out var upgradeEntry) || upgradeEntry == null)
+        PowerupUpgradeConfig.PowerupUpgradeEntry upgradeEntry = null;
+        if (powerupUpgradeConfig != null)
+        {
+            powerupUpgradeConfig.TryGetUpgrade(powerupType, out upgradeEntry);
+        }
+        else
+        {
+            upgradeEntry = FindDefaultUpgrade(powerupType);
+        }
+
+        if (upgradeEntry == null)
             return tuning;
 
         int level = Mathf.Clamp(playerProfile.GetPowerupUpgradeLevel(powerupType), 0, upgradeEntry.MaxLevel);
@@ -659,6 +740,18 @@ public class PlayerPowerupController : MonoBehaviour
             return tuning;
 
         return new PowerupTuning(upgradeLevel.duration, upgradeLevel.strength);
+    }
+
+    private static PowerupUpgradeConfig.PowerupUpgradeEntry FindDefaultUpgrade(PowerupType powerupType)
+    {
+        var defaultEntries = PowerupUpgradeConfig.GetDefaultEntries();
+        for (int i = 0; i < defaultEntries.Length; i++)
+        {
+            if (defaultEntries[i] != null && defaultEntries[i].powerupType == powerupType)
+                return defaultEntries[i];
+        }
+
+        return null;
     }
 
     private PowerupTuning GetDefaultPowerupTuning(PowerupType powerupType)
@@ -688,15 +781,17 @@ public class PlayerPowerupController : MonoBehaviour
 
     public readonly struct PowerupStatus
     {
-        public PowerupStatus(PowerupType type, float remainingTime, bool isTimed)
+        public PowerupStatus(PowerupType type, float remainingTime, float totalDuration, bool isTimed)
         {
             Type = type;
             RemainingTime = remainingTime;
+            TotalDuration = totalDuration;
             IsTimed = isTimed;
         }
 
         public PowerupType Type { get; }
         public float RemainingTime { get; }
+        public float TotalDuration { get; }
         public bool IsTimed { get; }
     }
 }

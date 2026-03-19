@@ -5,6 +5,8 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class ObstacleRingGenerator : MonoBehaviour
 {
+    private const float DefaultSupportedPowerupSpawnChance = 0.18f;
+
     [Header("References")]
     [Tooltip("The player's transform; rings are spawned ahead of this along +Z and recycled behind.")]
     [SerializeField] private Transform playerTransform;
@@ -196,6 +198,56 @@ public class ObstacleRingGenerator : MonoBehaviour
     private float _pickupSpawnChanceMultiplier = 1f;
 
     private bool _isRunActive;
+
+    public float EffectivePowerupSpawnChance =>
+        HasSupportedPowerupEntries() && powerupSpawnChance > 0f
+            ? powerupSpawnChance
+            : DefaultSupportedPowerupSpawnChance;
+
+    public bool HasSupportedPowerupEntries()
+    {
+        if (powerupEntries == null || powerupEntries.Length == 0)
+            return false;
+
+        for (int i = 0; i < powerupEntries.Length; i++)
+        {
+            PowerupEntry entry = powerupEntries[i];
+            if (entry != null && PowerupUpgradeConfig.IsTargetGameplayPowerup(entry.type) && entry.weight > 0)
+                return true;
+        }
+
+        return false;
+    }
+
+    public PowerupEntry[] GetSanitizedPowerupEntries()
+    {
+        if (!HasSupportedPowerupEntries())
+            return PowerupUpgradeConfig.GetDefaultSpawnEntries();
+
+        var sanitizedEntries = new List<PowerupEntry>();
+        for (int i = 0; i < powerupEntries.Length; i++)
+        {
+            PowerupEntry entry = powerupEntries[i];
+            if (entry == null || !PowerupUpgradeConfig.IsTargetGameplayPowerup(entry.type))
+                continue;
+
+            sanitizedEntries.Add(new PowerupEntry
+            {
+                type = entry.type,
+                weight = Mathf.Max(0, entry.weight)
+            });
+        }
+
+        return sanitizedEntries.Count > 0
+            ? sanitizedEntries.ToArray()
+            : PowerupUpgradeConfig.GetDefaultSpawnEntries();
+    }
+
+    public void ApplyDefaultPowerupEntries()
+    {
+        powerupEntries = PowerupUpgradeConfig.GetDefaultSpawnEntries();
+        powerupSpawnChance = Mathf.Max(powerupSpawnChance, DefaultSupportedPowerupSpawnChance);
+    }
 
     private enum PickupPatternType
     {
@@ -961,7 +1013,7 @@ public class ObstacleRingGenerator : MonoBehaviour
             pickup.transform.localPosition = Vector3.zero;
             pickup.transform.localRotation = Quaternion.identity;
 
-            bool spawnPowerup = ShouldSpawnPowerupInChain() && Random.value <= powerupSpawnChance;
+            bool spawnPowerup = ShouldSpawnPowerupInChain() && Random.value <= EffectivePowerupSpawnChance;
             if (spawnPowerup)
             {
                 pickup.Configure(PickupType.Powerup, ChooseRandomPowerup());
@@ -1107,7 +1159,7 @@ public class ObstacleRingGenerator : MonoBehaviour
             pickup.transform.localPosition = Vector3.zero;
             pickup.transform.localRotation = Quaternion.identity;
 
-            bool spawnPowerup = allowPowerup && Random.value <= powerupSpawnChance;
+            bool spawnPowerup = allowPowerup && Random.value <= EffectivePowerupSpawnChance;
             if (spawnPowerup)
             {
                 pickup.Configure(PickupType.Powerup, ChooseRandomPowerup());
@@ -1246,26 +1298,31 @@ public class ObstacleRingGenerator : MonoBehaviour
 
     private PowerupType ChooseRandomPowerup()
     {
-        if (powerupEntries == null || powerupEntries.Length == 0)
-            return PowerupType.CoinMultiplier;
+        PowerupEntry[] supportedEntries = GetSanitizedPowerupEntries();
+        if (supportedEntries == null || supportedEntries.Length == 0)
+        {
+            return GetFallbackPowerup();
+        }
 
         int totalWeight = 0;
-        foreach (var entry in powerupEntries)
+        foreach (var entry in supportedEntries)
         {
-            if (entry == null)
+            if (entry == null || !PowerupUpgradeConfig.IsTargetGameplayPowerup(entry.type))
                 continue;
 
             totalWeight += Mathf.Max(0, entry.weight);
         }
 
         if (totalWeight <= 0)
-            return powerupEntries[0].type;
+        {
+            return GetFallbackPowerup();
+        }
 
         int roll = Random.Range(0, totalWeight);
         int cumulative = 0;
-        foreach (var entry in powerupEntries)
+        foreach (var entry in supportedEntries)
         {
-            if (entry == null)
+            if (entry == null || !PowerupUpgradeConfig.IsTargetGameplayPowerup(entry.type))
                 continue;
 
             int w = Mathf.Max(0, entry.weight);
@@ -1274,7 +1331,16 @@ public class ObstacleRingGenerator : MonoBehaviour
                 return entry.type;
         }
 
-        return powerupEntries[0].type;
+        return GetFallbackPowerup();
+    }
+
+    private static PowerupType GetFallbackPowerup()
+    {
+        var supportedPowerups = PowerupUpgradeConfig.TargetPowerups;
+        if (supportedPowerups == null || supportedPowerups.Count == 0)
+            return PowerupType.ScoreMultiplier;
+
+        return supportedPowerups[Random.Range(0, supportedPowerups.Count)];
     }
 
     public void SetPickupSpawnChanceMultiplier(float multiplier)

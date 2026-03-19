@@ -3,6 +3,9 @@ using UnityEngine;
 
 public class HangarPageController : MonoBehaviour
 {
+    private const int DefaultComboBaseCost = 200;
+    private const int DefaultComboCostIncrease = 150;
+
     [Header("Data")]
     [SerializeField] private PlayerProfile profile;
     [SerializeField] private ShipDatabase shipDatabase;
@@ -153,11 +156,13 @@ public class HangarPageController : MonoBehaviour
         if (upgradeItemPrefab == null)
             return;
 
+        bool comboAdded = false;
+
         if (shipDatabase != null && shipDatabase.upgrades != null)
         {
             foreach (var upgrade in shipDatabase.upgrades)
             {
-                if (upgrade == null)
+                if (upgrade == null || upgrade.upgradeType != UpgradeType.ComboMultiplier)
                     continue;
 
                 int currentLevel = GetUpgradeLevel(upgrade);
@@ -167,8 +172,12 @@ public class HangarPageController : MonoBehaviour
                 var instance = Instantiate(upgradeItemPrefab, contentRoot);
                 instance.Initialize(upgrade, currentLevel, cost, canUpgrade);
                 _spawnedItems.Add(instance.gameObject);
+                comboAdded = true;
             }
         }
+
+        if (!comboAdded)
+            BuildFallbackComboUpgrade();
 
         BuildPowerupUpgrades();
     }
@@ -251,10 +260,14 @@ public class HangarPageController : MonoBehaviour
 
     private void BuildPowerupUpgrades()
     {
-        if (powerupUpgradeConfig == null || powerupUpgradeConfig.upgrades == null || upgradeItemPrefab == null)
+        if (upgradeItemPrefab == null)
             return;
 
-        foreach (var upgrade in powerupUpgradeConfig.upgrades)
+        var upgradeEntries = powerupUpgradeConfig != null
+            ? powerupUpgradeConfig.GetAvailableUpgrades()
+            : PowerupUpgradeConfig.GetDefaultEntries();
+
+        foreach (var upgrade in upgradeEntries)
         {
             if (upgrade == null)
                 continue;
@@ -295,5 +308,23 @@ public class HangarPageController : MonoBehaviour
 
         profile.SetPowerupUpgradeLevel(upgradeEntry.powerupType, currentLevel + 1);
         SelectTab(selectedTab);
+    }
+
+    private void BuildFallbackComboUpgrade()
+    {
+        ShipUpgradeDefinition comboUpgrade = ScriptableObject.CreateInstance<ShipUpgradeDefinition>();
+        comboUpgrade.upgradeType = UpgradeType.ComboMultiplier;
+        comboUpgrade.displayName = "Combo Modifier";
+        comboUpgrade.maxLevel = 5;
+        comboUpgrade.baseCost = DefaultComboBaseCost;
+        comboUpgrade.costIncrease = DefaultComboCostIncrease;
+
+        int currentLevel = GetUpgradeLevel(comboUpgrade);
+        int cost = comboUpgrade.GetCostForLevel(currentLevel);
+        bool canUpgrade = profile != null && currentLevel < comboUpgrade.maxLevel && profile.softCurrency >= cost;
+
+        var instance = Instantiate(upgradeItemPrefab, contentRoot);
+        instance.Initialize(comboUpgrade, currentLevel, cost, canUpgrade);
+        _spawnedItems.Add(instance.gameObject);
     }
 }

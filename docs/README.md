@@ -15,10 +15,13 @@ This `docs/` folder is the authoritative project context for product framing, ar
 | `implementation-plan.md` | Delivery sequence and validation expectations |
 | `decision-registry.md` | Accepted production and technical decisions |
 | `codex-context.md` | Working rules for future Codex execution in this repo |
+| `user-testing/` | Manual test checklists, one file per tracked experience feature |
 
 ## Working Rules
 
 - Keep the product, architecture, feature, task, script, and decision docs current as work evolves.
+- Keep `docs/user-testing/` current as features become playable, change flow, or gain new blockers/workarounds.
+- When a feature status changes, update both `feature-registry.md` and the relevant user-testing checklist in the same pass.
 - Do not start a new feature unless it is recorded in `feature-registry.md`.
 - Prefer one feature `In progress` at a time unless the user explicitly requests parallel work.
 - Use these docs as the restore point instead of relying on chat history.

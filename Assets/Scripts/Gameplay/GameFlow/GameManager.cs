@@ -159,6 +159,11 @@ public class GameManager : MonoBehaviour
             }
         }
 
+        if (powerupController != null && !powerupController.enabled)
+        {
+            powerupController.enabled = true;
+        }
+
         if (balanceConfig != null)
         {
             maxContinuesPerRun = balanceConfig.maxContinuesPerRun;
@@ -522,6 +527,7 @@ public class GameManager : MonoBehaviour
         playerController?.StartRun();
         speedController?.ResetForNewRun();
         speedController?.StartRun();
+        powerupController?.ResetAllPowerups();
 
         // But hide and make non-collidable
         SetPlayerVisible(false);
@@ -629,6 +635,7 @@ public class GameManager : MonoBehaviour
         speedController?.ResetForNewRun();
         statsTracker?.ResetRunStats();
         runZoneManager?.OnResetRun();
+        powerupController?.ResetAllPowerups();
         ApplyRunUpgrades();
 
         LogAnalyticsEvent(RunEventName, new Dictionary<string, object>
@@ -659,6 +666,8 @@ public class GameManager : MonoBehaviour
     {
         TransitionToState(GameState.Playing, 1f);
         _gameTimerEnabled = false;
+        powerupController?.ResetAllPowerups();
+        ApplyRunUpgrades();
 
         float preRunClearDistance = GetPreRunClearDistance();
         obstacleRingGenerator.DissolveNextRings(preRunClearDistance, dissolveDuration);
@@ -749,6 +758,7 @@ public class GameManager : MonoBehaviour
         obstacleRingGenerator?.StopRun();
         playerController?.StopRun();
         playerVisual.SetVisible(false);
+        powerupController?.ResetAllPowerups();
 
         LogAnalyticsEvent(RunEventName, new Dictionary<string, object>
         {
