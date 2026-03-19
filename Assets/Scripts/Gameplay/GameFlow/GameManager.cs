@@ -42,10 +42,13 @@ public class GameManager : MonoBehaviour
     [SerializeField] private CountdownUIController countdownUIController;
     [SerializeField] private LoadingScreenManager loadingScreenManager;
     [SerializeField] private RewardedRunPromptUI rewardedRunPromptUI;
+    [SerializeField] private RewardedOfferConfig rewardedOfferConfig;
 
     [Header("Rewarded Run Prompt")]
     [SerializeField] private bool rewardedRunPromptEnabled = false;
     [SerializeField] private float rewardedRunPromptDelaySeconds = 45f;
+    [SerializeField] private float rewardedRunPromptIntervalSeconds = 45f;
+    [SerializeField] private float rewardedRunPromptCooldownSeconds = 20f;
     [SerializeField] private bool rewardedRunPromptPausesGameplay = false;
     [SerializeField] private float rewardedRunPromptAutoDismissSeconds = 8f;
 
@@ -92,6 +95,9 @@ public class GameManager : MonoBehaviour
     private bool _rewardedRunPromptActive;
     private float _rewardedRunPromptPrevTimeScale;
     private bool _rewardedRunPromptPausedRun;
+    private float _nextRewardedOfferCheckTime;
+    private float _rewardedOfferCooldownUntilTime;
+    private RewardedOfferRuntimeData _pendingRewardedOffer;
     private GameStateMachine _stateMachine;
     private GameServicesFacade _services;
     private bool _runRewardsGranted;
@@ -102,6 +108,17 @@ public class GameManager : MonoBehaviour
 
     private Vector3 _lastDeathPosition;
     private Vector3 _lastDeathForward;
+
+    private sealed class RewardedOfferRuntimeData
+    {
+        public RewardedOfferRewardKind rewardKind;
+        public PowerupType powerupType;
+        public ShopCurrencyType currencyType;
+        public int amount;
+        public string title;
+        public string body;
+        public string rewardLabel;
+    }
 
     public GameState CurrentState => _stateMachine != null ? _stateMachine.CurrentState : GameState.Menu;
 
@@ -156,6 +173,15 @@ public class GameManager : MonoBehaviour
             if (profiles != null && profiles.Length > 0)
             {
                 playerProfile = profiles[0];
+            }
+        }
+
+        if (rewardedOfferConfig == null)
+        {
+            var rewardedOfferConfigs = Resources.FindObjectsOfTypeAll<RewardedOfferConfig>();
+            if (rewardedOfferConfigs != null && rewardedOfferConfigs.Length > 0)
+            {
+                rewardedOfferConfig = rewardedOfferConfigs[0];
             }
         }
 
@@ -263,10 +289,10 @@ public class GameManager : MonoBehaviour
             _elapsedTime += Time.deltaTime;
         }
 
-        //if (ShouldTriggerRewardedRunPrompt())
-        //{
-        //    ShowRewardedRunPrompt();
-        //}
+        if (ShouldTriggerRewardedRunPrompt())
+        {
+            ShowRewardedRunPrompt();
+        }
     }
 
     private void TransitionToState(GameState newState, float timeScale)
@@ -522,6 +548,9 @@ public class GameManager : MonoBehaviour
         _gameTimerEnabled = false;
         _rewardedRunPromptShownThisRun = false;
         _rewardedRunPromptActive = false;
+        _pendingRewardedOffer = null;
+        _nextRewardedOfferCheckTime = 0f;
+        _rewardedOfferCooldownUntilTime = 0f;
 
         // We WANT the background to fly, so keep movement running
         playerController?.StartRun();
@@ -538,6 +567,7 @@ public class GameManager : MonoBehaviour
         hudController?.Hide();
         pauseMenuUI?.Hide();
         rewardedRunPromptUI?.Hide();
+        hudController?.HideRewardedOfferPopout(false);
     }
 
     private void StartNewRunFromMenu()
@@ -617,6 +647,9 @@ public class GameManager : MonoBehaviour
         _rewardedRunPromptShownThisRun = false;
         _rewardedRunPromptActive = false;
         _rewardedRunPromptPausedRun = false;
+        _pendingRewardedOffer = null;
+        _nextRewardedOfferCheckTime = GetRewardedOfferFirstDelaySeconds();
+        _rewardedOfferCooldownUntilTime = 0f;
 
         // Show and enable the player now we're playing
         SetPlayerVisible(true);
@@ -627,6 +660,7 @@ public class GameManager : MonoBehaviour
         pauseMenuUI?.Hide();
         hudController?.Show();
         rewardedRunPromptUI?.Hide();
+        hudController?.HideRewardedOfferPopout(false);
 
         playerHealth?.ResetHealth();
         playerVisual.SetVisible(true);
@@ -668,6 +702,12 @@ public class GameManager : MonoBehaviour
         _gameTimerEnabled = false;
         powerupController?.ResetAllPowerups();
         ApplyRunUpgrades();
+        _pendingRewardedOffer = null;
+        _rewardedRunPromptActive = false;
+        _rewardedRunPromptPausedRun = false;
+        _rewardedOfferCooldownUntilTime = Mathf.Max(_rewardedOfferCooldownUntilTime, _elapsedTime + GetRewardedOfferCooldownSeconds());
+        rewardedRunPromptUI?.Hide();
+        hudController?.HideRewardedOfferPopout(false);
 
         float preRunClearDistance = GetPreRunClearDistance();
         obstacleRingGenerator.DissolveNextRings(preRunClearDistance, dissolveDuration);
@@ -698,6 +738,11 @@ public class GameManager : MonoBehaviour
 
     private void PauseGame()
     {
+        if (_rewardedRunPromptActive)
+        {
+            HideRewardedRunPrompt();
+        }
+
         TransitionToState(GameState.Paused, 0f);
 
         _gameTimerEnabled = false;
@@ -743,6 +788,9 @@ public class GameManager : MonoBehaviour
         {
             HideRewardedRunPrompt();
         }
+
+        hudController?.HideRewardedOfferPopout(false);
+        _pendingRewardedOffer = null;
 
         if (playerController != null)
         {
@@ -801,53 +849,87 @@ public class GameManager : MonoBehaviour
 
     private bool ShouldTriggerRewardedRunPrompt()
     {
-        if (!rewardedRunPromptEnabled)
+        if (!IsRewardedOfferFeatureEnabled())
             return false;
 
-        if (_rewardedRunPromptShownThisRun || _rewardedRunPromptActive)
+        if (_rewardedRunPromptActive || _pendingRewardedOffer != null)
             return false;
 
         if (_stateMachine.CurrentState != GameState.Playing)
             return false;
 
-        if (!_gameTimerEnabled || rewardedRunPromptDelaySeconds <= 0f)
+        if (!_gameTimerEnabled)
             return false;
 
-        if (_elapsedTime < rewardedRunPromptDelaySeconds)
+        if (_elapsedTime < _nextRewardedOfferCheckTime)
+            return false;
+
+        if (_elapsedTime < _rewardedOfferCooldownUntilTime)
             return false;
 
         if (_adInProgress || _interstitialInProgress)
             return false;
 
-        return rewardedRunPromptUI != null;
+        if (rewardedRunPromptUI == null || hudController == null)
+            return false;
+
+        if (_rewardedRunPromptPausedRun || hudController.IsRewardedOfferPopoutVisible)
+            return false;
+
+        return true;
     }
 
     private void ShowRewardedRunPrompt()
     {
-        _rewardedRunPromptShownThisRun = true;
-        _rewardedRunPromptActive = true;
+        _pendingRewardedOffer = SelectRewardedOffer();
+        if (_pendingRewardedOffer == null)
+        {
+            _nextRewardedOfferCheckTime = _elapsedTime + GetRewardedOfferIntervalSeconds();
+            return;
+        }
 
-        if (rewardedRunPromptPausesGameplay)
-            PauseRunForRewardedPrompt();
+        _rewardedRunPromptActive = true;
+        _rewardedRunPromptShownThisRun = true;
+        _nextRewardedOfferCheckTime = _elapsedTime + GetRewardedOfferIntervalSeconds();
+
+        hudController.ShowRewardedOfferPopout(
+            _pendingRewardedOffer.title,
+            _pendingRewardedOffer.rewardLabel,
+            GetRewardedOfferPopoutLifetimeSeconds(),
+            HandleRewardedOfferPopoutTapped,
+            HandleRewardedRunDecline,
+            HandleRewardedRunTimeout);
+
+        LogAnalyticsEvent(AnalyticsEventNames.RewardedOfferShown, BuildRewardedOfferAnalyticsParams(_pendingRewardedOffer));
+    }
+
+    private void HandleRewardedOfferPopoutTapped()
+    {
+        if (_pendingRewardedOffer == null)
+            return;
+
+        LogAnalyticsEvent(AnalyticsEventNames.RewardedOfferTapped, BuildRewardedOfferAnalyticsParams(_pendingRewardedOffer));
+        PauseRunForRewardedPrompt();
+        ShowRewardedOfferModal();
+    }
+
+    private void ShowRewardedOfferModal()
+    {
+        if (_pendingRewardedOffer == null)
+            return;
 
         bool adReady = _services?.RewardedAds != null && _services.RewardedAds.IsRewardedAdReady();
-        string title = LocalizationService.Get("ui.rewarded_run_title", "Boost your run!");
-        string body = LocalizationService.Get("ui.rewarded_run_body", "Watch a rewarded ad to claim a bonus.");
-        string reward = GetRewardedRunRewardLabel();
-        string acceptLabel = LocalizationService.Get("ui.rewarded_run_accept", "Watch Ad");
-        string declineLabel = LocalizationService.Get("ui.rewarded_run_decline", "No Thanks");
-
         rewardedRunPromptUI.Show(
-            title,
-            body,
-            reward,
-            acceptLabel,
-            declineLabel,
+            _pendingRewardedOffer.title,
+            _pendingRewardedOffer.body,
+            _pendingRewardedOffer.rewardLabel,
+            LocalizationService.Get("ui.rewarded_run_accept", "Watch Ad"),
+            LocalizationService.Get("ui.rewarded_run_decline", "Ignore"),
             HandleRewardedRunAccept,
             HandleRewardedRunDecline,
             adReady,
-            rewardedRunPromptAutoDismissSeconds,
-            HandleRewardedRunTimeout);
+            0f,
+            null);
     }
 
     private void HandleRewardedRunAccept()
@@ -883,7 +965,7 @@ public class GameManager : MonoBehaviour
 
         LogAnalyticsEvent("ad_shown", new Dictionary<string, object>
         {
-            { "source", "rewarded_run" }
+            { "source", "rewarded_offer" }
         });
 
         _services.RewardedAds.ShowRewardedAd(result =>
@@ -894,7 +976,7 @@ public class GameManager : MonoBehaviour
             {
                 LogAnalyticsEvent("ad_completed", new Dictionary<string, object>
                 {
-                    { "source", "rewarded_run" }
+                    { "source", "rewarded_offer" }
                 });
 
                 GrantRewardedRunReward();
@@ -903,7 +985,7 @@ public class GameManager : MonoBehaviour
             {
                 LogAnalyticsEvent("ad_skipped", new Dictionary<string, object>
                 {
-                    { "source", "rewarded_run" },
+                    { "source", "rewarded_offer" },
                     { "result", result.ToString() }
                 });
             }
@@ -915,11 +997,8 @@ public class GameManager : MonoBehaviour
 
     private void HandleRewardedRunDecline()
     {
-        LogAnalyticsEvent("ad_skipped", new Dictionary<string, object>
-        {
-            { "source", "rewarded_run" },
-            { "result", "declined" }
-        });
+        if (_pendingRewardedOffer != null)
+            LogAnalyticsEvent(AnalyticsEventNames.RewardedOfferIgnored, BuildRewardedOfferAnalyticsParams(_pendingRewardedOffer));
 
         HideRewardedRunPrompt();
         ResumeRunAfterRewardedPrompt();
@@ -927,11 +1006,8 @@ public class GameManager : MonoBehaviour
 
     private void HandleRewardedRunTimeout()
     {
-        LogAnalyticsEvent("ad_skipped", new Dictionary<string, object>
-        {
-            { "source", "rewarded_run" },
-            { "result", "timeout" }
-        });
+        if (_pendingRewardedOffer != null)
+            LogAnalyticsEvent(AnalyticsEventNames.RewardedOfferTimedOut, BuildRewardedOfferAnalyticsParams(_pendingRewardedOffer));
 
         HideRewardedRunPrompt();
         ResumeRunAfterRewardedPrompt();
@@ -939,14 +1015,24 @@ public class GameManager : MonoBehaviour
 
     private void GrantRewardedRunReward()
     {
-        GrantDoubleRunRewards();
-    }
+        if (_pendingRewardedOffer == null || playerProfile == null)
+            return;
 
-    private string GetRewardedRunRewardLabel()
-    {
-        return LocalizationService.Get(
-            "ui.rewarded_run_reward_double",
-            "Reward: Double run rewards");
+        switch (_pendingRewardedOffer.rewardKind)
+        {
+            case RewardedOfferRewardKind.Powerup:
+                powerupController?.ActivatePowerup(_pendingRewardedOffer.powerupType);
+                break;
+            case RewardedOfferRewardKind.PremiumCurrency:
+                playerProfile.AddCurrencyAndSave(ShopCurrencyType.Premium, _pendingRewardedOffer.amount);
+                break;
+            case RewardedOfferRewardKind.SoftCurrency:
+            default:
+                playerProfile.AddCurrencyAndSave(ShopCurrencyType.Soft, _pendingRewardedOffer.amount);
+                break;
+        }
+
+        LogAnalyticsEvent(AnalyticsEventNames.RewardedOfferRewardGranted, BuildRewardedOfferAnalyticsParams(_pendingRewardedOffer));
     }
 
     private void PauseRunForRewardedPrompt()
@@ -985,6 +1071,148 @@ public class GameManager : MonoBehaviour
     {
         _rewardedRunPromptActive = false;
         rewardedRunPromptUI?.Hide();
+        hudController?.HideRewardedOfferPopout(false);
+        _rewardedOfferCooldownUntilTime = Mathf.Max(_rewardedOfferCooldownUntilTime, _elapsedTime + GetRewardedOfferCooldownSeconds());
+        _pendingRewardedOffer = null;
+    }
+
+    private bool IsRewardedOfferFeatureEnabled()
+    {
+        if (rewardedOfferConfig != null)
+            return rewardedOfferConfig.enabled;
+
+        return rewardedRunPromptEnabled;
+    }
+
+    private float GetRewardedOfferFirstDelaySeconds()
+    {
+        return rewardedOfferConfig != null
+            ? Mathf.Max(0f, rewardedOfferConfig.firstOfferDelaySeconds)
+            : Mathf.Max(0f, rewardedRunPromptDelaySeconds);
+    }
+
+    private float GetRewardedOfferIntervalSeconds()
+    {
+        return rewardedOfferConfig != null
+            ? Mathf.Max(1f, rewardedOfferConfig.repeatIntervalSeconds)
+            : Mathf.Max(1f, rewardedRunPromptIntervalSeconds);
+    }
+
+    private float GetRewardedOfferPopoutLifetimeSeconds()
+    {
+        return rewardedOfferConfig != null
+            ? Mathf.Max(1f, rewardedOfferConfig.offerPopoutLifetimeSeconds)
+            : Mathf.Max(1f, rewardedRunPromptAutoDismissSeconds);
+    }
+
+    private float GetRewardedOfferCooldownSeconds()
+    {
+        return rewardedOfferConfig != null
+            ? Mathf.Max(0f, rewardedOfferConfig.offerCooldownSeconds)
+            : Mathf.Max(0f, rewardedRunPromptCooldownSeconds);
+    }
+
+    private RewardedOfferRuntimeData SelectRewardedOffer()
+    {
+        RewardedOfferRewardEntry[] rewards = rewardedOfferConfig != null
+            ? rewardedOfferConfig.GetResolvedRewards()
+            : RewardedOfferConfig.GetDefaultRewards();
+
+        if (rewards == null || rewards.Length == 0)
+            return null;
+
+        int totalWeight = 0;
+        for (int i = 0; i < rewards.Length; i++)
+        {
+            RewardedOfferRewardEntry reward = rewards[i];
+            if (!IsEligibleRewardEntry(reward))
+                continue;
+
+            totalWeight += Mathf.Max(0, reward.weight);
+        }
+
+        if (totalWeight <= 0)
+            return null;
+
+        int roll = Random.Range(0, totalWeight);
+        int cumulative = 0;
+        for (int i = 0; i < rewards.Length; i++)
+        {
+            RewardedOfferRewardEntry reward = rewards[i];
+            if (!IsEligibleRewardEntry(reward))
+                continue;
+
+            cumulative += Mathf.Max(0, reward.weight);
+            if (roll < cumulative)
+            {
+                return CreateRuntimeReward(reward);
+            }
+        }
+
+        return null;
+    }
+
+    private static bool IsEligibleRewardEntry(RewardedOfferRewardEntry reward)
+    {
+        if (reward == null || reward.weight <= 0)
+            return false;
+
+        switch (reward.rewardKind)
+        {
+            case RewardedOfferRewardKind.Powerup:
+                return PowerupUpgradeConfig.IsTargetGameplayPowerup(reward.powerupType);
+            case RewardedOfferRewardKind.SoftCurrency:
+            case RewardedOfferRewardKind.PremiumCurrency:
+                return reward.amount > 0;
+            default:
+                return false;
+        }
+    }
+
+    private static RewardedOfferRuntimeData CreateRuntimeReward(RewardedOfferRewardEntry reward)
+    {
+        if (reward == null)
+            return null;
+
+        return new RewardedOfferRuntimeData
+        {
+            rewardKind = reward.rewardKind,
+            powerupType = reward.powerupType,
+            currencyType = reward.rewardKind == RewardedOfferRewardKind.PremiumCurrency
+                ? ShopCurrencyType.Premium
+                : ShopCurrencyType.Soft,
+            amount = Mathf.Max(0, reward.amount),
+            title = reward.GetResolvedTitle(),
+            body = reward.GetResolvedBody(),
+            rewardLabel = reward.GetResolvedRewardLabel()
+        };
+    }
+
+    private Dictionary<string, object> BuildRewardedOfferAnalyticsParams(RewardedOfferRuntimeData reward)
+    {
+        var parameters = new Dictionary<string, object>
+        {
+            { AnalyticsEventNames.Params.Source, "rewarded_offer" }
+        };
+
+        if (reward == null)
+            return parameters;
+
+        parameters[AnalyticsEventNames.Params.RewardKind] = reward.rewardKind.ToString();
+
+        switch (reward.rewardKind)
+        {
+            case RewardedOfferRewardKind.Powerup:
+                parameters[AnalyticsEventNames.Params.Type] = reward.powerupType.ToString();
+                break;
+            case RewardedOfferRewardKind.PremiumCurrency:
+            case RewardedOfferRewardKind.SoftCurrency:
+                parameters[AnalyticsEventNames.Params.Type] = reward.currencyType.ToString();
+                parameters[AnalyticsEventNames.Params.Amount] = reward.amount;
+                break;
+        }
+
+        return parameters;
     }
 
     private void ShowGameOverUI()

@@ -47,6 +47,14 @@ public class HudController : MonoBehaviour
     [SerializeField] private RectTransform powerupStripRoot;
     [SerializeField] private TMP_Text powerupToastText;
 
+    [Header("Rewarded Offer")]
+    [SerializeField] private GameObject rewardedOfferPopoutRoot;
+    [SerializeField] private TMP_Text rewardedOfferTitleText;
+    [SerializeField] private TMP_Text rewardedOfferRewardText;
+    [SerializeField] private Slider rewardedOfferCountdownSlider;
+    [SerializeField] private Button rewardedOfferOpenButton;
+    [SerializeField] private Button rewardedOfferDismissButton;
+
     [Header("Pickup Score Popup")]
     [SerializeField] private RectTransform pickupScorePopupContainer;
     [SerializeField] private TMP_Text pickupScorePopupPrefab;
@@ -55,6 +63,11 @@ public class HudController : MonoBehaviour
     [SerializeField] private float pickupScorePopupDuration = 0.7f;
 
     private float _powerupToastExpiresAt;
+    private System.Action _rewardedOfferTappedAction;
+    private System.Action _rewardedOfferDismissedAction;
+    private System.Action _rewardedOfferTimedOutAction;
+    private float _rewardedOfferDuration;
+    private float _rewardedOfferRemaining;
 
     private void Awake()
     {
@@ -65,6 +78,7 @@ public class HudController : MonoBehaviour
 
         if (rootPanel == null) rootPanel = gameObject;
         EnsurePowerupStrip();
+        EnsureRewardedOfferPopout();
     }
 
     private void OnEnable()
@@ -127,6 +141,7 @@ public class HudController : MonoBehaviour
         UpdateBestScoreDisplay();
         UpdatePowerupIndicators();
         UpdatePowerupToast();
+        UpdateRewardedOfferPopout();
     }
 
     private void HandleHealthChanged(float current, float max)
@@ -164,6 +179,50 @@ public class HudController : MonoBehaviour
     {
         if (rootPanel != null)
             rootPanel.SetActive(false);
+
+        HideRewardedOfferPopout(false);
+    }
+
+    public bool IsRewardedOfferPopoutVisible => rewardedOfferPopoutRoot != null && rewardedOfferPopoutRoot.activeSelf;
+
+    public void ShowRewardedOfferPopout(
+        string title,
+        string reward,
+        float durationSeconds,
+        System.Action onTapped,
+        System.Action onDismissed,
+        System.Action onTimedOut)
+    {
+        EnsureRewardedOfferPopout();
+        if (rewardedOfferPopoutRoot == null)
+            return;
+
+        _rewardedOfferTappedAction = onTapped;
+        _rewardedOfferDismissedAction = onDismissed;
+        _rewardedOfferTimedOutAction = onTimedOut;
+        _rewardedOfferDuration = Mathf.Max(0.1f, durationSeconds);
+        _rewardedOfferRemaining = _rewardedOfferDuration;
+
+        if (rewardedOfferTitleText != null)
+            rewardedOfferTitleText.text = string.IsNullOrWhiteSpace(title) ? "Bonus Offer" : title;
+
+        if (rewardedOfferRewardText != null)
+            rewardedOfferRewardText.text = reward ?? string.Empty;
+
+        rewardedOfferPopoutRoot.SetActive(true);
+        UpdateRewardedOfferCountdownVisual();
+    }
+
+    public void HideRewardedOfferPopout(bool invokeDismissed)
+    {
+        if (rewardedOfferPopoutRoot != null)
+            rewardedOfferPopoutRoot.SetActive(false);
+
+        if (invokeDismissed)
+            _rewardedOfferDismissedAction?.Invoke();
+
+        ClearRewardedOfferCallbacks();
+        UpdateRewardedOfferCountdownVisual();
     }
 
     public void OnPauseButtonPressed()
@@ -361,6 +420,28 @@ public class HudController : MonoBehaviour
         }
     }
 
+    private void UpdateRewardedOfferPopout()
+    {
+        if (rewardedOfferPopoutRoot == null || !rewardedOfferPopoutRoot.activeSelf)
+            return;
+
+        if (_rewardedOfferDuration <= 0f)
+            return;
+
+        _rewardedOfferRemaining = Mathf.Max(0f, _rewardedOfferRemaining - Time.unscaledDeltaTime);
+        UpdateRewardedOfferCountdownVisual();
+
+        if (_rewardedOfferRemaining <= 0f)
+        {
+            if (rewardedOfferPopoutRoot != null)
+                rewardedOfferPopoutRoot.SetActive(false);
+
+            System.Action timeoutAction = _rewardedOfferTimedOutAction;
+            ClearRewardedOfferCallbacks();
+            timeoutAction?.Invoke();
+        }
+    }
+
     private void HandlePowerupCollected(PowerupType powerupType)
     {
         ShowPowerupToast($"{PowerupUpgradeConfig.GetDisplayName(powerupType)} online", GetPowerupColor(powerupType));
@@ -391,6 +472,93 @@ public class HudController : MonoBehaviour
         {
             powerupToastText.gameObject.SetActive(false);
         }
+    }
+
+    private void EnsureRewardedOfferPopout()
+    {
+        if (rewardedOfferPopoutRoot != null)
+            return;
+
+        if (rootPanel == null)
+            return;
+
+        TMP_FontAsset font = comboText != null ? comboText.font : TMP_Settings.defaultFontAsset;
+
+        GameObject container = new GameObject("RewardedOfferPopout", typeof(RectTransform), typeof(Image));
+        container.transform.SetParent(rootPanel.transform, false);
+        rewardedOfferPopoutRoot = container;
+
+        RectTransform containerRect = container.GetComponent<RectTransform>();
+        containerRect.anchorMin = new Vector2(0.5f, 1f);
+        containerRect.anchorMax = new Vector2(0.5f, 1f);
+        containerRect.pivot = new Vector2(0.5f, 1f);
+        containerRect.anchoredPosition = new Vector2(0f, -24f);
+        containerRect.sizeDelta = new Vector2(420f, 140f);
+
+        Image background = container.GetComponent<Image>();
+        background.color = new Color(0.1f, 0.12f, 0.16f, 0.96f);
+        background.raycastTarget = true;
+
+        rewardedOfferTitleText = CreateIndicatorText(container.transform, font, "OfferTitle", "Bonus Offer", 28f, FontStyles.Bold);
+        RectTransform titleRect = rewardedOfferTitleText.rectTransform;
+        titleRect.anchorMin = new Vector2(0f, 1f);
+        titleRect.anchorMax = new Vector2(1f, 1f);
+        titleRect.pivot = new Vector2(0.5f, 1f);
+        titleRect.anchoredPosition = new Vector2(0f, -12f);
+        titleRect.sizeDelta = new Vector2(-80f, 32f);
+
+        rewardedOfferRewardText = CreateIndicatorText(container.transform, font, "OfferReward", string.Empty, 22f, FontStyles.Normal);
+        RectTransform rewardRect = rewardedOfferRewardText.rectTransform;
+        rewardRect.anchorMin = new Vector2(0f, 1f);
+        rewardRect.anchorMax = new Vector2(1f, 1f);
+        rewardRect.pivot = new Vector2(0.5f, 1f);
+        rewardRect.anchoredPosition = new Vector2(0f, -48f);
+        rewardRect.sizeDelta = new Vector2(-36f, 30f);
+
+        GameObject sliderObject = new GameObject("OfferCountdown", typeof(RectTransform), typeof(Image), typeof(Slider));
+        sliderObject.transform.SetParent(container.transform, false);
+        RectTransform sliderRect = sliderObject.GetComponent<RectTransform>();
+        sliderRect.anchorMin = new Vector2(0f, 0f);
+        sliderRect.anchorMax = new Vector2(1f, 0f);
+        sliderRect.pivot = new Vector2(0.5f, 0f);
+        sliderRect.anchoredPosition = new Vector2(0f, 46f);
+        sliderRect.sizeDelta = new Vector2(-30f, 12f);
+
+        Image sliderBackground = sliderObject.GetComponent<Image>();
+        sliderBackground.color = new Color(0.22f, 0.25f, 0.3f, 1f);
+        sliderBackground.raycastTarget = false;
+
+        rewardedOfferCountdownSlider = sliderObject.GetComponent<Slider>();
+        rewardedOfferCountdownSlider.minValue = 0f;
+        rewardedOfferCountdownSlider.maxValue = 1f;
+        rewardedOfferCountdownSlider.value = 1f;
+        rewardedOfferCountdownSlider.direction = Slider.Direction.LeftToRight;
+
+        GameObject fillArea = new GameObject("FillArea", typeof(RectTransform));
+        fillArea.transform.SetParent(sliderObject.transform, false);
+        RectTransform fillAreaRect = fillArea.GetComponent<RectTransform>();
+        fillAreaRect.anchorMin = Vector2.zero;
+        fillAreaRect.anchorMax = Vector2.one;
+        fillAreaRect.offsetMin = new Vector2(2f, 2f);
+        fillAreaRect.offsetMax = new Vector2(-2f, -2f);
+
+        GameObject fill = new GameObject("Fill", typeof(RectTransform), typeof(Image));
+        fill.transform.SetParent(fillArea.transform, false);
+        RectTransform fillRect = fill.GetComponent<RectTransform>();
+        fillRect.anchorMin = Vector2.zero;
+        fillRect.anchorMax = Vector2.one;
+        fillRect.offsetMin = Vector2.zero;
+        fillRect.offsetMax = Vector2.zero;
+        Image fillImage = fill.GetComponent<Image>();
+        fillImage.color = new Color(1f, 0.73f, 0.24f, 1f);
+        fillImage.raycastTarget = false;
+        rewardedOfferCountdownSlider.fillRect = fillRect;
+        rewardedOfferCountdownSlider.targetGraphic = fillImage;
+
+        rewardedOfferOpenButton = CreateOfferButton(container.transform, font, "OfferOpenButton", "VIEW", new Vector2(-84f, 12f), new Color(0.25f, 0.7f, 0.3f, 1f), HandleRewardedOfferPopoutTapped);
+        rewardedOfferDismissButton = CreateOfferButton(container.transform, font, "OfferDismissButton", "IGNORE", new Vector2(84f, 12f), new Color(0.36f, 0.38f, 0.42f, 1f), HandleRewardedOfferPopoutDismissed);
+
+        rewardedOfferPopoutRoot.SetActive(false);
     }
 
     private void EnsurePowerupStrip()
@@ -562,5 +730,77 @@ public class HudController : MonoBehaviour
             default:
                 return Color.white;
         }
+    }
+
+    private void UpdateRewardedOfferCountdownVisual()
+    {
+        if (rewardedOfferCountdownSlider == null)
+            return;
+
+        if (_rewardedOfferDuration <= 0f)
+        {
+            rewardedOfferCountdownSlider.value = 0f;
+            return;
+        }
+
+        rewardedOfferCountdownSlider.value = Mathf.Clamp01(_rewardedOfferRemaining / _rewardedOfferDuration);
+    }
+
+    private Button CreateOfferButton(
+        Transform parent,
+        TMP_FontAsset font,
+        string objectName,
+        string label,
+        Vector2 anchoredPosition,
+        Color color,
+        UnityEngine.Events.UnityAction onPressed)
+    {
+        GameObject buttonObject = new GameObject(objectName, typeof(RectTransform), typeof(Image), typeof(Button));
+        buttonObject.transform.SetParent(parent, false);
+        RectTransform rect = buttonObject.GetComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0.5f, 0f);
+        rect.anchorMax = new Vector2(0.5f, 0f);
+        rect.pivot = new Vector2(0.5f, 0f);
+        rect.anchoredPosition = anchoredPosition;
+        rect.sizeDelta = new Vector2(140f, 32f);
+
+        Image image = buttonObject.GetComponent<Image>();
+        image.color = color;
+
+        Button button = buttonObject.GetComponent<Button>();
+        button.targetGraphic = image;
+        button.onClick.AddListener(onPressed);
+
+        TMP_Text text = CreateIndicatorText(buttonObject.transform, font, "Label", label, 18f, FontStyles.Bold);
+        RectTransform textRect = text.rectTransform;
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = Vector2.zero;
+        textRect.offsetMax = Vector2.zero;
+        return button;
+    }
+
+    private void HandleRewardedOfferPopoutTapped()
+    {
+        if (rewardedOfferPopoutRoot != null)
+            rewardedOfferPopoutRoot.SetActive(false);
+
+        System.Action tappedAction = _rewardedOfferTappedAction;
+        ClearRewardedOfferCallbacks();
+        tappedAction?.Invoke();
+    }
+
+    private void HandleRewardedOfferPopoutDismissed()
+    {
+        HideRewardedOfferPopout(true);
+    }
+
+    private void ClearRewardedOfferCallbacks()
+    {
+        _rewardedOfferTappedAction = null;
+        _rewardedOfferDismissedAction = null;
+        _rewardedOfferTimedOutAction = null;
+        _rewardedOfferDuration = 0f;
+        _rewardedOfferRemaining = 0f;
     }
 }

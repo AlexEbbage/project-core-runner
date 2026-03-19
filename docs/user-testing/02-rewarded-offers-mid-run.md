@@ -8,18 +8,23 @@ Verify mid-run rewarded offers appear, dismiss cleanly, and do not disrupt the r
 
 - Open `GameScene`.
 - Enter Play Mode.
-- If the flow is not naturally wired yet, note the blocker and test any available debug or forced prompt path.
+- Wait for the configured first offer interval or shorten timing values on `RewardedOfferConfig` for faster checks.
 
 ## Checklist
 
-- [ ] Confirm a mid-run offer can appear during active gameplay.
-- [ ] Confirm the offer includes a visible countdown or limited response window.
-- [ ] Confirm ignoring the offer lets gameplay continue without a harsh interruption.
-- [ ] Accept the offer and confirm gameplay pauses only when intended.
-- [ ] Confirm the modal clearly shows the reward and the rewarded-ad action.
-- [ ] Confirm closing or ignoring the modal returns the player cleanly to the run.
-- [ ] Confirm expired offers disappear without leaving orphan UI behind.
-- [ ] Confirm the offer does not overlap or break core HUD readability.
+- [ ] Confirm the first popout appears only after the configured initial delay.
+- [ ] Confirm the popout appears during active gameplay and not during menu, countdown, pause, continue, or game-over states.
+- [ ] Confirm the popout includes a visible countdown and reward label.
+- [ ] Press `IGNORE` on the popout and confirm it disappears without pausing gameplay.
+- [ ] Let the popout expire and confirm it disappears cleanly without leaving orphan UI behind.
+- [ ] Tap `VIEW` on the popout and confirm gameplay pauses only at that moment.
+- [ ] Confirm the modal clearly shows the reward and rewarded-ad action.
+- [ ] Close or ignore the modal and confirm gameplay resumes cleanly.
+- [ ] Complete a rewarded ad for a powerup reward and confirm the powerup activates immediately in-run.
+- [ ] Complete a rewarded ad for a soft-currency reward and confirm the profile gains soft currency.
+- [ ] Complete a rewarded ad for a premium-currency reward and confirm the profile gains premium currency.
+- [ ] Confirm the next offer does not appear until the next valid interval window.
+- [ ] Confirm only one offer is ever active at a time.
 
 ## Expected Result
 

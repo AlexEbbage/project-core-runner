@@ -71,3 +71,154 @@ public class GameBalanceConfig : ScriptableObject
     public float continueRespawnBackDistance = 8f;
     public float continueRespawnHeightOffset = 0.5f;
 }
+
+public enum RewardedOfferRewardKind
+{
+    Powerup,
+    SoftCurrency,
+    PremiumCurrency
+}
+
+[System.Serializable]
+public class RewardedOfferRewardEntry
+{
+    public RewardedOfferRewardKind rewardKind = RewardedOfferRewardKind.Powerup;
+    public PowerupType powerupType = PowerupType.ScoreMultiplier;
+    public int amount = 50;
+    public int weight = 1;
+    public string title;
+    [TextArea(2, 4)] public string body;
+    public string rewardLabel;
+
+    public RewardedOfferRewardEntry Clone()
+    {
+        return new RewardedOfferRewardEntry
+        {
+            rewardKind = rewardKind,
+            powerupType = powerupType,
+            amount = amount,
+            weight = weight,
+            title = title,
+            body = body,
+            rewardLabel = rewardLabel
+        };
+    }
+
+    public string GetResolvedTitle()
+    {
+        if (!string.IsNullOrWhiteSpace(title))
+            return title;
+
+        return rewardKind == RewardedOfferRewardKind.Powerup
+            ? "Mid-Run Boost"
+            : "Mid-Run Reward";
+    }
+
+    public string GetResolvedBody()
+    {
+        if (!string.IsNullOrWhiteSpace(body))
+            return body;
+
+        switch (rewardKind)
+        {
+            case RewardedOfferRewardKind.Powerup:
+                return "Tap in to watch a rewarded ad and activate a temporary powerup.";
+            case RewardedOfferRewardKind.PremiumCurrency:
+                return "Tap in to watch a rewarded ad and claim premium currency.";
+            case RewardedOfferRewardKind.SoftCurrency:
+            default:
+                return "Tap in to watch a rewarded ad and claim bonus soft currency.";
+        }
+    }
+
+    public string GetResolvedRewardLabel()
+    {
+        if (!string.IsNullOrWhiteSpace(rewardLabel))
+            return rewardLabel;
+
+        switch (rewardKind)
+        {
+            case RewardedOfferRewardKind.Powerup:
+                return PowerupUpgradeConfig.GetDisplayName(powerupType);
+            case RewardedOfferRewardKind.PremiumCurrency:
+                return $"+{Mathf.Max(1, amount)} Premium";
+            case RewardedOfferRewardKind.SoftCurrency:
+            default:
+                return $"+{Mathf.Max(1, amount)} Coins";
+        }
+    }
+}
+
+[CreateAssetMenu(
+    fileName = "RewardedOfferConfig",
+    menuName = "Game Config/Rewarded Offer Config")]
+public class RewardedOfferConfig : ScriptableObject
+{
+    [Header("Timing")]
+    public bool enabled = true;
+    public float firstOfferDelaySeconds = 45f;
+    public float repeatIntervalSeconds = 45f;
+    public float offerPopoutLifetimeSeconds = 8f;
+    public float offerCooldownSeconds = 20f;
+
+    [Header("Rewards")]
+    public RewardedOfferRewardEntry[] rewards;
+
+    public RewardedOfferRewardEntry[] GetResolvedRewards()
+    {
+        if (rewards == null || rewards.Length == 0)
+            return GetDefaultRewards();
+
+        var resolvedRewards = new RewardedOfferRewardEntry[rewards.Length];
+        for (int i = 0; i < rewards.Length; i++)
+        {
+            RewardedOfferRewardEntry reward = rewards[i];
+            resolvedRewards[i] = reward != null ? reward.Clone() : null;
+        }
+
+        return resolvedRewards;
+    }
+
+    public static RewardedOfferRewardEntry[] GetDefaultRewards()
+    {
+        return new[]
+        {
+            CreatePowerupReward(PowerupType.ScoreMultiplier, 7),
+            CreatePowerupReward(PowerupType.CoinMultiplier, 7),
+            CreatePowerupReward(PowerupType.Magnet, 6),
+            CreatePowerupReward(PowerupType.AutoPilot, 4),
+            CreatePowerupReward(PowerupType.Shield, 4),
+            CreateCurrencyReward(RewardedOfferRewardKind.SoftCurrency, 150, 8, "Coin Cache"),
+            CreateCurrencyReward(RewardedOfferRewardKind.SoftCurrency, 300, 5, "Big Coin Cache"),
+            CreateCurrencyReward(RewardedOfferRewardKind.PremiumCurrency, 2, 2, "Gem Drop"),
+            CreateCurrencyReward(RewardedOfferRewardKind.PremiumCurrency, 5, 1, "Rare Gem Drop")
+        };
+    }
+
+    private static RewardedOfferRewardEntry CreatePowerupReward(PowerupType powerupType, int weight)
+    {
+        return new RewardedOfferRewardEntry
+        {
+            rewardKind = RewardedOfferRewardKind.Powerup,
+            powerupType = powerupType,
+            weight = Mathf.Max(1, weight),
+            title = "Mid-Run Boost",
+            body = "Tap in to watch a rewarded ad and activate a temporary powerup.",
+            rewardLabel = PowerupUpgradeConfig.GetDisplayName(powerupType)
+        };
+    }
+
+    private static RewardedOfferRewardEntry CreateCurrencyReward(RewardedOfferRewardKind rewardKind, int amount, int weight, string title)
+    {
+        return new RewardedOfferRewardEntry
+        {
+            rewardKind = rewardKind,
+            amount = Mathf.Max(1, amount),
+            weight = Mathf.Max(1, weight),
+            title = title,
+            body = rewardKind == RewardedOfferRewardKind.PremiumCurrency
+                ? "Tap in to watch a rewarded ad and claim premium currency."
+                : "Tap in to watch a rewarded ad and claim bonus soft currency."
+        };
+    }
+}
