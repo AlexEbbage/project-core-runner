@@ -79,6 +79,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float preRunClearOffset = 2f;
     [SerializeField] private float dissolveDuration = 0.4f;
 
+    [Header("Game Over")]
+    [SerializeField] private float continueUnlockDelaySeconds = 2.5f;
+
     [Header("Debug")]
     [SerializeField] private bool logStateChanges = false;
 
@@ -105,6 +108,9 @@ public class GameManager : MonoBehaviour
     private bool _doubleRunRewardsQueued;
     private float _lastRunRewardGrantTime = float.NegativeInfinity;
     private RunRewardBundle _lastRunRewards;
+    private float _gameOverContinueAvailableAt;
+    private bool _gameOverContinueDelayLogged;
+    private GameOverPresentationData _lastGameOverPresentation;
 
     private Vector3 _lastDeathPosition;
     private Vector3 _lastDeathForward;
@@ -120,6 +126,59 @@ public class GameManager : MonoBehaviour
         public string rewardLabel;
     }
 
+    public readonly struct GameOverPresentationData
+    {
+        public GameOverPresentationData(
+            float finalScore,
+            float bestScore,
+            float elapsedTime,
+            float distance,
+            int coinsCollected,
+            float comboModifier,
+            int baseRewardCoins,
+            int baseRewardPremiumCurrency,
+            int baseRewardXp,
+            int continuesUsed,
+            int continuesRemaining,
+            int maxContinues,
+            bool canContinue,
+            bool canDoubleRewards,
+            float continueUnlockDelaySeconds)
+        {
+            this.finalScore = finalScore;
+            this.bestScore = bestScore;
+            this.elapsedTime = elapsedTime;
+            this.distance = distance;
+            this.coinsCollected = coinsCollected;
+            this.comboModifier = comboModifier;
+            this.baseRewardCoins = baseRewardCoins;
+            this.baseRewardPremiumCurrency = baseRewardPremiumCurrency;
+            this.baseRewardXp = baseRewardXp;
+            this.continuesUsed = continuesUsed;
+            this.continuesRemaining = continuesRemaining;
+            this.maxContinues = maxContinues;
+            this.canContinue = canContinue;
+            this.canDoubleRewards = canDoubleRewards;
+            this.continueUnlockDelaySeconds = continueUnlockDelaySeconds;
+        }
+
+        public float finalScore { get; }
+        public float bestScore { get; }
+        public float elapsedTime { get; }
+        public float distance { get; }
+        public int coinsCollected { get; }
+        public float comboModifier { get; }
+        public int baseRewardCoins { get; }
+        public int baseRewardPremiumCurrency { get; }
+        public int baseRewardXp { get; }
+        public int continuesUsed { get; }
+        public int continuesRemaining { get; }
+        public int maxContinues { get; }
+        public bool canContinue { get; }
+        public bool canDoubleRewards { get; }
+        public float continueUnlockDelaySeconds { get; }
+    }
+
     public GameState CurrentState => _stateMachine != null ? _stateMachine.CurrentState : GameState.Menu;
 
     public int ContinuesUsed => continuesUsed;
@@ -131,6 +190,10 @@ public class GameManager : MonoBehaviour
     public bool GameTimerEnabled => _gameTimerEnabled;
 
     public bool CanDoubleRunRewards => _runRewardsGranted && !_runRewardsDoubled && !_adInProgress;
+
+    public bool IsContinueUnlocked => Time.unscaledTime >= _gameOverContinueAvailableAt;
+
+    public GameOverPresentationData LastGameOverPresentation => _lastGameOverPresentation;
 
     public bool IsDoubleRewardsAdReady()
     {
@@ -333,6 +396,10 @@ public class GameManager : MonoBehaviour
             return;
 
         _services?.Audio?.PlayButtonClick();
+        LogAnalyticsEvent(AnalyticsEventNames.GameOverMenuPressed, new Dictionary<string, object>
+        {
+            { AnalyticsEventNames.Params.Source, "game_over" }
+        });
         TryShowInterstitial("menu_return", () => ReturnToMenuWithFade(() =>
         {
             _services?.Audio?.PlayMenuMusic();
@@ -378,6 +445,13 @@ public class GameManager : MonoBehaviour
     {
         if (_stateMachine.CurrentState != GameState.GameOver)
             return;
+
+        if (!IsContinueUnlocked)
+        {
+            if (logStateChanges)
+                Debug.Log("GameManager: Continue pressed before delay completed.");
+            return;
+        }
 
         _services?.Audio?.PlayButtonClick();
 
@@ -444,6 +518,12 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        LogAnalyticsEvent(AnalyticsEventNames.GameOverContinuePressed, new Dictionary<string, object>
+        {
+            { AnalyticsEventNames.Params.Source, "game_over" },
+            { "continue_index", continuesUsed + 1 }
+        });
+
         _adInProgress = true;
         Time.timeScale = 1f;
 
@@ -506,6 +586,11 @@ public class GameManager : MonoBehaviour
         _adInProgress = true;
         Time.timeScale = 1f;
 
+        LogAnalyticsEvent(AnalyticsEventNames.GameOverDoubleRewardsStarted, new Dictionary<string, object>
+        {
+            { AnalyticsEventNames.Params.Source, "game_over" }
+        });
+
         LogAnalyticsEvent("ad_shown", new Dictionary<string, object>
         {
             { "source", "double_rewards" }
@@ -517,6 +602,11 @@ public class GameManager : MonoBehaviour
 
             if (result == RewardedAdResult.Rewarded)
             {
+                LogAnalyticsEvent(AnalyticsEventNames.GameOverDoubleRewardsRewarded, new Dictionary<string, object>
+                {
+                    { AnalyticsEventNames.Params.Source, "game_over" }
+                });
+
                 LogAnalyticsEvent("ad_completed", new Dictionary<string, object>
                 {
                     { "source", "double_rewards" }
@@ -526,6 +616,12 @@ public class GameManager : MonoBehaviour
             }
             else
             {
+                LogAnalyticsEvent(AnalyticsEventNames.GameOverDoubleRewardsFailed, new Dictionary<string, object>
+                {
+                    { AnalyticsEventNames.Params.Source, "game_over" },
+                    { "result", result.ToString() }
+                });
+
                 LogAnalyticsEvent("ad_skipped", new Dictionary<string, object>
                 {
                     { "source", "double_rewards" },
@@ -551,6 +647,10 @@ public class GameManager : MonoBehaviour
         _pendingRewardedOffer = null;
         _nextRewardedOfferCheckTime = 0f;
         _rewardedOfferCooldownUntilTime = 0f;
+        _gameOverContinueAvailableAt = 0f;
+        _gameOverContinueDelayLogged = false;
+        _lastGameOverPresentation = default;
+        _lastRunRewardGrantTime = float.NegativeInfinity;
 
         // We WANT the background to fly, so keep movement running
         playerController?.StartRun();
@@ -650,6 +750,10 @@ public class GameManager : MonoBehaviour
         _pendingRewardedOffer = null;
         _nextRewardedOfferCheckTime = GetRewardedOfferFirstDelaySeconds();
         _rewardedOfferCooldownUntilTime = 0f;
+        _gameOverContinueAvailableAt = 0f;
+        _gameOverContinueDelayLogged = false;
+        _lastGameOverPresentation = default;
+        _lastRunRewardGrantTime = float.NegativeInfinity;
 
         // Show and enable the player now we're playing
         SetPlayerVisible(true);
@@ -663,7 +767,7 @@ public class GameManager : MonoBehaviour
         hudController?.HideRewardedOfferPopout(false);
 
         playerHealth?.ResetHealth();
-        playerVisual.SetVisible(true);
+        playerVisual?.SetVisible(true);
         scoreManager?.ResetRun();
         currencyManager?.ResetRun();
         speedController?.ResetForNewRun();
@@ -706,6 +810,10 @@ public class GameManager : MonoBehaviour
         _rewardedRunPromptActive = false;
         _rewardedRunPromptPausedRun = false;
         _rewardedOfferCooldownUntilTime = Mathf.Max(_rewardedOfferCooldownUntilTime, _elapsedTime + GetRewardedOfferCooldownSeconds());
+        _gameOverContinueAvailableAt = 0f;
+        _gameOverContinueDelayLogged = false;
+        _lastGameOverPresentation = default;
+        _lastRunRewardGrantTime = float.NegativeInfinity;
         rewardedRunPromptUI?.Hide();
         hudController?.HideRewardedOfferPopout(false);
 
@@ -805,7 +913,7 @@ public class GameManager : MonoBehaviour
         speedController?.StopRun();
         obstacleRingGenerator?.StopRun();
         playerController?.StopRun();
-        playerVisual.SetVisible(false);
+        playerVisual?.SetVisible(false);
         powerupController?.ResetAllPowerups();
 
         LogAnalyticsEvent(RunEventName, new Dictionary<string, object>
@@ -1215,22 +1323,85 @@ public class GameManager : MonoBehaviour
         return parameters;
     }
 
+    private GameOverPresentationData BuildGameOverPresentation()
+    {
+        float finalScore = scoreManager != null ? scoreManager.CurrentScore : 0f;
+        float bestScore = scoreManager != null ? scoreManager.BestScore : 0f;
+        float distance = statsTracker != null ? statsTracker.CurrentRunDistance : 0f;
+        int coinsCollected = currencyManager != null ? currencyManager.CurrentCoins : 0;
+        float comboModifier = scoreManager != null ? scoreManager.CurrentMultiplier : 1f;
+        int remainingContinues = Mathf.Max(0, maxContinuesPerRun - continuesUsed);
+
+        return new GameOverPresentationData(
+            finalScore,
+            bestScore,
+            _elapsedTime,
+            distance,
+            coinsCollected,
+            comboModifier,
+            _lastRunRewards.coins,
+            _lastRunRewards.gems,
+            _lastRunRewards.xp,
+            continuesUsed,
+            remainingContinues,
+            maxContinuesPerRun,
+            remainingContinues > 0,
+            _runRewardsGranted && !_runRewardsDoubled,
+            continueUnlockDelaySeconds);
+    }
+
+    private Dictionary<string, object> BuildGameOverAnalyticsParams()
+    {
+        return new Dictionary<string, object>
+        {
+            { AnalyticsEventNames.Params.Source, "game_over" },
+            { "score", _lastGameOverPresentation.finalScore },
+            { "distance", _lastGameOverPresentation.distance },
+            { "coins", _lastGameOverPresentation.coinsCollected },
+            { "reward_coins", _lastGameOverPresentation.baseRewardCoins },
+            { "reward_premium", _lastGameOverPresentation.baseRewardPremiumCurrency },
+            { "reward_xp", _lastGameOverPresentation.baseRewardXp },
+            { "combo_modifier", _lastGameOverPresentation.comboModifier },
+            { "continues_remaining", _lastGameOverPresentation.continuesRemaining }
+        };
+    }
+
     private void ShowGameOverUI()
     {
         if (gameOverUI == null || scoreManager == null)
             return;
 
         AwardRunRewardsOnce();
+        _gameOverContinueAvailableAt = Time.unscaledTime + Mathf.Max(0f, continueUnlockDelaySeconds);
+        _gameOverContinueDelayLogged = false;
+        _lastGameOverPresentation = BuildGameOverPresentation();
 
-        float finalScore = scoreManager.CurrentScore;
-        float bestScore = scoreManager.BestScore;
-        int remainingContinues = Mathf.Max(0, maxContinuesPerRun - continuesUsed);
+        gameOverUI.Show(_lastGameOverPresentation);
 
-        gameOverUI.Show(finalScore, bestScore, _elapsedTime, continuesUsed, remainingContinues, maxContinuesPerRun);
+        LogAnalyticsEvent(AnalyticsEventNames.GameOverShown, BuildGameOverAnalyticsParams());
+        if (_lastGameOverPresentation.canDoubleRewards)
+        {
+            LogAnalyticsEvent(AnalyticsEventNames.GameOverDoubleRewardsOffered, new Dictionary<string, object>
+            {
+                { AnalyticsEventNames.Params.Source, "game_over" }
+            });
+        }
 
         mainMenuUI?.Hide();
         hudController?.Hide();
         pauseMenuUI?.Hide();
+    }
+
+    public void NotifyGameOverContinueDelayCompleted()
+    {
+        if (_gameOverContinueDelayLogged)
+            return;
+
+        _gameOverContinueDelayLogged = true;
+        LogAnalyticsEvent(AnalyticsEventNames.GameOverContinueDelayCompleted, new Dictionary<string, object>
+        {
+            { AnalyticsEventNames.Params.Source, "game_over" }
+        });
     }
 
     private void HandleContinueAdResult(RewardedAdResult result)
@@ -1340,6 +1511,7 @@ public class GameManager : MonoBehaviour
         _runRewardsGranted = true;
         _lastRunRewards = CalculateRunRewards();
         ApplyRunRewards(_lastRunRewards, 1, false);
+        _lastGameOverPresentation = BuildGameOverPresentation();
 
         if (_doubleRunRewardsQueued)
         {
@@ -1399,6 +1571,13 @@ public class GameManager : MonoBehaviour
         _runRewardsDoubled = true;
         _doubleRunRewardsQueued = false;
         ApplyRunRewards(_lastRunRewards, 1, true);
+        _lastGameOverPresentation = BuildGameOverPresentation();
+
+        LogAnalyticsEvent(AnalyticsEventNames.GameOverDoubleRewardsBonusGranted, new Dictionary<string, object>
+        {
+            { AnalyticsEventNames.Params.Source, "game_over" },
+            { AnalyticsEventNames.Params.Amount, _lastRunRewards.coins + _lastRunRewards.gems + _lastRunRewards.xp }
+        });
     }
 
     private readonly struct RunRewardBundle
