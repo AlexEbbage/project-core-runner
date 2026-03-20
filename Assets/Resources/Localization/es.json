@@ -24,6 +24,23 @@
     {"key": "ui.rewarded_run_decline", "value": "No, gracias"},
     {"key": "ui.rewarded_run_reward_coin_multiplier", "value": "Recompensa: Multiplicador de monedas"},
     {"key": "ui.rewarded_run_reward_score_multiplier", "value": "Recompensa: Multiplicador de puntuación"},
-    {"key": "ui.rewarded_run_reward_coins", "value": "Recompensa: +{0} Monedas"}
+    {"key": "ui.rewarded_run_reward_coins", "value": "Recompensa: +{0} Monedas"},
+    {"key": "ui.shop_owned", "value": "Comprado"},
+    {"key": "ui.shop_price_soft", "value": "{0} Monedas"},
+    {"key": "ui.shop_price_premium_currency", "value": "{0} Gemas"},
+    {"key": "ui.shop_price_premium", "value": "Premium"},
+    {"key": "ui.shop_price_restore", "value": "Cuenta"},
+    {"key": "ui.shop_action_default", "value": "Ver"},
+    {"key": "ui.shop_action_buy", "value": "Comprar"},
+    {"key": "ui.shop_action_need_more", "value": "Faltan"},
+    {"key": "ui.shop_action_owned", "value": "Comprado"},
+    {"key": "ui.shop_action_remove_ads", "value": "Ir a Premium"},
+    {"key": "ui.shop_action_restore", "value": "Restaurar"},
+    {"key": "ui.shop_status_owned", "value": "Ya estÃ¡ comprado en este perfil."},
+    {"key": "ui.shop_status_remove_ads", "value": "Desbloquea partidas sin anuncios intersticiales."},
+    {"key": "ui.shop_status_restore", "value": "Restaura compras premium previas en esta cuenta."},
+    {"key": "ui.shop_status_ready", "value": "Listo para comprar."},
+    {"key": "ui.shop_status_need_soft", "value": "Necesitas mÃ¡s monedas para este objeto."},
+    {"key": "ui.shop_status_need_premium", "value": "Necesitas mÃ¡s gemas para este objeto."}
   ]
 }

@@ -9,7 +9,7 @@ Use the docs set as the durable operating system for the project. Foundation doc
 | Phase | Goal | Exit Criteria | Status |
 | --- | --- | --- | --- |
 | 1 | Foundation | Core docs, architecture, style guide, registries, and decisions reflect repo truth and approved direction | Completed |
-| 2 | First approved feature slice | Exactly one chosen feature is documented, implemented, validated, and reflected in all registries | Not started |
+| 2 | First approved feature slice | Exactly one chosen feature is documented, implemented, validated, and reflected in all registries | In progress |
 | 3 | Expansion | Additional approved features are implemented in priority order with docs kept current | Not started |
 | 4 | Polish and validation | UI polish, tuning, telemetry coverage, testing, and documentation cleanup are complete for the chosen release target | Not started |
 
@@ -23,9 +23,9 @@ Use the docs set as the durable operating system for the project. Foundation doc
 
 ## Current Recommended Order
 
-1. Progression/meta convergence
-2. Environment unlock and level-select completion
-3. Monetisation catalog expansion
+1. Ship customisation flow on top of the authored shop and hangar ids
+2. Progression/meta convergence
+3. Environment unlock and level-select completion
 4. Analytics coverage expansion
 5. UI tooling and polish improvements
 
@@ -34,6 +34,7 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - Environment unlock work depends on agreed unlock thresholds and content definitions.
 - Monetisation expansion depends on an approved catalog and entitlement model.
 - UI tooling changes depend on an explicit package adoption decision.
+- Shop scene/runtime validation in Unity is still required before the first production shop slice can be considered fully reviewed.
 
 ## Validation Notes
 

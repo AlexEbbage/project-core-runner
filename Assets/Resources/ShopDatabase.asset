@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c68e4af57f38b54d8c99a0ee13b4f75, type: 3}
+  m_Name: ShopDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::ShopDatabase
+  skinItems:
+  - {fileID: 11400000, guid: 0ce1561787eb4b118095ea5e0e5d2018, type: 2}
+  shipItems:
+  - {fileID: 11400000, guid: f03c2eeb9a5946c687d44361457a3676, type: 2}
+  trailItems:
+  - {fileID: 11400000, guid: c0c468188d404073a8a3bf863a2cb9f5, type: 2}
+  currencyItems:
+  - {fileID: 11400000, guid: e318f1a765dc454090df26973aa2ac5c, type: 2}
+  - {fileID: 11400000, guid: c26839b0dafb41ff86d5bcb3ca9b61b2, type: 2}

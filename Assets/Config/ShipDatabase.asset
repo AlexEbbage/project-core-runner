@@ -12,8 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 0}
   m_Name: ShipDatabase
   m_EditorClassIdentifier: Assembly-CSharp::ShipDatabase
-  ships: []
+  ships:
+  - {fileID: 11400000, guid: bd2c75b1bb3a4720a3dc3fbcd1e67e46, type: 2}
+  - {fileID: 11400000, guid: 49213683d9a44a3d917bb36a8c7afd74, type: 2}
   upgrades: []
-  skins: []
-  trails: []
-  coreFx: []
+  skins:
+  - {fileID: 11400000, guid: 0a27b8f1753a4653a0a435d9c94bb51d, type: 2}
+  - {fileID: 11400000, guid: 6094d127828742849cbe2278ce840f82, type: 2}
+  trails:
+  - {fileID: 11400000, guid: 034c27162b044b6993f3a4faf844cebc, type: 2}
+  - {fileID: 11400000, guid: 18a95fd99a8d460581ca39891bae1f69, type: 2}
+  coreFx:
+  - {fileID: 11400000, guid: f736d332793c4b689c8654d9f33fc89d, type: 2}

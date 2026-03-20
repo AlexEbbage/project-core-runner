@@ -24,6 +24,23 @@
     {"key": "ui.rewarded_run_decline", "value": "No Thanks"},
     {"key": "ui.rewarded_run_reward_coin_multiplier", "value": "Reward: Coin Multiplier"},
     {"key": "ui.rewarded_run_reward_score_multiplier", "value": "Reward: Score Multiplier"},
-    {"key": "ui.rewarded_run_reward_coins", "value": "Reward: +{0} Coins"}
+    {"key": "ui.rewarded_run_reward_coins", "value": "Reward: +{0} Coins"},
+    {"key": "ui.shop_owned", "value": "Owned"},
+    {"key": "ui.shop_price_soft", "value": "{0} Coins"},
+    {"key": "ui.shop_price_premium_currency", "value": "{0} Gems"},
+    {"key": "ui.shop_price_premium", "value": "Premium"},
+    {"key": "ui.shop_price_restore", "value": "Account"},
+    {"key": "ui.shop_action_default", "value": "View"},
+    {"key": "ui.shop_action_buy", "value": "Buy"},
+    {"key": "ui.shop_action_need_more", "value": "Need More"},
+    {"key": "ui.shop_action_owned", "value": "Owned"},
+    {"key": "ui.shop_action_remove_ads", "value": "Go Premium"},
+    {"key": "ui.shop_action_restore", "value": "Restore"},
+    {"key": "ui.shop_status_owned", "value": "Already owned on this profile."},
+    {"key": "ui.shop_status_remove_ads", "value": "Unlock ad-free runs and retire interrupting ads."},
+    {"key": "ui.shop_status_restore", "value": "Restore prior premium purchases on this account."},
+    {"key": "ui.shop_status_ready", "value": "Ready to purchase."},
+    {"key": "ui.shop_status_need_soft", "value": "You need more coins for this item."},
+    {"key": "ui.shop_status_need_premium", "value": "You need more gems for this item."}
   ]
 }

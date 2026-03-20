@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 0}
   m_Name: PlayerProfile
   m_EditorClassIdentifier: Assembly-CSharp::PlayerProfile
-  level: 1
+  level: 3
   xp: 0
-  softCurrency: 0
-  premiumCurrency: 0
+  softCurrency: 3000
+  premiumCurrency: 25
   selectedShipId: 
   unlockedItemIds: []
   upgradeLevels: []

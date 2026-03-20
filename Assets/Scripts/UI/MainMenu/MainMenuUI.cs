@@ -61,6 +61,7 @@ public class MainMenuUI : MonoBehaviour
 
     [Header("Lab")]
     [SerializeField] private PlayerProfile profile;
+    [SerializeField] private ShopDatabase shopDatabase;
     [SerializeField] private ShipDatabase shipDatabase;
     [SerializeField] private PowerupUpgradeConfig powerupUpgradeConfig;
     [SerializeField] private DailyLoginRewardsManager dailyLoginRewardsManager;
@@ -72,6 +73,8 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private Button featureCloseButton;
     [SerializeField] private string labButtonLabel = "LAB";
     [SerializeField] private string labTitle = "LAB";
+    [SerializeField] private string shopTitle = "SHOP";
+    [SerializeField] private string premiumTitle = "PREMIUM";
 
     [Header("Hub Side Entries")]
     [SerializeField] private GameObject dailyLoginEntryRoot;
@@ -84,8 +87,15 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private GameObject notificationsBadgeRoot;
 
     private readonly List<GameObject> _runtimeLabWidgets = new();
+    private readonly Dictionary<ShopTab, Button> _shopTabButtons = new();
     private int _currentLevelIndex;
     private bool _labScaffoldReady;
+    private RectTransform _shopTabRoot;
+    private RectTransform _shopContentRoot;
+    private ShopItemDetailsModal _shopDetailsModal;
+    private ShopPageController _runtimeShopController;
+    private TMP_Text _removeAdsButtonText;
+    private TMP_Text _restorePurchasesButtonText;
 
     private void Awake()
     {
@@ -307,13 +317,15 @@ public class MainMenuUI : MonoBehaviour
 
     private void UpdateRemoveAdsUI()
     {
+        EnsureMenuShopLabels();
+
         bool hasRemoveAds = AdsConfig.RemoveAds;
 
         if (!hidePremiumUserIAPButton && removeAdsButtonRoot != null)
-            removeAdsButtonRoot.SetActive(!hasRemoveAds);
+            removeAdsButtonRoot.SetActive(true);
 
         if (!hideRestorePurchasesButton && restorePurchasesButtonRoot != null)
-            restorePurchasesButtonRoot.SetActive(!hasRemoveAds);
+            restorePurchasesButtonRoot.SetActive(true);
 
         if (premiumBadgeRoot != null)
             premiumBadgeRoot.SetActive(hasRemoveAds);
@@ -321,18 +333,12 @@ public class MainMenuUI : MonoBehaviour
 
     public void OnRemoveAdsButtonPressed()
     {
-        if (removeAdsIAPManager != null)
-        {
-            removeAdsIAPManager.BuyRemoveAds();
-        }
+        OpenShopPanel(ShopTab.Skins);
     }
 
     public void OnRestorePurchasesButtonPressed()
     {
-        if (removeAdsIAPManager != null)
-        {
-            removeAdsIAPManager.RestorePurchases();
-        }
+        OpenShopPanel(ShopTab.Currency);
     }
 
     private void ResolveDataReferences()
@@ -342,6 +348,18 @@ public class MainMenuUI : MonoBehaviour
             PlayerProfile[] profiles = Resources.FindObjectsOfTypeAll<PlayerProfile>();
             if (profiles != null && profiles.Length > 0)
                 profile = profiles[0];
+        }
+
+        if (shopDatabase == null)
+        {
+            shopDatabase = Resources.Load<ShopDatabase>("ShopDatabase");
+
+            if (shopDatabase == null)
+            {
+                ShopDatabase[] shopDatabases = Resources.FindObjectsOfTypeAll<ShopDatabase>();
+                if (shopDatabases != null && shopDatabases.Length > 0)
+                    shopDatabase = shopDatabases[0];
+            }
         }
 
         if (shipDatabase == null)
@@ -435,15 +453,33 @@ public class MainMenuUI : MonoBehaviour
             return;
 
         EnsureLabScaffold();
+        EnsureShopScaffold();
+        SetFeatureMode(showLab: true, showShop: false);
         RefreshLabView();
         featurePanelRoot.SetActive(true);
         NotifyHubEntryOpened(AnalyticsEventNames.HubLabOpened, "lab");
+    }
+
+    public void OpenShopPanel(ShopTab initialTab)
+    {
+        if (!HasLabPanel())
+            return;
+
+        EnsureLabScaffold();
+        EnsureShopScaffold();
+        SetFeatureMode(showLab: false, showShop: true);
+        RefreshShopView(initialTab);
+        featurePanelRoot.SetActive(true);
+        NotifyHubEntryOpened(AnalyticsEventNames.HubShopOpened, initialTab == ShopTab.Currency ? "currency" : "shop");
     }
 
     public void CloseFeaturePanel()
     {
         if (featurePanelRoot != null)
             featurePanelRoot.SetActive(false);
+
+        if (_shopDetailsModal != null)
+            _shopDetailsModal.Hide();
     }
 
     public void RefreshLabView()
@@ -508,6 +544,95 @@ public class MainMenuUI : MonoBehaviour
         }
     }
 
+    private void RefreshShopView(ShopTab initialTab)
+    {
+        if (_runtimeShopController == null || _shopContentRoot == null)
+            return;
+
+        if (featureTitleText != null)
+            featureTitleText.text = initialTab == ShopTab.Currency ? premiumTitle : shopTitle;
+
+        if (labCurrencyText != null && profile != null)
+            labCurrencyText.text = $"SOFT {profile.softCurrency}   GEMS {profile.premiumCurrency}";
+
+        _runtimeShopController.Initialize(profile, shopDatabase, _shopContentRoot, _shopDetailsModal, removeAdsIAPManager, FindFirstObjectByType<HangarPageController>(), gameManager);
+        _runtimeShopController.SelectTab(initialTab);
+        UpdateShopTabSelection(initialTab);
+    }
+
+    private void EnsureShopScaffold()
+    {
+        if (featurePanelRoot == null)
+            return;
+
+        EnsureMenuShopLabels();
+
+        if (_shopTabRoot == null)
+            _shopTabRoot = CreateShopTabRoot(featurePanelRoot.transform);
+
+        if (_shopContentRoot == null)
+            _shopContentRoot = CreateFeatureContentRoot(featurePanelRoot.transform, "ShopContent");
+
+        if (_shopDetailsModal == null)
+        {
+            GameObject modalObject = new GameObject("ShopDetailsModal", typeof(RectTransform), typeof(UnityEngine.UI.Image), typeof(ShopItemDetailsModal));
+            modalObject.transform.SetParent(featurePanelRoot.transform, false);
+            _shopDetailsModal = modalObject.GetComponent<ShopItemDetailsModal>();
+            _shopDetailsModal.Hide();
+        }
+
+        if (_runtimeShopController == null)
+        {
+            GameObject controllerObject = new GameObject("ShopRuntimeController", typeof(RectTransform), typeof(ShopPageController));
+            controllerObject.transform.SetParent(featurePanelRoot.transform, false);
+            _runtimeShopController = controllerObject.GetComponent<ShopPageController>();
+        }
+    }
+
+    private void SetFeatureMode(bool showLab, bool showShop)
+    {
+        if (labContentRoot != null)
+            labContentRoot.gameObject.SetActive(showLab);
+
+        if (_shopTabRoot != null)
+            _shopTabRoot.gameObject.SetActive(showShop);
+
+        if (_shopContentRoot != null)
+            _shopContentRoot.gameObject.SetActive(showShop);
+
+        if (_runtimeShopController != null)
+            _runtimeShopController.gameObject.SetActive(showShop);
+    }
+
+    private void EnsureMenuShopLabels()
+    {
+        if (_removeAdsButtonText == null && removeAdsButtonRoot != null)
+            _removeAdsButtonText = removeAdsButtonRoot.GetComponentInChildren<TMP_Text>(true);
+
+        if (_restorePurchasesButtonText == null && restorePurchasesButtonRoot != null)
+            _restorePurchasesButtonText = restorePurchasesButtonRoot.GetComponentInChildren<TMP_Text>(true);
+
+        if (_removeAdsButtonText != null)
+            _removeAdsButtonText.text = shopTitle;
+
+        if (_restorePurchasesButtonText != null)
+            _restorePurchasesButtonText.text = premiumTitle;
+    }
+
+    private void UpdateShopTabSelection(ShopTab selectedTab)
+    {
+        foreach (KeyValuePair<ShopTab, Button> tabButton in _shopTabButtons)
+        {
+            if (tabButton.Value == null || !tabButton.Value.TryGetComponent(out Image image))
+                continue;
+
+            bool isSelected = tabButton.Key == selectedTab;
+            image.color = isSelected
+                ? new Color(0.98f, 0.5f, 0.18f, 1f)
+                : new Color(0.18f, 0.22f, 0.28f, 0.96f);
+        }
+    }
+
     public void RefreshHubState()
     {
         UpdateRemoveAdsUI();
@@ -524,6 +649,14 @@ public class MainMenuUI : MonoBehaviour
         SetBadgeState(tasksEntryRoot, tasksBadgeRoot, tasksAvailable);
         SetBadgeState(specialOffersEntryRoot, specialOffersBadgeRoot, specialOffersAvailable);
         SetBadgeState(notificationsEntryRoot, notificationsBadgeRoot, notificationsAvailable);
+    }
+
+    public void RefreshShopView()
+    {
+        if (_runtimeShopController == null || !_runtimeShopController.gameObject.activeSelf)
+            return;
+
+        RefreshShopView(_runtimeShopController.CurrentTab);
     }
 
     public void OpenDailyLoginFromHub()
@@ -800,6 +933,60 @@ public class MainMenuUI : MonoBehaviour
         return button;
     }
 
+    private RectTransform CreateShopTabRoot(Transform parent)
+    {
+        GameObject rootObject = new GameObject("ShopTabs", typeof(RectTransform), typeof(HorizontalLayoutGroup));
+        rootObject.transform.SetParent(parent, false);
+
+        RectTransform rect = rootObject.GetComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0f, 1f);
+        rect.anchorMax = new Vector2(1f, 1f);
+        rect.offsetMin = new Vector2(72f, -140f);
+        rect.offsetMax = new Vector2(-72f, -80f);
+
+        HorizontalLayoutGroup layout = rootObject.GetComponent<HorizontalLayoutGroup>();
+        layout.spacing = 12f;
+        layout.childControlWidth = true;
+        layout.childControlHeight = true;
+        layout.childForceExpandWidth = true;
+        layout.childForceExpandHeight = true;
+
+        TMP_FontAsset font = bestScoreText != null ? bestScoreText.font : TMP_Settings.defaultFontAsset;
+        CreateShopTabButton(rootObject.transform, font, ShopTab.Skins, "SKINS");
+        CreateShopTabButton(rootObject.transform, font, ShopTab.Ships, "SHIPS");
+        CreateShopTabButton(rootObject.transform, font, ShopTab.Trails, "TRAILS");
+        CreateShopTabButton(rootObject.transform, font, ShopTab.Currency, "CURRENCY");
+        rootObject.SetActive(false);
+        return rect;
+    }
+
+    private void CreateShopTabButton(Transform parent, TMP_FontAsset font, ShopTab tab, string label)
+    {
+        GameObject buttonObject = new GameObject($"{tab}Tab", typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
+        buttonObject.transform.SetParent(parent, false);
+
+        LayoutElement layout = buttonObject.GetComponent<LayoutElement>();
+        layout.preferredHeight = 52f;
+        layout.flexibleWidth = 1f;
+
+        Image image = buttonObject.GetComponent<Image>();
+        image.color = new Color(0.18f, 0.22f, 0.28f, 0.96f);
+
+        Button button = buttonObject.GetComponent<Button>();
+        button.targetGraphic = image;
+        button.onClick.AddListener(() => RefreshShopView(tab));
+
+        TMP_Text text = CreateCardText(buttonObject.transform, font, label, 20f, FontStyles.Bold);
+        text.alignment = TextAlignmentOptions.Center;
+        RectTransform textRect = text.rectTransform;
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = Vector2.zero;
+        textRect.offsetMax = Vector2.zero;
+
+        _shopTabButtons[tab] = button;
+    }
+
     private Button CreateFeatureCloseButton(Transform parent)
     {
         TMP_FontAsset font = bestScoreText != null ? bestScoreText.font : TMP_Settings.defaultFontAsset;
@@ -854,9 +1041,9 @@ public class MainMenuUI : MonoBehaviour
         return text;
     }
 
-    private RectTransform CreateLabContentRoot(Transform parent)
+    private RectTransform CreateFeatureContentRoot(Transform parent, string objectName)
     {
-        GameObject rootObject = new GameObject("LabContent", typeof(RectTransform), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
+        GameObject rootObject = new GameObject(objectName, typeof(RectTransform), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
         rootObject.transform.SetParent(parent, false);
 
         RectTransform rect = rootObject.GetComponent<RectTransform>();
@@ -876,7 +1063,14 @@ public class MainMenuUI : MonoBehaviour
         ContentSizeFitter fitter = rootObject.GetComponent<ContentSizeFitter>();
         fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
         fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+        rootObject.SetActive(false);
         return rect;
+    }
+
+    private RectTransform CreateLabContentRoot(Transform parent)
+    {
+        return CreateFeatureContentRoot(parent, "LabContent");
     }
 
     private static void SetBadgeState(GameObject entryRoot, GameObject badgeRoot, bool active)

@@ -56,6 +56,13 @@ public enum ShopCurrencyType
     Premium
 }
 
+public enum ShopItemAction
+{
+    UnlockItem,
+    OpenRemoveAdsPurchase,
+    RestorePurchases
+}
+
 [System.Serializable]
 public struct ShipStats
 {
@@ -144,6 +151,7 @@ public class ShopItemDefinition : ScriptableObject
     public ShopTab tab;
     public ShopCurrencyType currencyType;
     public int price;
+    public ShopItemAction action = ShopItemAction.UnlockItem;
 }
 
 [CreateAssetMenu(menuName = "Main Menu/Ship Database")]
@@ -363,15 +371,18 @@ public class PlayerProfile : ScriptableObject
         if (database == null)
             return;
 
+        string previousShipId = selectedShipId;
         string previousSkinId = selectedSkinId;
         string previousTrailId = selectedTrailId;
         string previousCoreFxId = selectedCoreFxId;
 
+        selectedShipId = EnsureDefaultSelection(selectedShipId, database.ships);
         selectedSkinId = EnsureDefaultSelection(selectedSkinId, database.skins);
         selectedTrailId = EnsureDefaultSelection(selectedTrailId, database.trails);
         selectedCoreFxId = EnsureDefaultSelection(selectedCoreFxId, database.coreFx);
 
-        if (previousSkinId != selectedSkinId
+        if (previousShipId != selectedShipId
+            || previousSkinId != selectedSkinId
             || previousTrailId != selectedTrailId
             || previousCoreFxId != selectedCoreFxId)
         {
@@ -401,6 +412,14 @@ public class PlayerProfile : ScriptableObject
             coreFxId,
             database != null ? database.GetCoreFx(coreFxId) : null,
             id => selectedCoreFxId = id);
+    }
+
+    public bool TrySelectShip(string shipId, ShipDatabase database)
+    {
+        return TrySelectCosmetic(
+            shipId,
+            database != null ? database.GetShip(shipId) : null,
+            id => selectedShipId = id);
     }
 
     public bool TrySpend(ShopCurrencyType currencyType, int amount)
@@ -623,6 +642,10 @@ public class PlayerProfile : ScriptableObject
     {
         switch (item)
         {
+            case ShipDefinition ship:
+                id = ship.id;
+                cost = 0;
+                return true;
             case ShipSkinDefinition skin:
                 id = skin.id;
                 cost = skin.cost;
