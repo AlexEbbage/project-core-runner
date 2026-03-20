@@ -4,6 +4,8 @@
 
 Verify the Lab remains the dedicated hub route for combo plus powerup upgrades, with clear costs, immediate profile refresh, and saved progression.
 
+This checklist is the signoff gate for `F18: Long-Term Progression Economy and Lab Upgrades`.
+
 ## Setup
 
 - Open the main menu hub.

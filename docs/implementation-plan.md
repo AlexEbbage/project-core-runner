@@ -2,7 +2,7 @@
 
 ## Delivery Strategy
 
-Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. The current delivery slice is the analytics closeout review: the motion layer is implemented and the telemetry slice is now in signoff.
+Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. The current delivery slice is the Lab closeout review: the authored upgrade roster is in place and the runtime validation pass is now the signoff gate.
 
 ## Phases
 
@@ -23,11 +23,10 @@ Use the docs set as the durable operating system for the project. Foundation doc
 
 ## Current Recommended Order
 
-1. Lab presentation and upgrade tuning
-2. Remaining progression-shell review cleanup
-3. Booster and pre-run economy extension
-4. Environment unlock and level-select completion
-5. Remaining UI polish follow-up if needed
+1. Remaining progression-shell review cleanup
+2. Booster and pre-run economy extension
+3. Environment unlock and level-select completion
+4. Remaining UI polish follow-up if needed
 
 ## Dependencies and Blockers
 
