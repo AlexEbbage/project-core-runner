@@ -26,6 +26,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private RunStatsTracker statsTracker;
     [SerializeField] private PlayerPowerupController powerupController;
     [SerializeField] private PlayerProfile playerProfile;
+    [SerializeField] private BoosterCatalog boosterCatalog;
 
     [Header("Player Visuals (optional)")]
     [SerializeField] private PlayerVisual playerVisual;
@@ -104,6 +105,7 @@ public class GameManager : MonoBehaviour
     private bool _runRewardsGranted;
     private bool _runRewardsDoubled;
     private bool _doubleRunRewardsQueued;
+    private float _boosterRewardMultiplier = 1f;
     private float _lastRunRewardGrantTime = float.NegativeInfinity;
     private RunRewardBundle _lastRunRewards;
     private float _gameOverContinueAvailableAt;
@@ -234,6 +236,18 @@ public class GameManager : MonoBehaviour
             if (profiles != null && profiles.Length > 0)
             {
                 playerProfile = profiles[0];
+            }
+        }
+
+        if (boosterCatalog == null)
+        {
+            boosterCatalog = Resources.Load<BoosterCatalog>("BoosterCatalog");
+
+            if (boosterCatalog == null)
+            {
+                BoosterCatalog[] catalogs = Resources.FindObjectsOfTypeAll<BoosterCatalog>();
+                if (catalogs != null && catalogs.Length > 0)
+                    boosterCatalog = catalogs[0];
             }
         }
 
@@ -663,6 +677,7 @@ public class GameManager : MonoBehaviour
         speedController?.ResetForNewRun();
         speedController?.StartRun();
         powerupController?.ResetAllPowerups();
+        ResetBoosterEffects();
 
         // But hide and make non-collidable
         SetPlayerVisible(false);
@@ -739,6 +754,61 @@ public class GameManager : MonoBehaviour
         powerupController?.ResetShieldRechargeCooldown();
     }
 
+    private void ApplyBoosterLoadout()
+    {
+        ResetBoosterEffects();
+
+        if (playerProfile == null)
+            return;
+
+        BoosterDefinition[] boosters = GetResolvedBoosterDefinitions();
+        if (boosters == null || boosters.Length == 0)
+            return;
+
+        playerProfile.EnsureBoosterLoadout(boosters);
+
+        ApplyBoosterForFamily(BoosterFamily.Score, boosters);
+        ApplyBoosterForFamily(BoosterFamily.Rewards, boosters);
+        ApplyBoosterForFamily(BoosterFamily.Speed, boosters);
+    }
+
+    private void ApplyBoosterForFamily(BoosterFamily family, BoosterDefinition[] boosters)
+    {
+        if (playerProfile == null || boosters == null || boosters.Length == 0)
+            return;
+
+        string equippedId = playerProfile.GetEquippedBoosterId(family);
+        if (string.IsNullOrWhiteSpace(equippedId))
+            return;
+
+        BoosterDefinition definition = FindBoosterDefinition(boosters, family, equippedId);
+        if (definition == null)
+            return;
+
+        float multiplier = Mathf.Max(1f, definition.multiplier);
+        switch (family)
+        {
+            case BoosterFamily.Score:
+                scoreManager?.SetPowerupScoreMultiplier(multiplier);
+                scoreManager?.SetPowerupPickupMultiplier(multiplier);
+                break;
+            case BoosterFamily.Rewards:
+                _boosterRewardMultiplier = multiplier;
+                break;
+            case BoosterFamily.Speed:
+                speedController?.SetPowerupSpeedMultiplier(multiplier);
+                break;
+        }
+    }
+
+    private void ResetBoosterEffects()
+    {
+        _boosterRewardMultiplier = 1f;
+        scoreManager?.SetPowerupScoreMultiplier(1f);
+        scoreManager?.SetPowerupPickupMultiplier(1f);
+        speedController?.SetPowerupSpeedMultiplier(1f);
+    }
+
     private void StartNewRun()
     {
         TransitionToState(GameState.Playing, 1f);
@@ -781,6 +851,7 @@ public class GameManager : MonoBehaviour
         runZoneManager?.OnResetRun();
         powerupController?.ResetAllPowerups();
         ApplyRunUpgrades();
+        ApplyBoosterLoadout();
 
         LogAnalyticsEvent(AnalyticsEventNames.RunStarted, new Dictionary<string, object>
         {
@@ -1334,6 +1405,28 @@ public class GameManager : MonoBehaviour
         return parameters;
     }
 
+    private BoosterDefinition[] GetResolvedBoosterDefinitions()
+    {
+        return boosterCatalog != null
+            ? boosterCatalog.GetResolvedBoosters()
+            : BoosterCatalog.GetDefaultBoosters();
+    }
+
+    private BoosterDefinition FindBoosterDefinition(BoosterDefinition[] boosters, BoosterFamily family, string boosterId)
+    {
+        if (boosters == null || string.IsNullOrWhiteSpace(boosterId))
+            return null;
+
+        for (int i = 0; i < boosters.Length; i++)
+        {
+            BoosterDefinition booster = boosters[i];
+            if (booster != null && booster.family == family && booster.id == boosterId)
+                return booster;
+        }
+
+        return null;
+    }
+
     private GameOverPresentationData BuildGameOverPresentation()
     {
         float finalScore = scoreManager != null ? scoreManager.CurrentScore : 0f;
@@ -1564,9 +1657,10 @@ public class GameManager : MonoBehaviour
 
     private RunRewardBundle CalculateRunRewards()
     {
-        int coins = currencyManager != null ? currencyManager.CurrentCoins : 0;
+        float rewardMultiplier = Mathf.Max(1f, _boosterRewardMultiplier);
+        int coins = currencyManager != null ? Mathf.RoundToInt(currencyManager.CurrentCoins * rewardMultiplier) : 0;
         int gems = gemsPerCoins > 0 ? coins / gemsPerCoins : 0;
-        int xp = scoreManager != null ? Mathf.RoundToInt(scoreManager.CurrentScore * xpPerScorePoint) : 0;
+        int xp = scoreManager != null ? Mathf.RoundToInt(scoreManager.CurrentScore * xpPerScorePoint * rewardMultiplier) : 0;
 
         return new RunRewardBundle(coins, gems, xp);
     }

@@ -149,6 +149,7 @@
     <Compile Include="Assets\Ultimate 10 Plus Shaders\Scripts\U10PS_SnowOverTime.cs" />
     <Compile Include="Assets\Scripts\UI\MainMenu\MainMenuController.cs" />
     <Compile Include="Assets\Scripts\UI\MainMenu\AchievementsPageController.cs" />
+    <Compile Include="Assets\Scripts\UI\MainMenu\BoosterData.cs" />
     <Compile Include="Assets\Scripts\Gameplay\Camera\CameraFovController.cs" />
     <Compile Include="Assets\Scripts\Gameplay\Powerups\PowerupUpgradeConfig.cs" />
     <Compile Include="Assets\Scripts\Config\SpeedScalingConfig.cs" />

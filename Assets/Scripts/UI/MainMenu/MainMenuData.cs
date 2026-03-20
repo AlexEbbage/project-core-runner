@@ -306,6 +306,8 @@ public class PlayerProfile : ScriptableObject
     [SerializeField] private List<string> unlockedItemIds = new();
     [SerializeField] private List<UpgradeLevelEntry> upgradeLevels = new();
     [SerializeField] private List<PowerupUpgradeLevelEntry> powerupUpgradeLevels = new();
+    [SerializeField] private List<string> unlockedBoosterIds = new();
+    [SerializeField] private List<BoosterSelectionEntry> boosterLoadout = new();
     [SerializeField] private int dailyLoginDayIndex;
     [SerializeField] private long dailyLoginLastClaimTicks;
     [SerializeField] private List<TaskCadenceState> taskCadenceStates = new();
@@ -348,6 +350,8 @@ public class PlayerProfile : ScriptableObject
         unlockedItemIds = data.unlockedItemIds ?? new List<string>();
         upgradeLevels = data.upgradeLevels ?? new List<UpgradeLevelEntry>();
         powerupUpgradeLevels = data.powerupUpgradeLevels ?? new List<PowerupUpgradeLevelEntry>();
+        unlockedBoosterIds = data.unlockedBoosterIds ?? new List<string>();
+        boosterLoadout = data.boosterLoadout ?? new List<BoosterSelectionEntry>();
         dailyLoginDayIndex = Mathf.Max(0, data.dailyLoginDayIndex);
         dailyLoginLastClaimTicks = data.dailyLoginLastClaimTicks;
         taskCadenceStates = data.taskCadenceStates ?? new List<TaskCadenceState>();
@@ -367,6 +371,8 @@ public class PlayerProfile : ScriptableObject
             unlockedItemIds = new List<string>(unlockedItemIds),
             upgradeLevels = new List<UpgradeLevelEntry>(upgradeLevels),
             powerupUpgradeLevels = new List<PowerupUpgradeLevelEntry>(powerupUpgradeLevels),
+            unlockedBoosterIds = new List<string>(unlockedBoosterIds),
+            boosterLoadout = new List<BoosterSelectionEntry>(boosterLoadout),
             dailyLoginDayIndex = dailyLoginDayIndex,
             dailyLoginLastClaimTicks = dailyLoginLastClaimTicks,
             taskCadenceStates = new List<TaskCadenceState>(taskCadenceStates),
@@ -677,6 +683,109 @@ public class PlayerProfile : ScriptableObject
         Save();
     }
 
+    public bool HasUnlockedBooster(string boosterId)
+    {
+        return !string.IsNullOrWhiteSpace(boosterId) && unlockedBoosterIds.Contains(boosterId);
+    }
+
+    public string GetEquippedBoosterId(BoosterFamily family)
+    {
+        for (int i = 0; i < boosterLoadout.Count; i++)
+        {
+            if (boosterLoadout[i].family == family)
+                return boosterLoadout[i].boosterId;
+        }
+
+        return string.Empty;
+    }
+
+    public void EnsureBoosterLoadout(BoosterDefinition[] definitions)
+    {
+        if (definitions == null || definitions.Length == 0)
+            return;
+
+        bool changed = false;
+        Dictionary<BoosterFamily, string> firstUnlockedByFamily = new();
+
+        for (int i = 0; i < definitions.Length; i++)
+        {
+            BoosterDefinition definition = definitions[i];
+            if (definition == null || string.IsNullOrWhiteSpace(definition.id))
+                continue;
+
+            if (definition.unlockedByDefault && !HasUnlockedBooster(definition.id))
+            {
+                UnlockBoosterWithoutSave(definition.id);
+                changed = true;
+            }
+
+            if (!HasUnlockedBooster(definition.id))
+                continue;
+
+            if (!firstUnlockedByFamily.ContainsKey(definition.family))
+                firstUnlockedByFamily[definition.family] = definition.id;
+        }
+
+        foreach (BoosterFamily family in System.Enum.GetValues(typeof(BoosterFamily)))
+        {
+            string equippedId = GetEquippedBoosterId(family);
+            if (!string.IsNullOrWhiteSpace(equippedId) && HasUnlockedBooster(equippedId))
+                continue;
+
+            if (firstUnlockedByFamily.TryGetValue(family, out string defaultId))
+            {
+                if (SetBoosterSelectionWithoutSave(family, defaultId))
+                    changed = true;
+            }
+        }
+
+        if (changed)
+            Save();
+    }
+
+    public bool TryEquipBooster(BoosterFamily family, string boosterId, BoosterDefinition[] definitions = null)
+    {
+        if (string.IsNullOrWhiteSpace(boosterId))
+            return false;
+
+        if (definitions != null && definitions.Length > 0)
+        {
+            for (int i = 0; i < definitions.Length; i++)
+            {
+                BoosterDefinition definition = definitions[i];
+                if (definition == null || definition.family != family || definition.id != boosterId)
+                    continue;
+
+                if (!HasUnlockedBooster(definition.id) && !definition.unlockedByDefault)
+                    return false;
+
+                if (definition.unlockedByDefault && !HasUnlockedBooster(definition.id))
+                    UnlockBoosterWithoutSave(definition.id);
+
+                if (SetBoosterSelectionWithoutSave(family, definition.id))
+                {
+                    Save();
+                    return true;
+                }
+
+                return false;
+            }
+
+            return false;
+        }
+
+        if (!HasUnlockedBooster(boosterId))
+            return false;
+
+        if (SetBoosterSelectionWithoutSave(family, boosterId))
+        {
+            Save();
+            return true;
+        }
+
+        return false;
+    }
+
     public bool CanClaimDailyLogin(System.DateTime todayUtcDate)
     {
         if (dailyLoginLastClaimTicks <= 0)
@@ -890,6 +999,8 @@ public class PlayerProfile : ScriptableObject
         public List<string> unlockedItemIds;
         public List<UpgradeLevelEntry> upgradeLevels;
         public List<PowerupUpgradeLevelEntry> powerupUpgradeLevels;
+        public List<string> unlockedBoosterIds;
+        public List<BoosterSelectionEntry> boosterLoadout;
         public int dailyLoginDayIndex;
         public long dailyLoginLastClaimTicks;
         public List<TaskCadenceState> taskCadenceStates;
@@ -930,6 +1041,13 @@ public class PlayerProfile : ScriptableObject
     {
         public string id;
         public int claimedTierCount;
+    }
+
+    [System.Serializable]
+    public class BoosterSelectionEntry
+    {
+        public BoosterFamily family;
+        public string boosterId;
     }
 
     private static string ComputeHash(string json)
@@ -1087,6 +1205,41 @@ public class PlayerProfile : ScriptableObject
     {
         if (!unlockedItemIds.Contains(itemId))
             unlockedItemIds.Add(itemId);
+    }
+
+    private void UnlockBoosterWithoutSave(string boosterId)
+    {
+        if (!unlockedBoosterIds.Contains(boosterId))
+            unlockedBoosterIds.Add(boosterId);
+    }
+
+    private bool SetBoosterSelectionWithoutSave(BoosterFamily family, string boosterId)
+    {
+        if (string.IsNullOrWhiteSpace(boosterId))
+            return false;
+
+        for (int i = 0; i < boosterLoadout.Count; i++)
+        {
+            if (boosterLoadout[i].family == family)
+            {
+                if (boosterLoadout[i].boosterId == boosterId)
+                    return false;
+
+                boosterLoadout[i] = new BoosterSelectionEntry
+                {
+                    family = family,
+                    boosterId = boosterId
+                };
+                return true;
+            }
+        }
+
+        boosterLoadout.Add(new BoosterSelectionEntry
+        {
+            family = family,
+            boosterId = boosterId
+        });
+        return true;
     }
 
     private void NormalizeLevelProgress()

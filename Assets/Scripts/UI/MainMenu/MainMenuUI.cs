@@ -41,6 +41,7 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private Image levelShapeImage;
     [SerializeField] private TMP_Text levelDescriptionText;
     [SerializeField] private TMP_Text levelRequirementText;
+    [SerializeField] private TMP_Text boosterSummaryText;
     [SerializeField] private Button leftArrowButton;
     [SerializeField] private Button rightArrowButton;
     [SerializeField] private RectTransform levelCardsRoot;
@@ -72,6 +73,7 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private ShopDatabase shopDatabase;
     [SerializeField] private ShipDatabase shipDatabase;
     [SerializeField] private PowerupUpgradeConfig powerupUpgradeConfig;
+    [SerializeField] private BoosterCatalog boosterCatalog;
     [SerializeField] private DailyLoginRewardsManager dailyLoginRewardsManager;
     [SerializeField] private ProgressionTasksController progressionTasksController;
     [SerializeField] private GameObject featurePanelRoot;
@@ -96,6 +98,7 @@ public class MainMenuUI : MonoBehaviour
 
     private readonly List<GameObject> _runtimeLabWidgets = new();
     private readonly List<GameObject> _runtimeLevelWidgets = new();
+    private readonly List<GameObject> _runtimeBoosterWidgets = new();
     private readonly Dictionary<ShopTab, Button> _shopTabButtons = new();
     private int _currentLevelIndex;
     private bool _labScaffoldReady;
@@ -104,6 +107,7 @@ public class MainMenuUI : MonoBehaviour
     private RectTransform _shopContentRoot;
     private ShopItemDetailsModal _shopDetailsModal;
     private ShopPageController _runtimeShopController;
+    private TMP_Text _boosterSummaryTextRuntime;
     private TMP_Text _removeAdsButtonText;
     private TMP_Text _restorePurchasesButtonText;
     private Coroutine _levelUpToastRoutine;
@@ -325,6 +329,7 @@ public class MainMenuUI : MonoBehaviour
     private void RefreshLevelSelectView()
     {
         EnsureLevelSelectScaffold();
+        EnsureBoosterDefaults();
 
         if (levels == null || levels.Length == 0)
         {
@@ -390,6 +395,13 @@ public class MainMenuUI : MonoBehaviour
         if (levelRequirementText == null)
             levelRequirementText = CreateTopLeftLabel(rootPanel.transform, "LevelRequirement", new Vector2(72f, -272f), 24f, TextAlignmentOptions.Left);
 
+        if (_boosterSummaryTextRuntime == null)
+        {
+            _boosterSummaryTextRuntime = boosterSummaryText != null
+                ? boosterSummaryText
+                : CreateTopLeftLabel(rootPanel.transform, "BoosterSummary", new Vector2(72f, -310f), 22f, TextAlignmentOptions.Left);
+        }
+
         if (levelUpToastRoot == null)
         {
             GameObject toastObject = new GameObject("LevelUpToast", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
@@ -421,7 +433,7 @@ public class MainMenuUI : MonoBehaviour
 
     private void RefreshLevelCards()
     {
-        if (levelCardsRoot == null || levels == null)
+        if (levelCardsRoot == null)
             return;
 
         for (int i = 0; i < _runtimeLevelWidgets.Count; i++)
@@ -431,22 +443,31 @@ public class MainMenuUI : MonoBehaviour
         }
         _runtimeLevelWidgets.Clear();
 
-        if (levels.Length == 0)
-            return;
+        for (int i = 0; i < _runtimeBoosterWidgets.Count; i++)
+        {
+            if (_runtimeBoosterWidgets[i] != null)
+                Destroy(_runtimeBoosterWidgets[i]);
+        }
+        _runtimeBoosterWidgets.Clear();
 
         TMP_FontAsset font = bestScoreText != null ? bestScoreText.font : TMP_Settings.defaultFontAsset;
-        _runtimeLevelWidgets.Add(CreateSectionLabel(levelCardsRoot, "Level Routes"));
-
-        for (int i = 0; i < levels.Length; i++)
+        if (levels != null && levels.Length > 0)
         {
-            LevelInfo levelInfo = levels[i];
-            if (string.IsNullOrWhiteSpace(levelInfo.displayName))
-                continue;
+            _runtimeLevelWidgets.Add(CreateSectionLabel(levelCardsRoot, "Level Routes"));
 
-            bool unlocked = IsLevelUnlocked(i);
-            bool selected = i == _currentLevelIndex;
-            _runtimeLevelWidgets.Add(CreateLevelCard(levelCardsRoot, font, i, levelInfo, unlocked, selected));
+            for (int i = 0; i < levels.Length; i++)
+            {
+                LevelInfo levelInfo = levels[i];
+                if (string.IsNullOrWhiteSpace(levelInfo.displayName))
+                    continue;
+
+                bool unlocked = IsLevelUnlocked(i);
+                bool selected = i == _currentLevelIndex;
+                _runtimeLevelWidgets.Add(CreateLevelCard(levelCardsRoot, font, i, levelInfo, unlocked, selected));
+            }
         }
+
+        RefreshBoosterCards(font);
     }
 
     private GameObject CreateLevelCard(Transform parent, TMP_FontAsset font, int index, LevelInfo info, bool unlocked, bool selected)
@@ -515,6 +536,218 @@ public class MainMenuUI : MonoBehaviour
             actionButton.interactable = unlocked && !selected;
 
         return card;
+    }
+
+    private void RefreshBoosterCards(TMP_FontAsset font)
+    {
+        if (levelCardsRoot == null)
+            return;
+
+        BoosterDefinition[] boosters = GetResolvedBoosterDefinitions();
+        if (_boosterSummaryTextRuntime != null)
+            _boosterSummaryTextRuntime.text = GetBoosterSummaryText(boosters);
+
+        _runtimeBoosterWidgets.Add(CreateSectionLabel(levelCardsRoot, "Boosters"));
+
+        if (boosters == null || boosters.Length == 0)
+        {
+            _runtimeBoosterWidgets.Add(CreateBoosterNotice(levelCardsRoot, font, "No boosters configured."));
+            return;
+        }
+
+        if (profile == null)
+        {
+            _runtimeBoosterWidgets.Add(CreateBoosterNotice(levelCardsRoot, font, "Booster loadout unavailable."));
+            return;
+        }
+
+        BoosterFamily[] families = { BoosterFamily.Score, BoosterFamily.Rewards, BoosterFamily.Speed };
+        foreach (BoosterFamily family in families)
+        {
+            _runtimeBoosterWidgets.Add(CreateSectionLabel(levelCardsRoot, GetBoosterFamilyLabel(family)));
+
+            bool hasEntries = false;
+            for (int i = 0; i < boosters.Length; i++)
+            {
+                BoosterDefinition booster = boosters[i];
+                if (booster == null || booster.family != family)
+                    continue;
+
+                hasEntries = true;
+                string equippedId = profile.GetEquippedBoosterId(family);
+                bool selected = booster.id == equippedId;
+                bool unlocked = profile.HasUnlockedBooster(booster.id) || booster.unlockedByDefault;
+                _runtimeBoosterWidgets.Add(CreateBoosterCard(levelCardsRoot, font, booster, unlocked, selected, () => SelectBooster(booster)));
+            }
+
+            if (!hasEntries)
+                _runtimeBoosterWidgets.Add(CreateBoosterNotice(levelCardsRoot, font, $"No {GetBoosterFamilyLabel(family).ToLowerInvariant()} boosters configured."));
+        }
+    }
+
+    private GameObject CreateBoosterCard(
+        Transform parent,
+        TMP_FontAsset font,
+        BoosterDefinition booster,
+        bool unlocked,
+        bool selected,
+        UnityEngine.Events.UnityAction onPressed)
+    {
+        GameObject card = new GameObject($"{booster.displayName}BoosterCard", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
+        card.transform.SetParent(parent, false);
+
+        LayoutElement layout = card.GetComponent<LayoutElement>();
+        layout.preferredHeight = 158f;
+
+        Image background = card.GetComponent<Image>();
+        background.color = selected
+            ? new Color(0.22f, 0.42f, 0.58f, 0.95f)
+            : unlocked
+                ? new Color(0.07f, 0.1f, 0.14f, 0.92f)
+                : new Color(0.08f, 0.08f, 0.1f, 0.82f);
+        background.raycastTarget = false;
+
+        VerticalLayoutGroup verticalLayout = card.AddComponent<VerticalLayoutGroup>();
+        verticalLayout.padding = new RectOffset(18, 18, 16, 16);
+        verticalLayout.spacing = 8f;
+        verticalLayout.childControlHeight = false;
+        verticalLayout.childControlWidth = true;
+        verticalLayout.childForceExpandHeight = false;
+        verticalLayout.childForceExpandWidth = true;
+
+        ContentSizeFitter fitter = card.AddComponent<ContentSizeFitter>();
+        fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+        fitter.verticalFit = ContentSizeFitter.FitMode.MinSize;
+
+        TMP_Text titleText = CreateCardText(card.transform, font, selected ? $"{booster.displayName} · Equipped" : booster.displayName, 28f, FontStyles.Bold);
+        titleText.alignment = TextAlignmentOptions.Left;
+
+        TMP_Text descriptionText = CreateCardText(card.transform, font, booster.description, 21f, FontStyles.Normal);
+        descriptionText.alignment = TextAlignmentOptions.Left;
+        descriptionText.enableWordWrapping = true;
+
+        GameObject footer = new GameObject("Footer", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(LayoutElement));
+        footer.transform.SetParent(card.transform, false);
+        LayoutElement footerLayout = footer.GetComponent<LayoutElement>();
+        footerLayout.preferredHeight = 44f;
+
+        HorizontalLayoutGroup footerGroup = footer.GetComponent<HorizontalLayoutGroup>();
+        footerGroup.spacing = 12f;
+        footerGroup.childControlHeight = true;
+        footerGroup.childControlWidth = false;
+        footerGroup.childForceExpandWidth = false;
+        footerGroup.childForceExpandHeight = false;
+
+        TMP_Text familyText = CreateCardText(footer.transform, font, $"{GetBoosterFamilyLabel(booster.family)} · x{Mathf.Max(1f, booster.multiplier):0.##}", 22f, FontStyles.Bold);
+        familyText.alignment = TextAlignmentOptions.Left;
+        LayoutElement familyLayout = familyText.gameObject.AddComponent<LayoutElement>();
+        familyLayout.preferredWidth = 240f;
+
+        string actionLabel = selected
+            ? "EQUIPPED"
+            : unlocked
+                ? "EQUIP"
+                : "LOCKED";
+
+        Button button = CreateActionButton(footer.transform, font, actionLabel, unlocked && !selected, onPressed);
+        LayoutElement buttonLayout = button.gameObject.AddComponent<LayoutElement>();
+        buttonLayout.preferredWidth = 180f;
+        buttonLayout.preferredHeight = 44f;
+
+        return card;
+    }
+
+    private GameObject CreateBoosterNotice(Transform parent, TMP_FontAsset font, string message)
+    {
+        GameObject notice = new GameObject("BoosterNotice", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
+        notice.transform.SetParent(parent, false);
+
+        LayoutElement layout = notice.GetComponent<LayoutElement>();
+        layout.preferredHeight = 84f;
+
+        Image background = notice.GetComponent<Image>();
+        background.color = new Color(0.07f, 0.08f, 0.1f, 0.72f);
+        background.raycastTarget = false;
+
+        TMP_Text text = CreateCardText(notice.transform, font, message, 22f, FontStyles.Normal);
+        text.alignment = TextAlignmentOptions.Left;
+        text.enableWordWrapping = true;
+
+        return notice;
+    }
+
+    private void SelectBooster(BoosterDefinition booster)
+    {
+        if (profile == null || booster == null)
+            return;
+
+        BoosterDefinition[] boosters = GetResolvedBoosterDefinitions();
+        if (!profile.TryEquipBooster(booster.family, booster.id, boosters))
+            return;
+
+        RefreshLevelCards();
+    }
+
+    private string GetBoosterSummaryText(BoosterDefinition[] boosters)
+    {
+        if (profile == null)
+            return "Boosters unavailable.";
+
+        string score = DescribeEquippedBooster(BoosterFamily.Score, boosters);
+        string rewards = DescribeEquippedBooster(BoosterFamily.Rewards, boosters);
+        string speed = DescribeEquippedBooster(BoosterFamily.Speed, boosters);
+        return $"Selected boosters: {score} | {rewards} | {speed}";
+    }
+
+    private string DescribeEquippedBooster(BoosterFamily family, BoosterDefinition[] boosters)
+    {
+        string equippedId = profile != null ? profile.GetEquippedBoosterId(family) : string.Empty;
+        BoosterDefinition booster = FindBoosterDefinition(boosters, family, equippedId);
+        if (booster == null)
+            return $"{GetBoosterFamilyLabel(family)} none";
+
+        return $"{GetBoosterFamilyLabel(family)} {booster.displayName}";
+    }
+
+    private BoosterDefinition FindBoosterDefinition(BoosterDefinition[] boosters, BoosterFamily family, string boosterId)
+    {
+        if (boosters == null || string.IsNullOrWhiteSpace(boosterId))
+            return null;
+
+        for (int i = 0; i < boosters.Length; i++)
+        {
+            BoosterDefinition booster = boosters[i];
+            if (booster != null && booster.family == family && booster.id == boosterId)
+                return booster;
+        }
+
+        return null;
+    }
+
+    private string GetBoosterFamilyLabel(BoosterFamily family)
+    {
+        return family switch
+        {
+            BoosterFamily.Score => "Score",
+            BoosterFamily.Rewards => "Rewards",
+            BoosterFamily.Speed => "Speed",
+            _ => family.ToString()
+        };
+    }
+
+    private BoosterDefinition[] GetResolvedBoosterDefinitions()
+    {
+        return boosterCatalog != null
+            ? boosterCatalog.GetResolvedBoosters()
+            : BoosterCatalog.GetDefaultBoosters();
+    }
+
+    private void EnsureBoosterDefaults()
+    {
+        if (profile == null)
+            return;
+
+        profile.EnsureBoosterLoadout(GetResolvedBoosterDefinitions());
     }
 
     private string GetLevelDescription(LevelInfo info)
@@ -761,6 +994,18 @@ public class MainMenuUI : MonoBehaviour
             PowerupUpgradeConfig[] configs = Resources.FindObjectsOfTypeAll<PowerupUpgradeConfig>();
             if (configs != null && configs.Length > 0)
                 powerupUpgradeConfig = configs[0];
+        }
+
+        if (boosterCatalog == null)
+        {
+            boosterCatalog = Resources.Load<BoosterCatalog>("BoosterCatalog");
+
+            if (boosterCatalog == null)
+            {
+                BoosterCatalog[] catalogs = Resources.FindObjectsOfTypeAll<BoosterCatalog>();
+                if (catalogs != null && catalogs.Length > 0)
+                    boosterCatalog = catalogs[0];
+            }
         }
     }
 

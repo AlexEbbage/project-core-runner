@@ -2,7 +2,7 @@
 
 ## Delivery Strategy
 
-Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. The current delivery slice is the progression-shell review closeout: the authored hub and progression surfaces are in place and the runtime validation pass is now the signoff gate.
+Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. The current delivery slice is the booster implementation and review pass: the pre-run loadout is now wired into the hub/play shell and the runtime validation pass is the signoff gate.
 
 ## Phases
 
@@ -23,8 +23,8 @@ Use the docs set as the durable operating system for the project. Foundation doc
 
 ## Current Recommended Order
 
-1. Progression-shell review closeout
-2. Booster and pre-run economy extension
+1. Booster implementation and review pass
+2. Progression-shell review closeout
 3. Environment unlock and level-select completion
 4. Remaining UI polish follow-up if needed
 
@@ -33,7 +33,7 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - Environment unlock work depends on agreed unlock thresholds and content definitions.
 - Monetisation expansion depends on an approved catalog and entitlement model.
 - UI tooling changes depend on an explicit package adoption decision.
-- Shop, ship customisation, lab, tasks, daily login, achievements, and UI polish all require Unity runtime validation before the broader progression milestone can be considered fully reviewed.
+- Boosters, shop, ship customisation, lab, tasks, daily login, achievements, and UI polish all require Unity runtime validation before the broader progression milestone can be considered fully reviewed.
 - DOTween is now the approved UI motion layer, so UI polish work should use the reusable motion helper rather than introducing a second transition stack.
 
 ## Validation Notes
