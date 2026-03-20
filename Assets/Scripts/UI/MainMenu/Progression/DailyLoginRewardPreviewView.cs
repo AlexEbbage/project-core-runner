@@ -8,22 +8,20 @@ public class DailyLoginRewardPreviewView : MonoBehaviour
     [SerializeField] private TMP_Text titleText;
     [SerializeField] private TMP_Text rewardText;
     [SerializeField] private TMP_Text statusText;
-    [SerializeField] private bool claimOnEnable = true;
-
-    private bool _attemptedClaim;
+    [SerializeField] private Button claimButton;
+    [SerializeField] private TMP_Text claimButtonText;
 
     private void Awake()
     {
         if (rewardsManager == null)
             rewardsManager = FindFirstObjectByType<DailyLoginRewardsManager>();
+
+        EnsureScaffold();
     }
 
     private void OnEnable()
     {
         LocalizationService.LanguageChanged += Refresh;
-
-        if (claimOnEnable && !_attemptedClaim)
-            TryClaimOnOpen();
 
         Refresh();
     }
@@ -35,6 +33,8 @@ public class DailyLoginRewardPreviewView : MonoBehaviour
 
     public void Refresh()
     {
+        EnsureScaffold();
+
         if (titleText != null)
             titleText.text = LocalizationService.Get("ui.daily_login_title", "Daily Login");
 
@@ -42,6 +42,7 @@ public class DailyLoginRewardPreviewView : MonoBehaviour
         {
             SetText(rewardText, LocalizationService.Get("ui.daily_login_unavailable", "Rewards unavailable."));
             SetText(statusText, LocalizationService.Get("ui.daily_login_unavailable_detail", "Login rewards are not configured."));
+            SetClaimButton(false);
             return;
         }
 
@@ -50,6 +51,7 @@ public class DailyLoginRewardPreviewView : MonoBehaviour
         {
             SetText(rewardText, LocalizationService.Get("ui.daily_login_unavailable", "Rewards unavailable."));
             SetText(statusText, LocalizationService.Get("ui.daily_login_unavailable_detail", "Login rewards are not configured."));
+            SetClaimButton(false);
             return;
         }
 
@@ -60,13 +62,21 @@ public class DailyLoginRewardPreviewView : MonoBehaviour
         SetText(statusText, canClaim
             ? LocalizationService.Get("ui.daily_login_claim_available", "Claim available today.")
             : LocalizationService.Get("ui.daily_login_claimed", "Claimed today."));
+        SetClaimButton(canClaim);
     }
 
-    private void TryClaimOnOpen()
+    public void TryClaim()
     {
-        _attemptedClaim = true;
-        if (rewardsManager != null)
-            rewardsManager.TryClaimReward();
+        if (rewardsManager == null)
+            return;
+
+        if (rewardsManager.TryClaimReward())
+        {
+            FindFirstObjectByType<ProgressionTasksController>()?.Refresh();
+            FindFirstObjectByType<MainMenuController>()?.RefreshHubChrome();
+        }
+
+        Refresh();
     }
 
     private static string DescribeReward(DailyLoginRewardEntry reward)
@@ -96,6 +106,19 @@ public class DailyLoginRewardPreviewView : MonoBehaviour
             text.text = value;
     }
 
+    private void SetClaimButton(bool interactable)
+    {
+        if (claimButton != null)
+            claimButton.interactable = interactable;
+
+        if (claimButtonText != null)
+        {
+            claimButtonText.text = interactable
+                ? LocalizationService.Get("ui.daily_login_claim_button", "Claim")
+                : LocalizationService.Get("ui.daily_login_claimed_button", "Claimed");
+        }
+    }
+
     public static DailyLoginRewardPreviewView Create(Transform parent, TMP_Text template)
     {
         GameObject root = new("DailyLoginRewardPreview", typeof(RectTransform));
@@ -116,8 +139,19 @@ public class DailyLoginRewardPreviewView : MonoBehaviour
         view.titleText = CreateText("Title", root.transform, template, 26f, FontStyles.Bold);
         view.rewardText = CreateText("Reward", root.transform, template, 20f, FontStyles.Normal);
         view.statusText = CreateText("Status", root.transform, template, 18f, FontStyles.Italic);
+        view.claimButton = CreateButton(root.transform, template, out view.claimButtonText);
+        view.claimButton.onClick.AddListener(view.TryClaim);
 
         return view;
+    }
+
+    private void EnsureScaffold()
+    {
+        if (claimButton == null)
+            return;
+
+        claimButton.onClick.RemoveAllListeners();
+        claimButton.onClick.AddListener(TryClaim);
     }
 
     private static TMP_Text CreateText(string name, Transform parent, TMP_Text template, float fontSize, FontStyles style)
@@ -143,5 +177,30 @@ public class DailyLoginRewardPreviewView : MonoBehaviour
         text.fontSize = fontSize;
         text.fontStyle = style;
         return text;
+    }
+
+    private static Button CreateButton(Transform parent, TMP_Text template, out TMP_Text buttonText)
+    {
+        GameObject buttonObject = new("ClaimButton", typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
+        buttonObject.transform.SetParent(parent, false);
+
+        LayoutElement layout = buttonObject.GetComponent<LayoutElement>();
+        layout.preferredWidth = 160f;
+        layout.preferredHeight = 44f;
+
+        Image image = buttonObject.GetComponent<Image>();
+        image.color = new Color(0.98f, 0.5f, 0.18f, 1f);
+
+        Button button = buttonObject.GetComponent<Button>();
+        button.targetGraphic = image;
+
+        buttonText = CreateText("ClaimText", buttonObject.transform, template, 18f, FontStyles.Bold);
+        buttonText.alignment = TextAlignmentOptions.Center;
+        RectTransform rect = buttonText.rectTransform;
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+        return button;
     }
 }

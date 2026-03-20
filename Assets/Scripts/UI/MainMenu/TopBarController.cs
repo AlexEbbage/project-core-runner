@@ -95,6 +95,6 @@ public class TopBarController : MonoBehaviour
         if (profile == null)
             return 0f;
 
-        return Mathf.Clamp01((profile.xp % 1000) / 1000f);
+        return profile.GetXpProgressNormalized();
     }
 }

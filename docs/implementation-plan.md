@@ -9,7 +9,7 @@ Use the docs set as the durable operating system for the project. Foundation doc
 | Phase | Goal | Exit Criteria | Status |
 | --- | --- | --- | --- |
 | 1 | Foundation | Core docs, architecture, style guide, registries, and decisions reflect repo truth and approved direction | Completed |
-| 2 | First approved feature slice | Exactly one chosen feature is documented, implemented, validated, and reflected in all registries | In progress |
+| 2 | First approved feature slice | Exactly one chosen feature, or one explicitly approved milestone bundle, is documented, implemented, validated, and reflected in all registries | In progress |
 | 3 | Expansion | Additional approved features are implemented in priority order with docs kept current | Not started |
 | 4 | Polish and validation | UI polish, tuning, telemetry coverage, testing, and documentation cleanup are complete for the chosen release target | Not started |
 
@@ -18,23 +18,23 @@ Use the docs set as the durable operating system for the project. Foundation doc
 1. Read `product-requirements.md`, `architecture.md`, `style-guide.md`, and the registries.
 2. Choose one feature from `feature-registry.md`.
 3. Move that feature to `In progress` and add or update its tasks in `task-registry.md`.
-4. Implement only that feature slice.
+4. Implement only that feature slice, or the explicitly approved milestone bundle.
 5. Update `script-registry.md`, `decision-registry.md`, and validation notes before closing the slice.
 
 ## Current Recommended Order
 
-1. Ship customisation flow on top of the authored shop and hangar ids
-2. Progression/meta convergence
-3. Environment unlock and level-select completion
-4. Analytics coverage expansion
-5. UI tooling and polish improvements
+1. Analytics coverage expansion
+2. UI tooling and polish improvements
+3. Booster and pre-run economy extension
+4. Environment unlock and level-select completion
+5. Remaining progression-shell polish and tuning
 
 ## Dependencies and Blockers
 
 - Environment unlock work depends on agreed unlock thresholds and content definitions.
 - Monetisation expansion depends on an approved catalog and entitlement model.
 - UI tooling changes depend on an explicit package adoption decision.
-- Shop scene/runtime validation in Unity is still required before the first production shop slice can be considered fully reviewed.
+- Shop, ship customisation, lab, tasks, daily login, and achievements all require Unity runtime validation before the broader progression milestone can be considered fully reviewed.
 
 ## Validation Notes
 

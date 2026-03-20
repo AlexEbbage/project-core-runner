@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dff80e4a83bb6564185aec19faa7b2df, type: 3}
+  m_Name: DailyLoginRewardsConfig
+  m_EditorClassIdentifier: Assembly-CSharp::DailyLoginRewardsConfig
+  defaultSoftCurrencyAmount: 150
+  rewards:
+  - dayIndex: 1
+    rewardType: 0
+    amount: 150
+    itemId: 
+  - dayIndex: 2
+    rewardType: 0
+    amount: 200
+    itemId: 
+  - dayIndex: 3
+    rewardType: 1
+    amount: 10
+    itemId: 
+  - dayIndex: 4
+    rewardType: 0
+    amount: 250
+    itemId: 
+  - dayIndex: 5
+    rewardType: 0
+    amount: 300
+    itemId: 
+  - dayIndex: 6
+    rewardType: 1
+    amount: 15
+    itemId: 
+  - dayIndex: 7
+    rewardType: 2
+    amount: 1
+    itemId: skin_solar_flare

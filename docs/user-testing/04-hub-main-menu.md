@@ -26,7 +26,7 @@ Verify the hub lands on `Level Select`, routes clearly to the five target destin
 - [ ] Confirm special offers route to a monetisation surface and the badge disappears if offers are no longer actionable.
 - [ ] Confirm notifications route to the highest-priority available action without breaking hub state.
 - [ ] Confirm settings can be opened and closed.
-- [ ] Confirm the level selection area updates the preview text correctly.
+- [ ] Confirm the level selection area updates the preview text correctly, shows lock-aware cards, and keeps the selected route after returning to the menu.
 - [ ] Confirm the menu returns cleanly after ending a run and going back.
 - [ ] Confirm any notification or badge state that exists is readable and not misleading.
 

@@ -2,7 +2,7 @@
 
 ## Goal
 
-Verify the player can read available levels/zones, understand locks, and enter the intended run from selection.
+Verify the player can read available levels/zones, understand locks, persist the selected route, and enter the intended run from selection.
 
 ## Setup
 
@@ -13,7 +13,9 @@ Verify the player can read available levels/zones, understand locks, and enter t
 
 - [ ] Confirm the level select surface can be opened.
 - [ ] Confirm available levels or zones are readable and selectable.
+- [ ] Confirm locked levels clearly show the required level or lock reason.
 - [ ] Change selection and confirm the preview updates correctly.
+- [ ] Confirm selecting a level persists after leaving and returning to the menu.
 - [ ] Start a run from the selected level and confirm the world matches the selection.
 - [ ] If lock states exist, confirm locked content is clearly marked.
 - [ ] If reward or challenge info exists per level, confirm it is understandable.

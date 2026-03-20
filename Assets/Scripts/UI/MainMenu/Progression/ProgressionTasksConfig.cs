@@ -46,6 +46,10 @@ public class ProgressionTaskDefinition
     [SerializeField] private ProgressionTaskRowStyle rowStyle = ProgressionTaskRowStyle.MultiStep;
     [SerializeField] private string rewardLabel = "50 Coins";
     [SerializeField] private Sprite rewardIcon;
+    [SerializeField] private ProfileGrantType rewardType = ProfileGrantType.SoftCurrency;
+    [SerializeField] private int rewardAmount = 50;
+    [SerializeField] private string rewardItemId;
+    [SerializeField] private int progressPointsReward = 25;
 
     public string Id => id;
     public string Description => description;
@@ -55,6 +59,10 @@ public class ProgressionTaskDefinition
     public ProgressionTaskRowStyle RowStyle => rowStyle;
     public string RewardLabel => rewardLabel;
     public Sprite RewardIcon => rewardIcon;
+    public ProfileGrantType RewardType => rewardType;
+    public int RewardAmount => rewardAmount;
+    public string RewardItemId => rewardItemId;
+    public int ProgressPointsReward => progressPointsReward;
 }
 
 [Serializable]
@@ -64,11 +72,17 @@ public class ProgressionRewardDefinition
     [SerializeField] private int pointsRequired = 50;
     [SerializeField] private Sprite icon;
     [SerializeField] private ProgressionRewardState state = ProgressionRewardState.Locked;
+    [SerializeField] private ProfileGrantType rewardType = ProfileGrantType.SoftCurrency;
+    [SerializeField] private int rewardAmount = 50;
+    [SerializeField] private string rewardItemId;
 
     public string RewardLabel => rewardLabel;
     public int PointsRequired => pointsRequired;
     public Sprite Icon => icon;
-    public ProgressionRewardState State => state;
+    public ProgressionRewardState DefaultState => state;
+    public ProfileGrantType RewardType => rewardType;
+    public int RewardAmount => rewardAmount;
+    public string RewardItemId => rewardItemId;
 }
 
 public enum ProgressionRewardState

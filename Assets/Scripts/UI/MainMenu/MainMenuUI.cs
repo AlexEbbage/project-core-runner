@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -7,7 +8,9 @@ using UnityEngine.UI;
 public struct LevelInfo
 {
     public string displayName;
+    public string description;
     public int sides;
+    public int requiredProfileLevel;
     public Sprite shapeSprite;
 }
 
@@ -36,8 +39,13 @@ public class MainMenuUI : MonoBehaviour
     [Header("Level Select UI")]
     [SerializeField] private TMP_Text levelNameText;
     [SerializeField] private Image levelShapeImage;
+    [SerializeField] private TMP_Text levelDescriptionText;
+    [SerializeField] private TMP_Text levelRequirementText;
     [SerializeField] private Button leftArrowButton;
     [SerializeField] private Button rightArrowButton;
+    [SerializeField] private RectTransform levelCardsRoot;
+    [SerializeField] private GameObject levelUpToastRoot;
+    [SerializeField] private TMP_Text levelUpToastText;
 
     [Header("Levels")]
     [SerializeField] private LevelInfo[] levels;
@@ -87,15 +95,19 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private GameObject notificationsBadgeRoot;
 
     private readonly List<GameObject> _runtimeLabWidgets = new();
+    private readonly List<GameObject> _runtimeLevelWidgets = new();
     private readonly Dictionary<ShopTab, Button> _shopTabButtons = new();
     private int _currentLevelIndex;
     private bool _labScaffoldReady;
+    private bool _profileEventsBound;
     private RectTransform _shopTabRoot;
     private RectTransform _shopContentRoot;
     private ShopItemDetailsModal _shopDetailsModal;
     private ShopPageController _runtimeShopController;
     private TMP_Text _removeAdsButtonText;
     private TMP_Text _restorePurchasesButtonText;
+    private Coroutine _levelUpToastRoutine;
+    private string _queuedLevelUpMessage;
 
     private void Awake()
     {
@@ -131,6 +143,8 @@ public class MainMenuUI : MonoBehaviour
 
         ResolveDataReferences();
         ResolveLabReferences();
+        EnsureLevelSelectScaffold();
+        BindProfileEvents();
 
         if (leftArrowButton != null)
             leftArrowButton.onClick.AddListener(OnPrevLevel);
@@ -146,6 +160,7 @@ public class MainMenuUI : MonoBehaviour
     {
         RemoveAdsIAPManager.OnRemoveAdsUnlocked += HandleRemoveAdsUnlocked;
         LocalizationService.LanguageChanged += HandleLanguageChanged;
+        BindProfileEvents();
 
         UpdateBestScoreDisplay();
         EnsureValidLevelIndex();
@@ -154,12 +169,14 @@ public class MainMenuUI : MonoBehaviour
         UpdateRemoveAdsUI();
         RefreshLabView();
         RefreshHubState();
+        ShowQueuedLevelUpToast();
     }
 
     private void OnDisable()
     {
         RemoveAdsIAPManager.OnRemoveAdsUnlocked -= HandleRemoveAdsUnlocked;
         LocalizationService.LanguageChanged -= HandleLanguageChanged;
+        UnbindProfileEvents();
     }
 
     public void Show()
@@ -167,6 +184,7 @@ public class MainMenuUI : MonoBehaviour
         if (rootPanel != null)
             rootPanel.SetActive(true);
 
+        mainMenuController?.RefreshHubChrome();
         UpdateBestScoreDisplay();
         EnsureValidLevelIndex();
         ApplyLevelToWorld();
@@ -174,6 +192,7 @@ public class MainMenuUI : MonoBehaviour
         UpdateRemoveAdsUI();
         RefreshLabView();
         RefreshHubState();
+        ShowQueuedLevelUpToast();
     }
 
     public void Hide()
@@ -229,41 +248,28 @@ public class MainMenuUI : MonoBehaviour
             return;
         }
 
-        if (_currentLevelIndex < 0 || _currentLevelIndex >= levels.Length)
+        int selectedIndex = profile != null ? profile.SelectedLevelIndex : _currentLevelIndex;
+        if (!IsLevelSelectable(selectedIndex))
         {
-            _currentLevelIndex = 0;
+            selectedIndex = GetFirstUnlockedLevelIndex();
         }
+
+        _currentLevelIndex = Mathf.Clamp(selectedIndex, 0, levels.Length - 1);
+
+        if (profile != null)
+            profile.SetSelectedLevelIndex(_currentLevelIndex);
     }
 
     private void UpdateLevelDisplay()
     {
-        if (levels == null || levels.Length == 0)
-        {
-            if (levelNameText != null)
-                levelNameText.text = LocalizationService.Get("ui.no_levels", "No Levels");
-
-            if (levelShapeImage != null)
-                levelShapeImage.enabled = false;
-
-            return;
-        }
-
-        var info = levels[_currentLevelIndex];
-
-        if (levelNameText != null)
-            levelNameText.text = info.displayName;
-
-        if (levelShapeImage != null)
-        {
-            levelShapeImage.enabled = info.shapeSprite != null;
-            levelShapeImage.sprite = info.shapeSprite;
-        }
+        EnsureLevelSelectScaffold();
+        RefreshLevelSelectView();
     }
 
     private void HandleLanguageChanged()
     {
         UpdateBestScoreDisplay();
-        UpdateLevelDisplay();
+        RefreshLevelSelectView();
         RefreshLabView();
     }
 
@@ -272,6 +278,7 @@ public class MainMenuUI : MonoBehaviour
         if (levels == null || levels.Length == 0)
             return;
 
+        EnsureValidLevelIndex();
         var info = levels[_currentLevelIndex];
         int sides = Mathf.Max(3, info.sides);
 
@@ -284,12 +291,8 @@ public class MainMenuUI : MonoBehaviour
         if (levels == null || levels.Length == 0)
             return;
 
-        _currentLevelIndex--;
-        if (_currentLevelIndex < 0)
-            _currentLevelIndex = levels.Length - 1;
-
-        ApplyLevelToWorld();
-        UpdateLevelDisplay();
+        int previousIndex = FindAdjacentSelectableLevelIndex(_currentLevelIndex, -1);
+        SelectLevel(previousIndex >= 0 ? previousIndex : GetFirstUnlockedLevelIndex());
     }
 
     private void OnNextLevel()
@@ -297,12 +300,361 @@ public class MainMenuUI : MonoBehaviour
         if (levels == null || levels.Length == 0)
             return;
 
-        _currentLevelIndex++;
-        if (_currentLevelIndex >= levels.Length)
-            _currentLevelIndex = 0;
+        int nextIndex = FindAdjacentSelectableLevelIndex(_currentLevelIndex, 1);
+        SelectLevel(nextIndex >= 0 ? nextIndex : GetFirstUnlockedLevelIndex());
+    }
+
+    private void RefreshLevelSelectView()
+    {
+        EnsureLevelSelectScaffold();
+
+        if (levels == null || levels.Length == 0)
+        {
+            if (levelNameText != null)
+                levelNameText.text = LocalizationService.Get("ui.no_levels", "No Levels");
+
+            if (levelDescriptionText != null)
+                levelDescriptionText.text = LocalizationService.Get("ui.level_select_empty", "No levels available.");
+
+            if (levelRequirementText != null)
+                levelRequirementText.text = string.Empty;
+
+            if (levelShapeImage != null)
+                levelShapeImage.enabled = false;
+
+            RefreshLevelCards();
+            return;
+        }
+
+        EnsureValidLevelIndex();
+        LevelInfo info = levels[_currentLevelIndex];
+
+        if (levelNameText != null)
+            levelNameText.text = info.displayName;
+
+        if (levelDescriptionText != null)
+            levelDescriptionText.text = GetLevelDescription(info);
+
+        if (levelRequirementText != null)
+            levelRequirementText.text = GetLevelRequirementText(info, _currentLevelIndex, IsLevelUnlocked(_currentLevelIndex));
+
+        if (levelShapeImage != null)
+        {
+            levelShapeImage.enabled = info.shapeSprite != null;
+            levelShapeImage.sprite = info.shapeSprite;
+        }
+
+        if (leftArrowButton != null)
+            leftArrowButton.interactable = FindAdjacentSelectableLevelIndex(_currentLevelIndex, -1) >= 0;
+
+        if (rightArrowButton != null)
+            rightArrowButton.interactable = FindAdjacentSelectableLevelIndex(_currentLevelIndex, 1) >= 0;
+
+        RefreshLevelCards();
+    }
+
+    private void EnsureLevelSelectScaffold()
+    {
+        if (rootPanel == null)
+            return;
+
+        if (levelCardsRoot == null)
+        {
+            levelCardsRoot = CreateFeatureContentRoot(rootPanel.transform, "LevelSelectCards");
+        }
+
+        if (levelCardsRoot != null)
+            levelCardsRoot.gameObject.SetActive(true);
+
+        if (levelDescriptionText == null)
+            levelDescriptionText = CreateTopLeftLabel(rootPanel.transform, "LevelDescription", new Vector2(72f, -236f), 26f, TextAlignmentOptions.Left);
+
+        if (levelRequirementText == null)
+            levelRequirementText = CreateTopLeftLabel(rootPanel.transform, "LevelRequirement", new Vector2(72f, -272f), 24f, TextAlignmentOptions.Left);
+
+        if (levelUpToastRoot == null)
+        {
+            GameObject toastObject = new GameObject("LevelUpToast", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
+            toastObject.transform.SetParent(rootPanel.transform, false);
+
+            RectTransform toastRect = toastObject.GetComponent<RectTransform>();
+            toastRect.anchorMin = new Vector2(0.5f, 1f);
+            toastRect.anchorMax = new Vector2(0.5f, 1f);
+            toastRect.pivot = new Vector2(0.5f, 1f);
+            toastRect.anchoredPosition = new Vector2(0f, -32f);
+            toastRect.sizeDelta = new Vector2(420f, 72f);
+
+            Image toastBackground = toastObject.GetComponent<Image>();
+            toastBackground.color = new Color(0.14f, 0.33f, 0.18f, 0.96f);
+
+            TMP_Text toastText = CreateCardText(toastObject.transform, bestScoreText != null ? bestScoreText.font : TMP_Settings.defaultFontAsset, string.Empty, 22f, FontStyles.Bold);
+            toastText.alignment = TextAlignmentOptions.Center;
+            RectTransform toastTextRect = toastText.rectTransform;
+            toastTextRect.anchorMin = Vector2.zero;
+            toastTextRect.anchorMax = Vector2.one;
+            toastTextRect.offsetMin = new Vector2(16f, 8f);
+            toastTextRect.offsetMax = new Vector2(-16f, -8f);
+
+            levelUpToastRoot = toastObject;
+            levelUpToastText = toastText;
+            toastObject.SetActive(false);
+        }
+    }
+
+    private void RefreshLevelCards()
+    {
+        if (levelCardsRoot == null || levels == null)
+            return;
+
+        for (int i = 0; i < _runtimeLevelWidgets.Count; i++)
+        {
+            if (_runtimeLevelWidgets[i] != null)
+                Destroy(_runtimeLevelWidgets[i]);
+        }
+        _runtimeLevelWidgets.Clear();
+
+        if (levels.Length == 0)
+            return;
+
+        TMP_FontAsset font = bestScoreText != null ? bestScoreText.font : TMP_Settings.defaultFontAsset;
+        _runtimeLevelWidgets.Add(CreateSectionLabel(levelCardsRoot, "Level Routes"));
+
+        for (int i = 0; i < levels.Length; i++)
+        {
+            LevelInfo levelInfo = levels[i];
+            if (string.IsNullOrWhiteSpace(levelInfo.displayName))
+                continue;
+
+            bool unlocked = IsLevelUnlocked(i);
+            bool selected = i == _currentLevelIndex;
+            _runtimeLevelWidgets.Add(CreateLevelCard(levelCardsRoot, font, i, levelInfo, unlocked, selected));
+        }
+    }
+
+    private GameObject CreateLevelCard(Transform parent, TMP_FontAsset font, int index, LevelInfo info, bool unlocked, bool selected)
+    {
+        GameObject card = new GameObject($"{info.displayName}LevelCard", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
+        card.transform.SetParent(parent, false);
+
+        LayoutElement layout = card.GetComponent<LayoutElement>();
+        layout.preferredHeight = 170f;
+
+        Image background = card.GetComponent<Image>();
+        background.color = selected
+            ? new Color(0.22f, 0.42f, 0.58f, 0.95f)
+            : unlocked
+                ? new Color(0.07f, 0.1f, 0.14f, 0.92f)
+                : new Color(0.08f, 0.08f, 0.1f, 0.82f);
+
+        VerticalLayoutGroup layoutGroup = card.AddComponent<VerticalLayoutGroup>();
+        layoutGroup.padding = new RectOffset(18, 18, 16, 16);
+        layoutGroup.spacing = 8f;
+        layoutGroup.childControlHeight = false;
+        layoutGroup.childControlWidth = true;
+        layoutGroup.childForceExpandHeight = false;
+        layoutGroup.childForceExpandWidth = true;
+
+        ContentSizeFitter fitter = card.AddComponent<ContentSizeFitter>();
+        fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+        fitter.verticalFit = ContentSizeFitter.FitMode.MinSize;
+
+        TMP_Text titleText = CreateCardText(card.transform, font, selected ? $"{info.displayName} · {LocalizationService.Get("ui.level_select_selected", "Selected")}" : info.displayName, 28f, FontStyles.Bold);
+        titleText.alignment = TextAlignmentOptions.Left;
+
+        TMP_Text descriptionText = CreateCardText(card.transform, font, GetLevelDescription(info), 22f, FontStyles.Normal);
+        descriptionText.alignment = TextAlignmentOptions.Left;
+        descriptionText.enableWordWrapping = true;
+
+        GameObject footer = new GameObject("Footer", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(LayoutElement));
+        footer.transform.SetParent(card.transform, false);
+        LayoutElement footerLayout = footer.GetComponent<LayoutElement>();
+        footerLayout.preferredHeight = 48f;
+
+        HorizontalLayoutGroup footerGroup = footer.GetComponent<HorizontalLayoutGroup>();
+        footerGroup.spacing = 12f;
+        footerGroup.childControlHeight = true;
+        footerGroup.childControlWidth = false;
+        footerGroup.childForceExpandWidth = false;
+        footerGroup.childForceExpandHeight = false;
+
+        TMP_Text unlockText = CreateCardText(footer.transform, font, GetLevelRequirementText(info, index, unlocked), 22f, FontStyles.Bold);
+        unlockText.alignment = TextAlignmentOptions.Left;
+        LayoutElement unlockLayout = unlockText.gameObject.AddComponent<LayoutElement>();
+        unlockLayout.preferredWidth = 220f;
+
+        string actionLabel = selected
+            ? LocalizationService.Get("ui.level_select_selected", "Selected")
+            : unlocked
+                ? LocalizationService.Get("ui.level_select_select", "Select")
+                : LocalizationService.Get("ui.level_select_locked_short", "Locked");
+
+        Button actionButton = CreateActionButton(footer.transform, font, actionLabel, unlocked && !selected, () => SelectLevel(index));
+        LayoutElement buttonLayout = actionButton.gameObject.AddComponent<LayoutElement>();
+        buttonLayout.preferredWidth = 170f;
+        buttonLayout.preferredHeight = 44f;
+
+        if (actionButton != null)
+            actionButton.interactable = unlocked && !selected;
+
+        return card;
+    }
+
+    private string GetLevelDescription(LevelInfo info)
+    {
+        if (!string.IsNullOrWhiteSpace(info.description))
+            return info.description;
+
+        int sides = Mathf.Max(3, info.sides);
+        return LocalizationService.Format("ui.level_select_description", sides);
+    }
+
+    private string GetLevelRequirementText(LevelInfo info, int index, bool unlocked)
+    {
+        int requiredLevel = GetRequiredLevel(info, index);
+        if (unlocked)
+            return LocalizationService.Format("ui.level_select_unlocked", requiredLevel);
+
+        return LocalizationService.Format("ui.level_select_locked", requiredLevel);
+    }
+
+    private int GetRequiredLevel(LevelInfo info, int index)
+    {
+        return Mathf.Max(1, info.requiredProfileLevel > 0 ? info.requiredProfileLevel : index + 1);
+    }
+
+    private bool IsLevelUnlocked(int index)
+    {
+        if (!IsLevelSelectable(index))
+            return false;
+
+        int requiredLevel = GetRequiredLevel(levels[index], index);
+        int playerLevel = profile != null ? profile.level : 1;
+        return playerLevel >= requiredLevel;
+    }
+
+    private bool IsLevelSelectable(int index)
+    {
+        return levels != null && index >= 0 && index < levels.Length;
+    }
+
+    private int GetFirstUnlockedLevelIndex()
+    {
+        if (levels == null || levels.Length == 0)
+            return 0;
+
+        for (int i = 0; i < levels.Length; i++)
+        {
+            if (IsLevelUnlocked(i))
+                return i;
+        }
+
+        return 0;
+    }
+
+    private int FindAdjacentSelectableLevelIndex(int startIndex, int direction)
+    {
+        if (levels == null || levels.Length == 0 || direction == 0)
+            return -1;
+
+        int count = levels.Length;
+        int index = Mathf.Clamp(startIndex, 0, count - 1);
+
+        for (int i = 0; i < count; i++)
+        {
+            index = (index + direction + count) % count;
+            if (IsLevelUnlocked(index))
+                return index;
+        }
+
+        return -1;
+    }
+
+    private void SelectLevel(int index)
+    {
+        if (!IsLevelSelectable(index))
+            return;
+
+        if (!IsLevelUnlocked(index))
+        {
+            UpdateLevelDisplay();
+            return;
+        }
+
+        _currentLevelIndex = index;
+        if (profile != null)
+            profile.SetSelectedLevelIndex(index);
 
         ApplyLevelToWorld();
         UpdateLevelDisplay();
+    }
+
+    private void BindProfileEvents()
+    {
+        if (_profileEventsBound || profile == null)
+            return;
+
+        profile.LevelChanged += HandleProfileLevelChanged;
+        _profileEventsBound = true;
+    }
+
+    private void UnbindProfileEvents()
+    {
+        if (!_profileEventsBound || profile == null)
+            return;
+
+        profile.LevelChanged -= HandleProfileLevelChanged;
+        _profileEventsBound = false;
+    }
+
+    private void HandleProfileLevelChanged(int previousLevel, int newLevel)
+    {
+        mainMenuController?.RefreshHubChrome();
+        RefreshLevelSelectView();
+
+        string message = LocalizationService.Format("ui.level_up_toast", previousLevel, newLevel);
+        QueueLevelUpToast(message);
+    }
+
+    private void QueueLevelUpToast(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+            return;
+
+        _queuedLevelUpMessage = message;
+        ShowQueuedLevelUpToast();
+    }
+
+    private void ShowQueuedLevelUpToast()
+    {
+        if (string.IsNullOrWhiteSpace(_queuedLevelUpMessage))
+            return;
+
+        if (rootPanel == null || !rootPanel.activeInHierarchy)
+            return;
+
+        EnsureLevelSelectScaffold();
+
+        if (levelUpToastText != null)
+            levelUpToastText.text = _queuedLevelUpMessage;
+
+        if (levelUpToastRoot != null)
+            levelUpToastRoot.SetActive(true);
+
+        if (_levelUpToastRoutine != null)
+            StopCoroutine(_levelUpToastRoutine);
+
+        _levelUpToastRoutine = StartCoroutine(HideLevelUpToastAfterDelay());
+        _queuedLevelUpMessage = null;
+    }
+
+    private IEnumerator HideLevelUpToastAfterDelay()
+    {
+        yield return new WaitForSecondsRealtime(2.5f);
+
+        if (levelUpToastRoot != null)
+            levelUpToastRoot.SetActive(false);
+
+        _levelUpToastRoutine = null;
     }
 
     private void HandleRemoveAdsUnlocked()
@@ -663,10 +1015,7 @@ public class MainMenuUI : MonoBehaviour
     {
         NotifyHubEntryOpened(AnalyticsEventNames.HubDailyLoginOpened, "daily_login");
         mainMenuController?.ShowPage(MainPage.Tasks, false, false);
-
-        if (dailyLoginRewardsManager != null && dailyLoginRewardsManager.CanClaimToday())
-            dailyLoginRewardsManager.TryClaimReward();
-
+        FindFirstObjectByType<ProgressionTasksHubView>()?.Show(ProgressionCadence.Daily);
         progressionTasksController?.Refresh();
         RefreshHubState();
     }
@@ -675,6 +1024,7 @@ public class MainMenuUI : MonoBehaviour
     {
         NotifyHubEntryOpened(AnalyticsEventNames.HubTasksOpened, "tasks");
         mainMenuController?.ShowPage(MainPage.Tasks, false, false);
+        FindFirstObjectByType<ProgressionTasksHubView>()?.Show(ProgressionCadence.Daily);
         progressionTasksController?.Refresh();
         RefreshHubState();
     }
@@ -781,6 +1131,7 @@ public class MainMenuUI : MonoBehaviour
 
         profile.SetUpgradeLevel(UpgradeType.ComboMultiplier, currentLevel + 1);
         RefreshLabView();
+        mainMenuController?.RefreshHubChrome();
     }
 
     private void HandlePowerupUpgradePressed(PowerupUpgradeConfig.PowerupUpgradeEntry entry)
@@ -798,6 +1149,7 @@ public class MainMenuUI : MonoBehaviour
 
         profile.SetPowerupUpgradeLevel(entry.powerupType, currentLevel + 1);
         RefreshLabView();
+        mainMenuController?.RefreshHubChrome();
     }
 
     private GameObject CreateSectionLabel(Transform parent, string label)
@@ -1030,6 +1382,29 @@ public class MainMenuUI : MonoBehaviour
         rect.pivot = new Vector2(1f, 1f);
         rect.anchoredPosition = anchoredPosition;
         rect.sizeDelta = new Vector2(360f, 48f);
+
+        TMP_Text text = labelObject.GetComponent<TMP_Text>();
+        text.font = font;
+        text.fontSize = fontSize;
+        text.fontStyle = FontStyles.Bold;
+        text.alignment = alignment;
+        text.color = Color.white;
+        text.raycastTarget = false;
+        return text;
+    }
+
+    private TMP_Text CreateTopLeftLabel(Transform parent, string objectName, Vector2 anchoredPosition, float fontSize, TextAlignmentOptions alignment)
+    {
+        TMP_FontAsset font = bestScoreText != null ? bestScoreText.font : TMP_Settings.defaultFontAsset;
+        GameObject labelObject = new GameObject(objectName, typeof(RectTransform), typeof(TextMeshProUGUI));
+        labelObject.transform.SetParent(parent, false);
+
+        RectTransform rect = labelObject.GetComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0f, 1f);
+        rect.anchorMax = new Vector2(0f, 1f);
+        rect.pivot = new Vector2(0f, 1f);
+        rect.anchoredPosition = anchoredPosition;
+        rect.sizeDelta = new Vector2(760f, 44f);
 
         TMP_Text text = labelObject.GetComponent<TMP_Text>();
         text.font = font;

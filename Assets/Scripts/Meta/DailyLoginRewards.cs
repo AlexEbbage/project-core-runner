@@ -91,33 +91,42 @@ public class DailyLoginRewardsManager : MonoBehaviour
 {
     [SerializeField] private PlayerProfile profile;
     [SerializeField] private DailyLoginRewardsConfig rewardsConfig;
-    [SerializeField] private bool autoClaimOnStart = true;
+    [SerializeField] private bool autoClaimOnStart;
     [SerializeField] private bool logRewards = true;
-
-    private const string LastClaimKey = "DailyLogin.LastClaimDate";
-    private const string DayIndexKey = "DailyLogin.DayIndex";
 
     private void Start()
     {
+        if (profile == null)
+        {
+            PlayerProfile[] profiles = Resources.FindObjectsOfTypeAll<PlayerProfile>();
+            if (profiles != null && profiles.Length > 0)
+                profile = profiles[0];
+        }
+
+        if (rewardsConfig == null)
+        {
+            DailyLoginRewardsConfig[] configs = Resources.FindObjectsOfTypeAll<DailyLoginRewardsConfig>();
+            if (configs != null && configs.Length > 0)
+                rewardsConfig = configs[0];
+        }
+
         if (autoClaimOnStart)
             TryClaimReward();
     }
 
-    public bool TryClaimReward()
+    public bool TryClaimReward(bool doubleReward = false)
     {
         if (profile == null || rewardsConfig == null)
             return false;
 
         DateTime today = DateTime.UtcNow.Date;
-        if (!CanClaimToday(today, out int nextDayIndex))
+        if (!profile.CanClaimDailyLogin(today))
             return false;
 
-        var reward = rewardsConfig.GetRewardForDay(nextDayIndex);
-        GrantReward(reward);
-
-        PlayerPrefs.SetString(LastClaimKey, today.ToString("O"));
-        PlayerPrefs.SetInt(DayIndexKey, nextDayIndex);
-        PlayerPrefs.Save();
+        int nextDayIndex = profile.GetNextDailyLoginDayIndex(today);
+        DailyLoginRewardEntry reward = rewardsConfig.GetRewardForDay(nextDayIndex);
+        GrantReward(reward, doubleReward);
+        profile.MarkDailyLoginClaimed(today, nextDayIndex);
 
         if (logRewards)
             Debug.Log($"DailyLoginRewards: Claimed day {nextDayIndex} ({reward.rewardType}).");
@@ -127,69 +136,38 @@ public class DailyLoginRewardsManager : MonoBehaviour
 
     public bool CanClaimToday()
     {
-        return CanClaimToday(DateTime.UtcNow.Date, out _);
+        return profile != null && profile.CanClaimDailyLogin(DateTime.UtcNow.Date);
     }
 
     public DailyLoginRewardEntry GetNextRewardPreview(out int nextDayIndex)
     {
-        nextDayIndex = GetNextClaimDayIndex(DateTime.UtcNow.Date);
+        nextDayIndex = profile != null ? profile.GetNextDailyLoginDayIndex(DateTime.UtcNow.Date) : 0;
         return rewardsConfig != null
             ? rewardsConfig.GetRewardForDay(nextDayIndex)
             : default;
     }
 
-    private bool TryGetLastClaimDate(out DateTime lastClaimDate)
+    public int GetCurrentStreakDay()
     {
-        lastClaimDate = default;
-        string stored = PlayerPrefs.GetString(LastClaimKey, string.Empty);
-        if (string.IsNullOrEmpty(stored))
-            return false;
-
-        return DateTime.TryParse(stored, null, System.Globalization.DateTimeStyles.RoundtripKind, out lastClaimDate);
+        return profile != null ? profile.GetDailyLoginDayIndex() : 0;
     }
 
-    private bool CanClaimToday(DateTime today, out int nextDayIndex)
+    private void GrantReward(DailyLoginRewardEntry reward, bool doubleReward)
     {
-        nextDayIndex = GetNextClaimDayIndex(today);
+        int amountMultiplier = doubleReward ? 2 : 1;
 
-        if (TryGetLastClaimDate(out DateTime lastClaimDate))
-        {
-            int daysSinceClaim = (today - lastClaimDate.Date).Days;
-            return daysSinceClaim > 0;
-        }
-
-        return true;
-    }
-
-    private int GetNextClaimDayIndex(DateTime today)
-    {
-        int currentDay = PlayerPrefs.GetInt(DayIndexKey, 0);
-        if (TryGetLastClaimDate(out DateTime lastClaimDate))
-        {
-            int daysSinceClaim = (today - lastClaimDate.Date).Days;
-            if (daysSinceClaim <= 0)
-                return Mathf.Max(1, currentDay + 1);
-
-            return daysSinceClaim == 1 ? currentDay + 1 : 1;
-        }
-
-        return 1;
-    }
-
-    private void GrantReward(DailyLoginRewardEntry reward)
-    {
         switch (reward.rewardType)
         {
             case DailyLoginRewardType.SoftCurrency:
-                profile.AddCurrency(ShopCurrencyType.Soft, reward.amount);
+                profile.GrantProfileReward(ProfileGrantType.SoftCurrency, reward.amount * amountMultiplier);
                 break;
             case DailyLoginRewardType.PremiumCurrency:
-                profile.AddCurrency(ShopCurrencyType.Premium, reward.amount);
+                profile.GrantProfileReward(ProfileGrantType.PremiumCurrency, reward.amount * amountMultiplier);
                 break;
             case DailyLoginRewardType.Skin:
             case DailyLoginRewardType.Item:
                 if (!string.IsNullOrEmpty(reward.itemId))
-                    profile.UnlockItem(reward.itemId);
+                    profile.GrantProfileReward(ProfileGrantType.UnlockItem, reward.amount, reward.itemId);
                 break;
         }
     }

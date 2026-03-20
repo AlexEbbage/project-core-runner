@@ -45,6 +45,8 @@ public class MainMenuController : MonoBehaviour
 
         if (bottomNavBar != null)
             bottomNavBar.Initialize(this);
+
+        EnsurePageControllers();
     }
 
     private void OnEnable()
@@ -244,6 +246,12 @@ public class MainMenuController : MonoBehaviour
             mainMenuUI?.NotifyHubEntryOpened(AnalyticsEventNames.HubShipOpened, "ship");
         else if (page == MainPage.Lab)
             mainMenuUI?.NotifyHubEntryOpened(AnalyticsEventNames.HubLabOpened, "lab");
+    }
+
+    private void EnsurePageControllers()
+    {
+        if (challengesPage != null && !challengesPage.TryGetComponent(out AchievementsPageController _))
+            challengesPage.gameObject.AddComponent<AchievementsPageController>();
     }
 
     private static MainPage NormalizeHubPage(MainPage page)

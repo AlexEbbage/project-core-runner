@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c68e4af57f38b54d8c99a0ee13b4f75, type: 3}
+  m_Name: AchievementsConfig
+  m_EditorClassIdentifier: Assembly-CSharp::AchievementsConfig
+  achievements:
+  - id: achievement_level_path
+    title: Rising Pilot
+    description: Reach higher profile levels to prove your consistency.
+    metricType: 0
+    tiers:
+    - targetValue: 2
+      rewardLabel: 100 Coins
+      rewardType: 0
+      rewardAmount: 100
+      rewardItemId: 
+    - targetValue: 3
+      rewardLabel: 10 Gems
+      rewardType: 1
+      rewardAmount: 10
+      rewardItemId: 
+    - targetValue: 5
+      rewardLabel: 250 XP
+      rewardType: 2
+      rewardAmount: 250
+      rewardItemId: 
+  - id: achievement_collector
+    title: Collector
+    description: Grow your garage with more unlocked ships and cosmetics.
+    metricType: 1
+    tiers:
+    - targetValue: 2
+      rewardLabel: 75 Coins
+      rewardType: 0
+      rewardAmount: 75
+      rewardItemId: 
+    - targetValue: 4
+      rewardLabel: 12 Gems
+      rewardType: 1
+      rewardAmount: 12
+      rewardItemId: 
+    - targetValue: 6
+      rewardLabel: 150 Coins
+      rewardType: 0
+      rewardAmount: 150
+      rewardItemId: 
+  - id: achievement_tinkerer
+    title: Tinkerer
+    description: Invest in upgrades across the lab to strengthen your runs.
+    metricType: 2
+    tiers:
+    - targetValue: 1
+      rewardLabel: 50 Coins
+      rewardType: 0
+      rewardAmount: 50
+      rewardItemId: 
+    - targetValue: 3
+      rewardLabel: 8 Gems
+      rewardType: 1
+      rewardAmount: 8
+      rewardItemId: 
+    - targetValue: 5
+      rewardLabel: 125 Coins
+      rewardType: 0
+      rewardAmount: 125
+      rewardItemId: 

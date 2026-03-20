@@ -9,12 +9,16 @@ Verify the player can preview, equip, and persist ship visual customization.
 - Open the `Ship` or hangar/customisation surface from the main menu.
 - Ensure the starter shop slice has granted or sold at least one alternate item to the profile.
 - If needed, buy one cosmetic first from the shop and return to customisation without restarting the scene.
+- Verify the customisation view shows the runtime tab row for `Ships`, `Skins`, `Trails`, `Core FX`, and `Upgrades`.
 
 ## Checklist
 
 - [ ] Confirm the customization surface opens.
+- [ ] Confirm the current-loadout preview card is visible and reflects the currently equipped ship/cosmetics.
 - [ ] Confirm the current ship preview is visible.
+- [ ] Switch between `Ships`, `Skins`, `Trails`, `Core FX`, and `Upgrades` and confirm the selected tab is obvious.
 - [ ] Select a different cosmetic option and confirm the preview updates immediately.
+- [ ] Select a different unlocked ship and confirm the stat rows and loadout preview update immediately.
 - [ ] Confirm the equipped state is obvious.
 - [ ] Close and reopen the screen and confirm the selected cosmetic persists.
 - [ ] Start a run and confirm the equipped cosmetic appears in gameplay.
