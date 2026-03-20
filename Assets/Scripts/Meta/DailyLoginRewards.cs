@@ -91,6 +91,7 @@ public class DailyLoginRewardsManager : MonoBehaviour
 {
     [SerializeField] private PlayerProfile profile;
     [SerializeField] private DailyLoginRewardsConfig rewardsConfig;
+    [SerializeField] private GameManager gameManager;
     [SerializeField] private bool autoClaimOnStart;
     [SerializeField] private bool logRewards = true;
 
@@ -110,6 +111,9 @@ public class DailyLoginRewardsManager : MonoBehaviour
                 rewardsConfig = configs[0];
         }
 
+        if (gameManager == null)
+            gameManager = FindFirstObjectByType<GameManager>();
+
         if (autoClaimOnStart)
             TryClaimReward();
     }
@@ -127,6 +131,15 @@ public class DailyLoginRewardsManager : MonoBehaviour
         DailyLoginRewardEntry reward = rewardsConfig.GetRewardForDay(nextDayIndex);
         GrantReward(reward, doubleReward);
         profile.MarkDailyLoginClaimed(today, nextDayIndex);
+
+        gameManager?.LogAnalyticsEvent(AnalyticsEventNames.DailyLoginClaimed, new Dictionary<string, object>
+        {
+            { AnalyticsEventNames.Params.Source, "daily_login" },
+            { AnalyticsEventNames.Params.DayIndex, nextDayIndex },
+            { AnalyticsEventNames.Params.RewardKind, reward.rewardType.ToString() },
+            { AnalyticsEventNames.Params.Amount, reward.amount * (doubleReward ? 2 : 1) },
+            { AnalyticsEventNames.Params.Id, reward.itemId }
+        });
 
         if (logRewards)
             Debug.Log($"DailyLoginRewards: Claimed day {nextDayIndex} ({reward.rewardType}).");

@@ -144,6 +144,7 @@ public class HangarPageController : MonoBehaviour
 
         gameManager?.LogAnalyticsEvent(AnalyticsEventNames.UpgradePurchased, new Dictionary<string, object>
         {
+            { AnalyticsEventNames.Params.Source, "hangar" },
             { AnalyticsEventNames.Params.Type, itemView.Definition.upgradeType.ToString() },
             { AnalyticsEventNames.Params.Price, cost }
         });
@@ -157,7 +158,15 @@ public class HangarPageController : MonoBehaviour
             return;
 
         if (profile.TrySelectShip(shipId, shipDatabase))
+        {
+            gameManager?.LogAnalyticsEvent(AnalyticsEventNames.HangarItemEquipped, new Dictionary<string, object>
+            {
+                { AnalyticsEventNames.Params.Source, "hangar" },
+                { AnalyticsEventNames.Params.Type, "ship" },
+                { AnalyticsEventNames.Params.Id, shipId }
+            });
             RefreshContent();
+        }
     }
 
     public void OnSkinSelected(string skinId)
@@ -166,7 +175,15 @@ public class HangarPageController : MonoBehaviour
             return;
 
         if (profile.TrySelectSkin(skinId, shipDatabase))
+        {
+            gameManager?.LogAnalyticsEvent(AnalyticsEventNames.HangarItemEquipped, new Dictionary<string, object>
+            {
+                { AnalyticsEventNames.Params.Source, "hangar" },
+                { AnalyticsEventNames.Params.Type, "skin" },
+                { AnalyticsEventNames.Params.Id, skinId }
+            });
             RefreshContent();
+        }
     }
 
     public void OnTrailSelected(string trailId)
@@ -175,7 +192,15 @@ public class HangarPageController : MonoBehaviour
             return;
 
         if (profile.TrySelectTrail(trailId, shipDatabase))
+        {
+            gameManager?.LogAnalyticsEvent(AnalyticsEventNames.HangarItemEquipped, new Dictionary<string, object>
+            {
+                { AnalyticsEventNames.Params.Source, "hangar" },
+                { AnalyticsEventNames.Params.Type, "trail" },
+                { AnalyticsEventNames.Params.Id, trailId }
+            });
             RefreshContent();
+        }
     }
 
     public void OnCoreFxSelected(string coreFxId)
@@ -184,7 +209,15 @@ public class HangarPageController : MonoBehaviour
             return;
 
         if (profile.TrySelectCoreFx(coreFxId, shipDatabase))
+        {
+            gameManager?.LogAnalyticsEvent(AnalyticsEventNames.HangarItemEquipped, new Dictionary<string, object>
+            {
+                { AnalyticsEventNames.Params.Source, "hangar" },
+                { AnalyticsEventNames.Params.Type, "core_fx" },
+                { AnalyticsEventNames.Params.Id, coreFxId }
+            });
             RefreshContent();
+        }
     }
 
     public void RefreshContent()
@@ -409,6 +442,12 @@ public class HangarPageController : MonoBehaviour
             return;
 
         profile.SetPowerupUpgradeLevel(upgradeEntry.powerupType, currentLevel + 1);
+        gameManager?.LogAnalyticsEvent(AnalyticsEventNames.UpgradePurchased, new Dictionary<string, object>
+        {
+            { AnalyticsEventNames.Params.Source, "hangar" },
+            { AnalyticsEventNames.Params.Type, upgradeEntry.powerupType.ToString() },
+            { AnalyticsEventNames.Params.Price, cost }
+        });
         RefreshContent();
     }
 

@@ -6,6 +6,7 @@ public class ProgressionTasksController : MonoBehaviour
 {
     [SerializeField] private ProgressionTasksConfig config;
     [SerializeField] private PlayerProfile profile;
+    [SerializeField] private GameManager gameManager;
     [SerializeField] private ProgressionTasksContentView[] contentViews;
     [SerializeField] private ProgressionTaskRowView defaultTaskRowPrefab;
     [SerializeField] private ProgressionTaskRowView sliderOnlyTaskRowPrefab;
@@ -31,6 +32,9 @@ public class ProgressionTasksController : MonoBehaviour
             if (view != null)
                 _contentLookup[view.Cadence] = view;
         }
+
+        if (gameManager == null)
+            gameManager = FindFirstObjectByType<GameManager>();
     }
 
     private void OnEnable()
@@ -149,7 +153,17 @@ public class ProgressionTasksController : MonoBehaviour
             instance.SetClaimAction(() =>
             {
                 if (profile.TryClaimTaskMilestoneReward(group.Cadence, cycleStart, group, reward.PointsRequired))
+                {
+                    gameManager?.LogAnalyticsEvent(AnalyticsEventNames.TaskMilestoneClaimed, new Dictionary<string, object>
+                    {
+                        { AnalyticsEventNames.Params.Source, "tasks" },
+                        { AnalyticsEventNames.Params.Cadence, group.Cadence.ToString() },
+                        { AnalyticsEventNames.Params.PointsRequired, reward.PointsRequired },
+                        { AnalyticsEventNames.Params.RewardKind, reward.RewardType.ToString() },
+                        { AnalyticsEventNames.Params.Amount, reward.RewardAmount }
+                    });
                     HandleStateChanged();
+                }
             });
         }
     }
@@ -209,7 +223,17 @@ public class ProgressionTasksController : MonoBehaviour
             instance.SetAction(actionLabel, complete && !claimed, () =>
             {
                 if (profile.TryClaimTaskReward(group.Cadence, cycleStart, group, task.Id))
+                {
+                    gameManager?.LogAnalyticsEvent(AnalyticsEventNames.TaskRewardClaimed, new Dictionary<string, object>
+                    {
+                        { AnalyticsEventNames.Params.Source, "tasks" },
+                        { AnalyticsEventNames.Params.Cadence, group.Cadence.ToString() },
+                        { AnalyticsEventNames.Params.TaskId, task.Id },
+                        { AnalyticsEventNames.Params.RewardKind, task.RewardType.ToString() },
+                        { AnalyticsEventNames.Params.Amount, task.RewardAmount }
+                    });
                     HandleStateChanged();
+                }
             });
         }
     }

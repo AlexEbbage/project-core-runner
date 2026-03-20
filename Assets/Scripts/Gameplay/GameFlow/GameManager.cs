@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    private const string RunEventName = "run_end";
-
     public enum GameState
     {
         Menu,
@@ -476,10 +474,11 @@ public class GameManager : MonoBehaviour
                 Debug.Log("GameManager: Remove Ads active, skipping continue ad.");
             }
 
-            LogAnalyticsEvent("ad_bypassed", new Dictionary<string, object>
+            LogAnalyticsEvent(AnalyticsEventNames.AdBypassed, new Dictionary<string, object>
             {
-                { "source", "continue" },
-                { "reason", "remove_ads" }
+                { AnalyticsEventNames.Params.Source, "continue" },
+                { AnalyticsEventNames.Params.Reason, "remove_ads" },
+                { AnalyticsEventNames.Params.AdType, "rewarded" }
             });
 
             Time.timeScale = 1f;
@@ -494,10 +493,11 @@ public class GameManager : MonoBehaviour
                 Debug.LogWarning("GameManager: No IRewardedAdService assigned. Cannot show rewarded ad.");
             }
 
-            LogAnalyticsEvent("ad_not_ready", new Dictionary<string, object>
+            LogAnalyticsEvent(AnalyticsEventNames.AdNotReady, new Dictionary<string, object>
             {
-                { "source", "continue" },
-                { "reason", "service_missing" }
+                { AnalyticsEventNames.Params.Source, "continue" },
+                { AnalyticsEventNames.Params.Reason, "service_missing" },
+                { AnalyticsEventNames.Params.AdType, "rewarded" }
             });
 
             return;
@@ -510,9 +510,10 @@ public class GameManager : MonoBehaviour
                 Debug.Log("GameManager: Rewarded ad not ready.");
             }
 
-            LogAnalyticsEvent("ad_not_ready", new Dictionary<string, object>
+            LogAnalyticsEvent(AnalyticsEventNames.AdNotReady, new Dictionary<string, object>
             {
-                { "source", "continue" }
+                { AnalyticsEventNames.Params.Source, "continue" },
+                { AnalyticsEventNames.Params.AdType, "rewarded" }
             });
 
             return;
@@ -521,7 +522,7 @@ public class GameManager : MonoBehaviour
         LogAnalyticsEvent(AnalyticsEventNames.GameOverContinuePressed, new Dictionary<string, object>
         {
             { AnalyticsEventNames.Params.Source, "game_over" },
-            { "continue_index", continuesUsed + 1 }
+            { AnalyticsEventNames.Params.ContinueIndex, continuesUsed + 1 }
         });
 
         _adInProgress = true;
@@ -532,10 +533,11 @@ public class GameManager : MonoBehaviour
             Debug.Log("GameManager: Showing rewarded ad for continue.");
         }
 
-        LogAnalyticsEvent("ad_shown", new Dictionary<string, object>
+        LogAnalyticsEvent(AnalyticsEventNames.AdShown, new Dictionary<string, object>
         {
-            { "source", "continue" },
-            { "continue_index", continuesUsed + 1 }
+            { AnalyticsEventNames.Params.Source, "continue" },
+            { AnalyticsEventNames.Params.ContinueIndex, continuesUsed + 1 },
+            { AnalyticsEventNames.Params.AdType, "rewarded" }
         });
 
         _services.RewardedAds.ShowRewardedAd(HandleContinueAdResult);
@@ -556,10 +558,11 @@ public class GameManager : MonoBehaviour
                 Debug.Log("GameManager: Remove Ads active, skipping double rewards ad.");
             }
 
-            LogAnalyticsEvent("ad_bypassed", new Dictionary<string, object>
+            LogAnalyticsEvent(AnalyticsEventNames.AdBypassed, new Dictionary<string, object>
             {
-                { "source", "double_rewards" },
-                { "reason", "remove_ads" }
+                { AnalyticsEventNames.Params.Source, "double_rewards" },
+                { AnalyticsEventNames.Params.Reason, "remove_ads" },
+                { AnalyticsEventNames.Params.AdType, "rewarded" }
             });
 
             return;
@@ -591,9 +594,10 @@ public class GameManager : MonoBehaviour
             { AnalyticsEventNames.Params.Source, "game_over" }
         });
 
-        LogAnalyticsEvent("ad_shown", new Dictionary<string, object>
+        LogAnalyticsEvent(AnalyticsEventNames.AdShown, new Dictionary<string, object>
         {
-            { "source", "double_rewards" }
+            { AnalyticsEventNames.Params.Source, "double_rewards" },
+            { AnalyticsEventNames.Params.AdType, "rewarded" }
         });
 
         _services.RewardedAds.ShowRewardedAd(result =>
@@ -607,9 +611,10 @@ public class GameManager : MonoBehaviour
                     { AnalyticsEventNames.Params.Source, "game_over" }
                 });
 
-                LogAnalyticsEvent("ad_completed", new Dictionary<string, object>
+                LogAnalyticsEvent(AnalyticsEventNames.AdCompleted, new Dictionary<string, object>
                 {
-                    { "source", "double_rewards" }
+                    { AnalyticsEventNames.Params.Source, "double_rewards" },
+                    { AnalyticsEventNames.Params.AdType, "rewarded" }
                 });
 
                 GrantDoubleRunRewards();
@@ -619,13 +624,14 @@ public class GameManager : MonoBehaviour
                 LogAnalyticsEvent(AnalyticsEventNames.GameOverDoubleRewardsFailed, new Dictionary<string, object>
                 {
                     { AnalyticsEventNames.Params.Source, "game_over" },
-                    { "result", result.ToString() }
+                    { AnalyticsEventNames.Params.Result, result.ToString() }
                 });
 
-                LogAnalyticsEvent("ad_skipped", new Dictionary<string, object>
+                LogAnalyticsEvent(AnalyticsEventNames.AdSkipped, new Dictionary<string, object>
                 {
-                    { "source", "double_rewards" },
-                    { "result", result.ToString() }
+                    { AnalyticsEventNames.Params.Source, "double_rewards" },
+                    { AnalyticsEventNames.Params.Result, result.ToString() },
+                    { AnalyticsEventNames.Params.AdType, "rewarded" }
                 });
             }
         });
@@ -776,9 +782,9 @@ public class GameManager : MonoBehaviour
         powerupController?.ResetAllPowerups();
         ApplyRunUpgrades();
 
-        LogAnalyticsEvent(RunEventName, new Dictionary<string, object>
+        LogAnalyticsEvent(AnalyticsEventNames.RunStarted, new Dictionary<string, object>
         {
-            { "phase", "start" }
+            { AnalyticsEventNames.Params.Phase, "start" }
         });
 
         float preRunClearDistance = GetPreRunClearDistance();
@@ -916,12 +922,12 @@ public class GameManager : MonoBehaviour
         playerVisual?.SetVisible(false);
         powerupController?.ResetAllPowerups();
 
-        LogAnalyticsEvent(RunEventName, new Dictionary<string, object>
+        LogAnalyticsEvent(AnalyticsEventNames.RunEnded, new Dictionary<string, object>
         {
-            { "phase", "end" },
-            { "score", scoreManager != null ? scoreManager.CurrentScore : 0 },
-            { "time", _elapsedTime },
-            { "continues_used", continuesUsed }
+            { AnalyticsEventNames.Params.Phase, "end" },
+            { AnalyticsEventNames.Params.Score, scoreManager != null ? scoreManager.CurrentScore : 0 },
+            { AnalyticsEventNames.Params.Time, _elapsedTime },
+            { AnalyticsEventNames.Params.ContinuesUsed, continuesUsed }
         });
         statsTracker?.EndRun();
 
@@ -1044,10 +1050,11 @@ public class GameManager : MonoBehaviour
     {
         if (_services?.RewardedAds == null)
         {
-            LogAnalyticsEvent("ad_not_ready", new Dictionary<string, object>
+            LogAnalyticsEvent(AnalyticsEventNames.AdNotReady, new Dictionary<string, object>
             {
-                { "source", "rewarded_run" },
-                { "reason", "service_missing" }
+                { AnalyticsEventNames.Params.Source, "rewarded_run" },
+                { AnalyticsEventNames.Params.Reason, "service_missing" },
+                { AnalyticsEventNames.Params.AdType, "rewarded" }
             });
 
             HideRewardedRunPrompt();
@@ -1057,9 +1064,10 @@ public class GameManager : MonoBehaviour
 
         if (!_services.RewardedAds.IsRewardedAdReady())
         {
-            LogAnalyticsEvent("ad_not_ready", new Dictionary<string, object>
+            LogAnalyticsEvent(AnalyticsEventNames.AdNotReady, new Dictionary<string, object>
             {
-                { "source", "rewarded_run" }
+                { AnalyticsEventNames.Params.Source, "rewarded_run" },
+                { AnalyticsEventNames.Params.AdType, "rewarded" }
             });
 
             HideRewardedRunPrompt();
@@ -1071,9 +1079,10 @@ public class GameManager : MonoBehaviour
         if (_rewardedRunPromptPausedRun)
             Time.timeScale = 1f;
 
-        LogAnalyticsEvent("ad_shown", new Dictionary<string, object>
+        LogAnalyticsEvent(AnalyticsEventNames.AdShown, new Dictionary<string, object>
         {
-            { "source", "rewarded_offer" }
+            { AnalyticsEventNames.Params.Source, "rewarded_offer" },
+            { AnalyticsEventNames.Params.AdType, "rewarded" }
         });
 
         _services.RewardedAds.ShowRewardedAd(result =>
@@ -1082,19 +1091,21 @@ public class GameManager : MonoBehaviour
 
             if (result == RewardedAdResult.Rewarded)
             {
-                LogAnalyticsEvent("ad_completed", new Dictionary<string, object>
+                LogAnalyticsEvent(AnalyticsEventNames.AdCompleted, new Dictionary<string, object>
                 {
-                    { "source", "rewarded_offer" }
+                    { AnalyticsEventNames.Params.Source, "rewarded_offer" },
+                    { AnalyticsEventNames.Params.AdType, "rewarded" }
                 });
 
                 GrantRewardedRunReward();
             }
             else
             {
-                LogAnalyticsEvent("ad_skipped", new Dictionary<string, object>
+                LogAnalyticsEvent(AnalyticsEventNames.AdSkipped, new Dictionary<string, object>
                 {
-                    { "source", "rewarded_offer" },
-                    { "result", result.ToString() }
+                    { AnalyticsEventNames.Params.Source, "rewarded_offer" },
+                    { AnalyticsEventNames.Params.Result, result.ToString() },
+                    { AnalyticsEventNames.Params.AdType, "rewarded" }
                 });
             }
 
@@ -1355,14 +1366,14 @@ public class GameManager : MonoBehaviour
         return new Dictionary<string, object>
         {
             { AnalyticsEventNames.Params.Source, "game_over" },
-            { "score", _lastGameOverPresentation.finalScore },
-            { "distance", _lastGameOverPresentation.distance },
-            { "coins", _lastGameOverPresentation.coinsCollected },
-            { "reward_coins", _lastGameOverPresentation.baseRewardCoins },
-            { "reward_premium", _lastGameOverPresentation.baseRewardPremiumCurrency },
-            { "reward_xp", _lastGameOverPresentation.baseRewardXp },
-            { "combo_modifier", _lastGameOverPresentation.comboModifier },
-            { "continues_remaining", _lastGameOverPresentation.continuesRemaining }
+            { AnalyticsEventNames.Params.Score, _lastGameOverPresentation.finalScore },
+            { AnalyticsEventNames.Params.Distance, _lastGameOverPresentation.distance },
+            { AnalyticsEventNames.Params.Coins, _lastGameOverPresentation.coinsCollected },
+            { AnalyticsEventNames.Params.RewardCoins, _lastGameOverPresentation.baseRewardCoins },
+            { AnalyticsEventNames.Params.RewardPremium, _lastGameOverPresentation.baseRewardPremiumCurrency },
+            { AnalyticsEventNames.Params.RewardXp, _lastGameOverPresentation.baseRewardXp },
+            { AnalyticsEventNames.Params.ComboModifier, _lastGameOverPresentation.comboModifier },
+            { AnalyticsEventNames.Params.ContinuesRemaining, _lastGameOverPresentation.continuesRemaining }
         };
     }
 
@@ -1413,19 +1424,21 @@ public class GameManager : MonoBehaviour
             if (logStateChanges)
                 Debug.Log($"GameManager: Rewarded ad unavailable or skipped ({result}). No continue.");
 
-            LogAnalyticsEvent("ad_skipped", new Dictionary<string, object>
+            LogAnalyticsEvent(AnalyticsEventNames.AdSkipped, new Dictionary<string, object>
             {
-                { "source", "continue" },
-                { "continue_index", continuesUsed + 1 }
+                { AnalyticsEventNames.Params.Source, "continue" },
+                { AnalyticsEventNames.Params.ContinueIndex, continuesUsed + 1 },
+                { AnalyticsEventNames.Params.AdType, "rewarded" }
             });
 
             return;
         }
 
-        LogAnalyticsEvent("ad_completed", new Dictionary<string, object>
+        LogAnalyticsEvent(AnalyticsEventNames.AdCompleted, new Dictionary<string, object>
         {
-            { "source", "continue" },
-            { "continue_index", continuesUsed + 1 }
+            { AnalyticsEventNames.Params.Source, "continue" },
+            { AnalyticsEventNames.Params.ContinueIndex, continuesUsed + 1 },
+            { AnalyticsEventNames.Params.AdType, "rewarded" }
         });
 
         continuesUsed++;
@@ -1434,9 +1447,10 @@ public class GameManager : MonoBehaviour
             continuesUsed = maxContinuesPerRun;
         }
 
-        LogAnalyticsEvent("continue_used", new Dictionary<string, object>
+        LogAnalyticsEvent(AnalyticsEventNames.ContinueUsed, new Dictionary<string, object>
         {
-            { "index", continuesUsed }
+            { AnalyticsEventNames.Params.ContinueIndex, continuesUsed },
+            { AnalyticsEventNames.Params.Source, "game_over" }
         });
 
         if (logStateChanges)
@@ -1692,11 +1706,11 @@ public class GameManager : MonoBehaviour
                 Debug.Log("GameManager: Remove Ads active, skipping interstitial.");
             }
 
-            LogAnalyticsEvent("ad_bypassed", new Dictionary<string, object>
+            LogAnalyticsEvent(AnalyticsEventNames.AdBypassed, new Dictionary<string, object>
             {
-                { "source", source },
-                { "reason", "remove_ads" },
-                { "ad_type", "interstitial" }
+                { AnalyticsEventNames.Params.Source, source },
+                { AnalyticsEventNames.Params.Reason, "remove_ads" },
+                { AnalyticsEventNames.Params.AdType, "interstitial" }
             });
 
             onCompleted?.Invoke();
@@ -1710,11 +1724,11 @@ public class GameManager : MonoBehaviour
                 Debug.Log("GameManager: Interstitials disabled, skipping interstitial.");
             }
 
-            LogAnalyticsEvent("ad_bypassed", new Dictionary<string, object>
+            LogAnalyticsEvent(AnalyticsEventNames.AdBypassed, new Dictionary<string, object>
             {
-                { "source", source },
-                { "reason", "interstitials_disabled" },
-                { "ad_type", "interstitial" }
+                { AnalyticsEventNames.Params.Source, source },
+                { AnalyticsEventNames.Params.Reason, "interstitials_disabled" },
+                { AnalyticsEventNames.Params.AdType, "interstitial" }
             });
 
             onCompleted?.Invoke();
@@ -1728,11 +1742,11 @@ public class GameManager : MonoBehaviour
                 Debug.LogWarning("GameManager: No IInterstitialAdService assigned. Cannot show interstitial.");
             }
 
-            LogAnalyticsEvent("ad_not_ready", new Dictionary<string, object>
+            LogAnalyticsEvent(AnalyticsEventNames.AdNotReady, new Dictionary<string, object>
             {
-                { "source", source },
-                { "reason", "service_missing" },
-                { "ad_type", "interstitial" }
+                { AnalyticsEventNames.Params.Source, source },
+                { AnalyticsEventNames.Params.Reason, "service_missing" },
+                { AnalyticsEventNames.Params.AdType, "interstitial" }
             });
 
             onCompleted?.Invoke();
@@ -1746,10 +1760,10 @@ public class GameManager : MonoBehaviour
                 Debug.Log("GameManager: Interstitial ad not ready.");
             }
 
-            LogAnalyticsEvent("ad_not_ready", new Dictionary<string, object>
+            LogAnalyticsEvent(AnalyticsEventNames.AdNotReady, new Dictionary<string, object>
             {
-                { "source", source },
-                { "ad_type", "interstitial" }
+                { AnalyticsEventNames.Params.Source, source },
+                { AnalyticsEventNames.Params.AdType, "interstitial" }
             });
 
             onCompleted?.Invoke();
@@ -1764,10 +1778,10 @@ public class GameManager : MonoBehaviour
             Debug.Log("GameManager: Showing interstitial ad.");
         }
 
-        LogAnalyticsEvent("ad_shown", new Dictionary<string, object>
+        LogAnalyticsEvent(AnalyticsEventNames.AdShown, new Dictionary<string, object>
         {
-            { "source", source },
-            { "ad_type", "interstitial" }
+            { AnalyticsEventNames.Params.Source, source },
+            { AnalyticsEventNames.Params.AdType, "interstitial" }
         });
 
         _services.InterstitialAds.ShowInterstitialAd(result =>
@@ -1776,19 +1790,19 @@ public class GameManager : MonoBehaviour
 
             if (result == InterstitialAdResult.Completed)
             {
-                LogAnalyticsEvent("ad_completed", new Dictionary<string, object>
+                LogAnalyticsEvent(AnalyticsEventNames.AdCompleted, new Dictionary<string, object>
                 {
-                    { "source", source },
-                    { "ad_type", "interstitial" }
+                    { AnalyticsEventNames.Params.Source, source },
+                    { AnalyticsEventNames.Params.AdType, "interstitial" }
                 });
             }
             else
             {
-                LogAnalyticsEvent("ad_skipped", new Dictionary<string, object>
+                LogAnalyticsEvent(AnalyticsEventNames.AdSkipped, new Dictionary<string, object>
                 {
-                    { "source", source },
-                    { "ad_type", "interstitial" },
-                    { "result", result.ToString() }
+                    { AnalyticsEventNames.Params.Source, source },
+                    { AnalyticsEventNames.Params.AdType, "interstitial" },
+                    { AnalyticsEventNames.Params.Result, result.ToString() }
                 });
             }
 

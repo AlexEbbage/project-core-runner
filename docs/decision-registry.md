@@ -98,6 +98,21 @@ Implications:
 - Monetisation docs should distinguish current implemented flows from future store expansion.
 - Analytics and UX decisions should continue to track monetisation source and player-facing clarity.
 
+### DR-007: Use a shared analytics event-name contract with stable parameter keys
+
+Status: Accepted
+
+Context:
+The project now spans run, hub, shop, hangar, progression, and ad flows that all need comparable telemetry without a second reporting schema.
+
+Decision:
+Keep analytics event names and common payload keys centralized in `AnalyticsEventNames`. Prefer player-facing action or outcome events, and reuse shared parameter keys across callers instead of inventing per-script payload shapes.
+
+Implications:
+
+- Future telemetry work should extend the shared contract first.
+- Controllers should log through the existing analytics service boundary rather than building local event vocabularies.
+
 ## Template
 
 ```text

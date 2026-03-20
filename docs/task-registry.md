@@ -33,11 +33,11 @@ Break approved features into tasks labeled `F#-T#`. Update status as the work ch
 | F18-T2 | F18 | Finalize upgrade card clarity, authored tuning data, and runtime validation for combo plus the target powerup set | Codex/User | In progress | Purchase refresh is wired, but content tuning and scene-authored validation still remain |
 | F19-T1 | F19 | Convert the current challenges destination into a first achievement shell with tier progress and claim states | Codex/User | Implemented (awaiting review) | Uses `AchievementsPageController` plus authored `AchievementsConfig.asset` content |
 | F19-T2 | F19 | Persist achievement tier claims and reward grants through `PlayerProfile` without adding a second save owner | Codex/User | Implemented (awaiting review) | Achievement rewards now use the same profile grant path as tasks and daily login |
-| F15-T1 | F15 | Expand analytics event contract for run outcomes, ad sources, progression, economy, and shop actions | Codex/User | Not started | Start from current analytics service and event names |
+| F15-T1 | F15 | Expand analytics event contract for run outcomes, ad sources, progression, economy, and shop actions | Codex/User | In progress | Shared constants now cover run, ad, hub, shop, hangar, progression, and level-select telemetry; complete the remaining runtime call sites and manual validation pass |
 | F16-T1 | F16 | Decide whether to add DOTween and any additional UI tooling, plus integration boundaries | Codex/User | Not started | Docs should drive package adoption, not the reverse |
 | T1 | Docs Refresh | Complete docs scaffold population and set docs as authoritative project context | Codex | Completed | Done in this pass |
 | T2 | Docs Refresh | Validate docs against repo truth and separate implemented vs partial vs planned status correctly | Codex | Completed | Done in this pass |
-| T3 | Meta Roadmap | Converge progression, economy, and reward systems into a first approved implementation slice | Codex/User | In progress | Current bundle spans XP/levels and level select; the broader progression shell work remains tracked separately |
+| T3 | Meta Roadmap | Converge progression, economy, and reward systems into a first approved implementation slice | Codex/User | Completed | The XP/levels and level-select slice is complete; broader progression-shell work remains tracked separately |
 | T4 | Level Roadmap | Complete environment unlock and level-select product definition | Codex/User | Not started | Recommended after progression alignment |
 | T5 | UI Roadmap | Lock the UI tooling/polish direction and transition strategy | Codex/User | Not started | Recommended before major UI polish work |
 

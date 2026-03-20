@@ -115,11 +115,21 @@ public class ShopPageController : MonoBehaviour
         switch (item.action)
         {
             case ShopItemAction.OpenRemoveAdsPurchase:
+                gameManager?.LogAnalyticsEvent(AnalyticsEventNames.PremiumPurchaseStarted, new Dictionary<string, object>
+                {
+                    { AnalyticsEventNames.Params.Source, "shop" },
+                    { AnalyticsEventNames.Params.ProductId, RemoveAdsIAPManager.Product_RemoveAds }
+                });
                 removeAdsIAPManager?.BuyRemoveAds();
                 BuildContent();
                 FindFirstObjectByType<MainMenuUI>()?.RefreshShopView();
                 return;
             case ShopItemAction.RestorePurchases:
+                gameManager?.LogAnalyticsEvent(AnalyticsEventNames.PremiumRestoreRequested, new Dictionary<string, object>
+                {
+                    { AnalyticsEventNames.Params.Source, "shop" },
+                    { AnalyticsEventNames.Params.ProductId, RemoveAdsIAPManager.Product_RemoveAds }
+                });
                 removeAdsIAPManager?.RestorePurchases();
                 BuildContent();
                 FindFirstObjectByType<MainMenuUI>()?.RefreshShopView();
@@ -135,6 +145,7 @@ public class ShopPageController : MonoBehaviour
         profile.UnlockItem(item.id);
         gameManager?.LogAnalyticsEvent(AnalyticsEventNames.ShopPurchase, new Dictionary<string, object>
         {
+            { AnalyticsEventNames.Params.Source, "shop" },
             { AnalyticsEventNames.Params.Type, item.tab.ToString() },
             { AnalyticsEventNames.Params.Id, item.id },
             { AnalyticsEventNames.Params.Price, item.price }

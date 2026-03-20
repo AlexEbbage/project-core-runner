@@ -2,7 +2,7 @@
 
 ## Delivery Strategy
 
-Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. The preferred next delivery slice is to converge progression, rewards, and meta economy rules before broadening content or polishing UI tooling.
+Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. The preferred next delivery slice is to complete analytics coverage across the existing gameplay and progression surfaces before broadening content or polishing UI tooling.
 
 ## Phases
 

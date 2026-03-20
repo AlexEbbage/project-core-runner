@@ -8,6 +8,7 @@ public class AchievementsPageController : MonoBehaviour
     [SerializeField] private PlayerProfile profile;
     [SerializeField] private AchievementsConfig config;
     [SerializeField] private RectTransform contentRoot;
+    [SerializeField] private GameManager gameManager;
 
     private readonly List<GameObject> _spawnedObjects = new();
 
@@ -26,6 +27,9 @@ public class AchievementsPageController : MonoBehaviour
             if (configs != null && configs.Length > 0)
                 config = configs[0];
         }
+
+        if (gameManager == null)
+            gameManager = FindFirstObjectByType<GameManager>();
 
         EnsureContentRoot();
     }
@@ -166,6 +170,14 @@ public class AchievementsPageController : MonoBehaviour
             {
                 if (profile.TryClaimAchievementTier(achievement.id, tierIndex, tier, progress))
                 {
+                    gameManager?.LogAnalyticsEvent(AnalyticsEventNames.AchievementTierClaimed, new Dictionary<string, object>
+                    {
+                        { AnalyticsEventNames.Params.Source, "achievements" },
+                        { AnalyticsEventNames.Params.AchievementId, achievement.id },
+                        { AnalyticsEventNames.Params.TierIndex, tierIndex },
+                        { AnalyticsEventNames.Params.RewardKind, tier.rewardType.ToString() },
+                        { AnalyticsEventNames.Params.Amount, tier.rewardAmount }
+                    });
                     Refresh();
                     FindFirstObjectByType<MainMenuController>()?.RefreshHubChrome();
                 }

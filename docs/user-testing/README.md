@@ -27,3 +27,4 @@ Files:
 - [11-boosters.md](./11-boosters.md)
 - [12-xp-and-levels.md](./12-xp-and-levels.md)
 - [13-level-select.md](./13-level-select.md)
+- [14-analytics-coverage.md](./14-analytics-coverage.md)

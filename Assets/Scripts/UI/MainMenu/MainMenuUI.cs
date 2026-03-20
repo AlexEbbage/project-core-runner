@@ -216,6 +216,18 @@ public class MainMenuUI : MonoBehaviour
         ApplyLevelToWorld();
         CloseFeaturePanel();
 
+        if (IsLevelSelectable(_currentLevelIndex))
+        {
+            LevelInfo info = levels[_currentLevelIndex];
+            gameManager?.LogAnalyticsEvent(AnalyticsEventNames.LevelPlayPressed, new Dictionary<string, object>
+            {
+                { AnalyticsEventNames.Params.Source, "level_select" },
+                { AnalyticsEventNames.Params.LevelIndex, _currentLevelIndex },
+                { AnalyticsEventNames.Params.LevelName, info.displayName },
+                { AnalyticsEventNames.Params.RequiredLevel, GetRequiredLevel(info, _currentLevelIndex) }
+            });
+        }
+
         if (defaultSpeedConfig != null && runSpeedController != null)
         {
             runSpeedController.SetSpeedConfig(defaultSpeedConfig);
@@ -584,6 +596,15 @@ public class MainMenuUI : MonoBehaviour
         if (profile != null)
             profile.SetSelectedLevelIndex(index);
 
+        LevelInfo info = levels[index];
+        gameManager?.LogAnalyticsEvent(AnalyticsEventNames.LevelSelected, new Dictionary<string, object>
+        {
+            { AnalyticsEventNames.Params.Source, "level_select" },
+            { AnalyticsEventNames.Params.LevelIndex, index },
+            { AnalyticsEventNames.Params.LevelName, info.displayName },
+            { AnalyticsEventNames.Params.RequiredLevel, GetRequiredLevel(info, index) }
+        });
+
         ApplyLevelToWorld();
         UpdateLevelDisplay();
     }
@@ -660,6 +681,12 @@ public class MainMenuUI : MonoBehaviour
     private void HandleRemoveAdsUnlocked()
     {
         UpdateRemoveAdsUI();
+
+        gameManager?.LogAnalyticsEvent(AnalyticsEventNames.PremiumEntitlementUnlocked, new Dictionary<string, object>
+        {
+            { AnalyticsEventNames.Params.Source, "remove_ads" },
+            { AnalyticsEventNames.Params.ProductId, RemoveAdsIAPManager.Product_RemoveAds }
+        });
 
         if (thankYouPopup != null)
         {
@@ -1130,6 +1157,12 @@ public class MainMenuUI : MonoBehaviour
             return;
 
         profile.SetUpgradeLevel(UpgradeType.ComboMultiplier, currentLevel + 1);
+        gameManager?.LogAnalyticsEvent(AnalyticsEventNames.UpgradePurchased, new Dictionary<string, object>
+        {
+            { AnalyticsEventNames.Params.Source, "lab" },
+            { AnalyticsEventNames.Params.Type, UpgradeType.ComboMultiplier.ToString() },
+            { AnalyticsEventNames.Params.Price, cost }
+        });
         RefreshLabView();
         mainMenuController?.RefreshHubChrome();
     }
@@ -1148,6 +1181,12 @@ public class MainMenuUI : MonoBehaviour
             return;
 
         profile.SetPowerupUpgradeLevel(entry.powerupType, currentLevel + 1);
+        gameManager?.LogAnalyticsEvent(AnalyticsEventNames.UpgradePurchased, new Dictionary<string, object>
+        {
+            { AnalyticsEventNames.Params.Source, "lab" },
+            { AnalyticsEventNames.Params.Type, entry.powerupType.ToString() },
+            { AnalyticsEventNames.Params.Price, cost }
+        });
         RefreshLabView();
         mainMenuController?.RefreshHubChrome();
     }
