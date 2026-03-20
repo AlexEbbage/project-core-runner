@@ -9,6 +9,12 @@ Verify the new UI motion layer improves the feel of the hub and overlays without
 - Open `GameScene`.
 - Stay in menu state, then trigger the supported UI surfaces one by one.
 
+## Verification Result
+
+- Static validation: `dotnet build Assembly-CSharp.csproj -nologo` passed.
+- Runtime Unity scene verification: not performed in this environment, so the checklist remains the live signoff gate.
+- Closeout status: motion hooks are already wired in code; the remaining work is the editor review pass against `GameScene`.
+
 ## Checklist
 
 - [ ] Confirm the hub page transitions feel smooth when switching between `Shop`, `Ship`, `Lab`, `Level Select`, and `Achievements`.

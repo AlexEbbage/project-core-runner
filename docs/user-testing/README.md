@@ -29,3 +29,4 @@ Files:
 - [13-level-select.md](./13-level-select.md)
 - [14-analytics-coverage.md](./14-analytics-coverage.md)
 - [15-ui-polish-motion.md](./15-ui-polish-motion.md)
+- [16-progression-shell-closeout.md](./16-progression-shell-closeout.md)
