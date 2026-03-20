@@ -4,6 +4,8 @@
 
 Verify the shared analytics contract fires for the core run loop, hub navigation, purchases, and progression claims without depending on a live backend.
 
+This checklist is the signoff gate for `F15: Analytics Coverage`.
+
 ## Setup
 
 - Use the debug analytics service or a Firebase-enabled test build that logs events locally.

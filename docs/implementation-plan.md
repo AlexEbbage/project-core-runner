@@ -2,7 +2,7 @@
 
 ## Delivery Strategy
 
-Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. The current delivery slice is UI tooling and polish: the motion layer has moved into implementation now that the analytics coverage pass is in review.
+Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. The current delivery slice is the analytics closeout review: the motion layer is implemented and the telemetry slice is now in signoff.
 
 ## Phases
 
@@ -23,11 +23,11 @@ Use the docs set as the durable operating system for the project. Foundation doc
 
 ## Current Recommended Order
 
-1. UI tooling and polish improvements
-2. Analytics coverage validation and follow-up cleanup
+1. Lab presentation and upgrade tuning
+2. Remaining progression-shell review cleanup
 3. Booster and pre-run economy extension
 4. Environment unlock and level-select completion
-5. Remaining progression-shell polish and tuning
+5. Remaining UI polish follow-up if needed
 
 ## Dependencies and Blockers
 
