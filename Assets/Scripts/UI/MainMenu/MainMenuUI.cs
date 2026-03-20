@@ -26,6 +26,8 @@ public class MainMenuUI : MonoBehaviour
 
     [Header("Core References")]
     [SerializeField] private GameManager gameManager;
+    [SerializeField] private MainMenuController mainMenuController;
+    [SerializeField] private TopBarController topBarController;
     [SerializeField] private GameObject rootPanel;
     [SerializeField] private GameObject settingsPanel;
     [SerializeField] private TMP_Text bestScoreText;
@@ -61,6 +63,8 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private PlayerProfile profile;
     [SerializeField] private ShipDatabase shipDatabase;
     [SerializeField] private PowerupUpgradeConfig powerupUpgradeConfig;
+    [SerializeField] private DailyLoginRewardsManager dailyLoginRewardsManager;
+    [SerializeField] private ProgressionTasksController progressionTasksController;
     [SerializeField] private GameObject featurePanelRoot;
     [SerializeField] private TMP_Text featureTitleText;
     [SerializeField] private RectTransform labContentRoot;
@@ -68,6 +72,16 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private Button featureCloseButton;
     [SerializeField] private string labButtonLabel = "LAB";
     [SerializeField] private string labTitle = "LAB";
+
+    [Header("Hub Side Entries")]
+    [SerializeField] private GameObject dailyLoginEntryRoot;
+    [SerializeField] private GameObject specialOffersEntryRoot;
+    [SerializeField] private GameObject tasksEntryRoot;
+    [SerializeField] private GameObject notificationsEntryRoot;
+    [SerializeField] private GameObject dailyLoginBadgeRoot;
+    [SerializeField] private GameObject specialOffersBadgeRoot;
+    [SerializeField] private GameObject tasksBadgeRoot;
+    [SerializeField] private GameObject notificationsBadgeRoot;
 
     private readonly List<GameObject> _runtimeLabWidgets = new();
     private int _currentLevelIndex;
@@ -77,6 +91,12 @@ public class MainMenuUI : MonoBehaviour
     {
         if (gameManager == null)
             gameManager = FindFirstObjectByType<GameManager>();
+
+        if (mainMenuController == null)
+            mainMenuController = FindFirstObjectByType<MainMenuController>();
+
+        if (topBarController == null)
+            topBarController = FindFirstObjectByType<TopBarController>();
 
         if (rootPanel == null)
             rootPanel = gameObject;
@@ -92,6 +112,12 @@ public class MainMenuUI : MonoBehaviour
 
         if (removeAdsIAPManager == null)
             removeAdsIAPManager = FindFirstObjectByType<RemoveAdsIAPManager>();
+
+        if (dailyLoginRewardsManager == null)
+            dailyLoginRewardsManager = FindFirstObjectByType<DailyLoginRewardsManager>();
+
+        if (progressionTasksController == null)
+            progressionTasksController = FindFirstObjectByType<ProgressionTasksController>();
 
         ResolveDataReferences();
         ResolveLabReferences();
@@ -117,6 +143,7 @@ public class MainMenuUI : MonoBehaviour
         UpdateLevelDisplay();
         UpdateRemoveAdsUI();
         RefreshLabView();
+        RefreshHubState();
     }
 
     private void OnDisable()
@@ -136,6 +163,7 @@ public class MainMenuUI : MonoBehaviour
         UpdateLevelDisplay();
         UpdateRemoveAdsUI();
         RefreshLabView();
+        RefreshHubState();
     }
 
     public void Hide()
@@ -271,7 +299,7 @@ public class MainMenuUI : MonoBehaviour
     {
         UpdateRemoveAdsUI();
 
-        if (!HasLabPanel() && thankYouPopup != null)
+        if (thankYouPopup != null)
         {
             thankYouPopup.Show();
         }
@@ -279,25 +307,6 @@ public class MainMenuUI : MonoBehaviour
 
     private void UpdateRemoveAdsUI()
     {
-        if (HasLabPanel())
-        {
-            if (removeAdsButtonRoot != null)
-            {
-                removeAdsButtonRoot.SetActive(true);
-                TMP_Text label = removeAdsButtonRoot.GetComponentInChildren<TMP_Text>(true);
-                if (label != null)
-                    label.text = labButtonLabel;
-            }
-
-            if (restorePurchasesButtonRoot != null)
-                restorePurchasesButtonRoot.SetActive(false);
-
-            if (premiumBadgeRoot != null)
-                premiumBadgeRoot.SetActive(false);
-
-            return;
-        }
-
         bool hasRemoveAds = AdsConfig.RemoveAds;
 
         if (!hidePremiumUserIAPButton && removeAdsButtonRoot != null)
@@ -312,12 +321,6 @@ public class MainMenuUI : MonoBehaviour
 
     public void OnRemoveAdsButtonPressed()
     {
-        if (HasLabPanel())
-        {
-            OpenLabPanel();
-            return;
-        }
-
         if (removeAdsIAPManager != null)
         {
             removeAdsIAPManager.BuyRemoveAds();
@@ -426,7 +429,7 @@ public class MainMenuUI : MonoBehaviour
         _labScaffoldReady = true;
     }
 
-    private void OpenLabPanel()
+    public void OpenLabPanelFromHub()
     {
         if (!HasLabPanel())
             return;
@@ -434,15 +437,16 @@ public class MainMenuUI : MonoBehaviour
         EnsureLabScaffold();
         RefreshLabView();
         featurePanelRoot.SetActive(true);
+        NotifyHubEntryOpened(AnalyticsEventNames.HubLabOpened, "lab");
     }
 
-    private void CloseFeaturePanel()
+    public void CloseFeaturePanel()
     {
         if (featurePanelRoot != null)
             featurePanelRoot.SetActive(false);
     }
 
-    private void RefreshLabView()
+    public void RefreshLabView()
     {
         if (!HasLabPanel())
             return;
@@ -502,6 +506,85 @@ public class MainMenuUI : MonoBehaviour
                 canUpgrade,
                 () => HandlePowerupUpgradePressed(entry)));
         }
+    }
+
+    public void RefreshHubState()
+    {
+        UpdateRemoveAdsUI();
+
+        if (topBarController != null)
+            topBarController.RefreshFromProfile(profile);
+
+        bool dailyLoginAvailable = dailyLoginRewardsManager != null && dailyLoginRewardsManager.CanClaimToday();
+        bool tasksAvailable = progressionTasksController != null && progressionTasksController.HasClaimableRewards();
+        bool specialOffersAvailable = !AdsConfig.RemoveAds;
+        bool notificationsAvailable = dailyLoginAvailable || tasksAvailable || specialOffersAvailable;
+
+        SetBadgeState(dailyLoginEntryRoot, dailyLoginBadgeRoot, dailyLoginAvailable);
+        SetBadgeState(tasksEntryRoot, tasksBadgeRoot, tasksAvailable);
+        SetBadgeState(specialOffersEntryRoot, specialOffersBadgeRoot, specialOffersAvailable);
+        SetBadgeState(notificationsEntryRoot, notificationsBadgeRoot, notificationsAvailable);
+    }
+
+    public void OpenDailyLoginFromHub()
+    {
+        NotifyHubEntryOpened(AnalyticsEventNames.HubDailyLoginOpened, "daily_login");
+        mainMenuController?.ShowPage(MainPage.Tasks, false, false);
+
+        if (dailyLoginRewardsManager != null && dailyLoginRewardsManager.CanClaimToday())
+            dailyLoginRewardsManager.TryClaimReward();
+
+        progressionTasksController?.Refresh();
+        RefreshHubState();
+    }
+
+    public void OpenTasksFromHub()
+    {
+        NotifyHubEntryOpened(AnalyticsEventNames.HubTasksOpened, "tasks");
+        mainMenuController?.ShowPage(MainPage.Tasks, false, false);
+        progressionTasksController?.Refresh();
+        RefreshHubState();
+    }
+
+    public void OpenSpecialOffersFromHub()
+    {
+        NotifyHubEntryOpened(AnalyticsEventNames.HubSpecialOffersOpened, "special_offers");
+        mainMenuController?.ShowShopPage(ShopTab.Currency);
+        RefreshHubState();
+    }
+
+    public void OpenNotificationsFromHub()
+    {
+        NotifyHubEntryOpened(AnalyticsEventNames.HubNotificationsOpened, "notifications");
+
+        bool dailyLoginAvailable = dailyLoginRewardsManager != null && dailyLoginRewardsManager.CanClaimToday();
+        bool tasksAvailable = progressionTasksController != null && progressionTasksController.HasClaimableRewards();
+
+        if (dailyLoginAvailable)
+        {
+            OpenDailyLoginFromHub();
+            return;
+        }
+
+        if (tasksAvailable)
+        {
+            OpenTasksFromHub();
+            return;
+        }
+
+        OpenSpecialOffersFromHub();
+    }
+
+    public void NotifyHubEntryOpened(string eventName, string entry)
+    {
+        if (gameManager == null || string.IsNullOrWhiteSpace(eventName))
+            return;
+
+        gameManager.LogAnalyticsEvent(eventName, new Dictionary<string, object>
+        {
+            { AnalyticsEventNames.Params.Source, "hub" },
+            { AnalyticsEventNames.Params.Type, entry }
+        });
     }
 
     private int GetComboUpgradeCost()
@@ -794,5 +877,14 @@ public class MainMenuUI : MonoBehaviour
         fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
         fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
         return rect;
+    }
+
+    private static void SetBadgeState(GameObject entryRoot, GameObject badgeRoot, bool active)
+    {
+        if (entryRoot != null)
+            entryRoot.SetActive(true);
+
+        if (badgeRoot != null)
+            badgeRoot.SetActive(active);
     }
 }

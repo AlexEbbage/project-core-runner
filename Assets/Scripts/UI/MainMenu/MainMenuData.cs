@@ -9,7 +9,12 @@ public enum MainPage
     Hangar,
     Play,
     Challenges,
-    Progression
+    Progression,
+    Ship = Hangar,
+    LevelSelect = Play,
+    Achievements = Challenges,
+    Tasks = Progression,
+    Lab = 5
 }
 
 public enum HangarTab

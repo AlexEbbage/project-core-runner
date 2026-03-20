@@ -43,6 +43,26 @@ public class ProgressionTasksController : MonoBehaviour
         }
     }
 
+    public bool HasClaimableRewards()
+    {
+        if (config == null)
+            return false;
+
+        foreach (var group in config.TaskGroups)
+        {
+            if (group == null)
+                continue;
+
+            foreach (var reward in group.Rewards)
+            {
+                if (reward != null && reward.State == ProgressionRewardState.Claimable)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
     private void UpdateContent(ProgressionTasksContentView view, ProgressionTaskGroupDefinition group)
     {
         if (view.PointsValueText != null)

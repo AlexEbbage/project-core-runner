@@ -13,6 +13,14 @@ public static class AnalyticsEventNames
     public const string GameOverDoubleRewardsFailed = "game_over_double_rewards_failed";
     public const string GameOverDoubleRewardsBonusGranted = "game_over_double_rewards_bonus_granted";
     public const string GameOverMenuPressed = "game_over_menu_pressed";
+    public const string HubPageSelected = "hub_page_selected";
+    public const string HubDailyLoginOpened = "hub_daily_login_opened";
+    public const string HubTasksOpened = "hub_tasks_opened";
+    public const string HubLabOpened = "hub_lab_opened";
+    public const string HubShipOpened = "hub_ship_opened";
+    public const string HubShopOpened = "hub_shop_opened";
+    public const string HubSpecialOffersOpened = "hub_special_offers_opened";
+    public const string HubNotificationsOpened = "hub_notifications_opened";
     public const string RewardedOfferShown = "rewarded_offer_shown";
     public const string RewardedOfferTapped = "rewarded_offer_tapped";
     public const string RewardedOfferIgnored = "rewarded_offer_ignored";
