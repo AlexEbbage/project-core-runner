@@ -108,6 +108,12 @@ public class MainMenuUI : MonoBehaviour
     private TMP_Text _restorePurchasesButtonText;
     private Coroutine _levelUpToastRoutine;
     private string _queuedLevelUpMessage;
+    private bool _featurePanelVisible;
+    private bool _dailyLoginBadgeVisible;
+    private bool _specialOffersBadgeVisible;
+    private bool _tasksBadgeVisible;
+    private bool _notificationsBadgeVisible;
+    private bool _premiumBadgeVisible;
 
     private void Awake()
     {
@@ -153,7 +159,7 @@ public class MainMenuUI : MonoBehaviour
             rightArrowButton.onClick.AddListener(OnNextLevel);
 
         if (featureCloseButton != null)
-            featureCloseButton.onClick.AddListener(CloseFeaturePanel);
+            featureCloseButton.onClick.AddListener(() => CloseFeaturePanel());
     }
 
     private void OnEnable()
@@ -200,7 +206,7 @@ public class MainMenuUI : MonoBehaviour
         if (rootPanel != null)
             rootPanel.SetActive(false);
 
-        CloseFeaturePanel();
+        CloseFeaturePanel(true);
     }
 
     public void ShowSettings()
@@ -214,7 +220,7 @@ public class MainMenuUI : MonoBehaviour
     public void OnPlayButtonPressed()
     {
         ApplyLevelToWorld();
-        CloseFeaturePanel();
+        CloseFeaturePanel(true);
 
         if (IsLevelSelectable(_currentLevelIndex))
         {
@@ -658,12 +664,10 @@ public class MainMenuUI : MonoBehaviour
         if (levelUpToastText != null)
             levelUpToastText.text = _queuedLevelUpMessage;
 
-        if (levelUpToastRoot != null)
-            levelUpToastRoot.SetActive(true);
-
         if (_levelUpToastRoutine != null)
             StopCoroutine(_levelUpToastRoutine);
 
+        UiMotion.ShowPanel(levelUpToastRoot);
         _levelUpToastRoutine = StartCoroutine(HideLevelUpToastAfterDelay());
         _queuedLevelUpMessage = null;
     }
@@ -672,8 +676,7 @@ public class MainMenuUI : MonoBehaviour
     {
         yield return new WaitForSecondsRealtime(2.5f);
 
-        if (levelUpToastRoot != null)
-            levelUpToastRoot.SetActive(false);
+        UiMotion.HidePanel(levelUpToastRoot);
 
         _levelUpToastRoutine = null;
     }
@@ -706,8 +709,13 @@ public class MainMenuUI : MonoBehaviour
         if (!hideRestorePurchasesButton && restorePurchasesButtonRoot != null)
             restorePurchasesButtonRoot.SetActive(true);
 
+        bool wasPremiumBadgeVisible = _premiumBadgeVisible;
         if (premiumBadgeRoot != null)
             premiumBadgeRoot.SetActive(hasRemoveAds);
+
+        _premiumBadgeVisible = hasRemoveAds;
+        if (hasRemoveAds && !wasPremiumBadgeVisible)
+            UiMotion.PulseBadge(premiumBadgeRoot != null ? premiumBadgeRoot.transform : null);
     }
 
     public void OnRemoveAdsButtonPressed()
@@ -835,7 +843,7 @@ public class MainMenuUI : MonoBehaviour
         EnsureShopScaffold();
         SetFeatureMode(showLab: true, showShop: false);
         RefreshLabView();
-        featurePanelRoot.SetActive(true);
+        ShowFeaturePanel();
         NotifyHubEntryOpened(AnalyticsEventNames.HubLabOpened, "lab");
     }
 
@@ -848,14 +856,43 @@ public class MainMenuUI : MonoBehaviour
         EnsureShopScaffold();
         SetFeatureMode(showLab: false, showShop: true);
         RefreshShopView(initialTab);
-        featurePanelRoot.SetActive(true);
+        ShowFeaturePanel();
         NotifyHubEntryOpened(AnalyticsEventNames.HubShopOpened, initialTab == ShopTab.Currency ? "currency" : "shop");
     }
 
-    public void CloseFeaturePanel()
+    private void ShowFeaturePanel()
+    {
+        if (featurePanelRoot == null)
+            return;
+
+        if (_featurePanelVisible && featurePanelRoot.activeSelf)
+        {
+            featurePanelRoot.SetActive(true);
+            return;
+        }
+
+        _featurePanelVisible = true;
+        UiMotion.ShowPanel(featurePanelRoot);
+    }
+
+    public void CloseFeaturePanel(bool instant = false)
     {
         if (featurePanelRoot != null)
-            featurePanelRoot.SetActive(false);
+        {
+            if (!_featurePanelVisible && !featurePanelRoot.activeSelf)
+            {
+                if (_shopDetailsModal != null)
+                    _shopDetailsModal.Hide();
+
+                return;
+            }
+
+            _featurePanelVisible = false;
+            if (instant || !featurePanelRoot.activeSelf)
+                featurePanelRoot.SetActive(false);
+            else
+                UiMotion.HidePanel(featurePanelRoot);
+        }
 
         if (_shopDetailsModal != null)
             _shopDetailsModal.Hide();
@@ -1024,10 +1061,10 @@ public class MainMenuUI : MonoBehaviour
         bool specialOffersAvailable = !AdsConfig.RemoveAds;
         bool notificationsAvailable = dailyLoginAvailable || tasksAvailable || specialOffersAvailable;
 
-        SetBadgeState(dailyLoginEntryRoot, dailyLoginBadgeRoot, dailyLoginAvailable);
-        SetBadgeState(tasksEntryRoot, tasksBadgeRoot, tasksAvailable);
-        SetBadgeState(specialOffersEntryRoot, specialOffersBadgeRoot, specialOffersAvailable);
-        SetBadgeState(notificationsEntryRoot, notificationsBadgeRoot, notificationsAvailable);
+        SetBadgeState(dailyLoginEntryRoot, dailyLoginBadgeRoot, dailyLoginAvailable, ref _dailyLoginBadgeVisible);
+        SetBadgeState(tasksEntryRoot, tasksBadgeRoot, tasksAvailable, ref _tasksBadgeVisible);
+        SetBadgeState(specialOffersEntryRoot, specialOffersBadgeRoot, specialOffersAvailable, ref _specialOffersBadgeVisible);
+        SetBadgeState(notificationsEntryRoot, notificationsBadgeRoot, notificationsAvailable, ref _notificationsBadgeVisible);
     }
 
     public void RefreshShopView()
@@ -1396,7 +1433,7 @@ public class MainMenuUI : MonoBehaviour
 
         Button button = buttonObject.GetComponent<Button>();
         button.targetGraphic = image;
-        button.onClick.AddListener(CloseFeaturePanel);
+        button.onClick.AddListener(() => CloseFeaturePanel());
 
         TMP_Text text = CreateCardText(buttonObject.transform, font, "CLOSE", 22f, FontStyles.Bold);
         text.alignment = TextAlignmentOptions.Center;
@@ -1487,12 +1524,18 @@ public class MainMenuUI : MonoBehaviour
         return CreateFeatureContentRoot(parent, "LabContent");
     }
 
-    private static void SetBadgeState(GameObject entryRoot, GameObject badgeRoot, bool active)
+    private void SetBadgeState(GameObject entryRoot, GameObject badgeRoot, bool active, ref bool wasVisible)
     {
         if (entryRoot != null)
             entryRoot.SetActive(true);
 
+        bool wasActive = wasVisible;
+
         if (badgeRoot != null)
             badgeRoot.SetActive(active);
+
+        wasVisible = active;
+        if (active && !wasActive)
+            UiMotion.PulseBadge(badgeRoot != null ? badgeRoot.transform : null);
     }
 }

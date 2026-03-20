@@ -27,6 +27,7 @@ public class RewardedRunPromptUI : MonoBehaviour
     private Action _onTimeout;
     private float _autoDismissSeconds;
     private float _autoDismissRemaining;
+    private bool _isHiding;
 
     private void Awake()
     {
@@ -53,7 +54,10 @@ public class RewardedRunPromptUI : MonoBehaviour
         Action onTimeout = null)
     {
         if (rootPanel != null)
+        {
             rootPanel.SetActive(true);
+            _isHiding = false;
+        }
 
         _onAccept = onAccept;
         _onDecline = onDecline;
@@ -71,19 +75,23 @@ public class RewardedRunPromptUI : MonoBehaviour
             acceptButton.interactable = acceptEnabled;
 
         UpdateCountdownVisual();
+        UiMotion.ShowPanel(rootPanel, UiMotion.PanelEnterDuration, UiMotion.PanelEnterScale);
     }
 
     public void Hide()
     {
-        if (rootPanel != null)
-            rootPanel.SetActive(false);
-
         _onAccept = null;
         _onDecline = null;
         _onTimeout = null;
         _autoDismissSeconds = 0f;
         _autoDismissRemaining = 0f;
         UpdateCountdownVisual();
+
+        if (_isHiding)
+            return;
+
+        _isHiding = true;
+        UiMotion.HidePanel(rootPanel, UiMotion.PanelExitDuration, UiMotion.PanelEnterScale, true, () => _isHiding = false);
     }
 
     public bool IsVisible => rootPanel != null && rootPanel.activeSelf;

@@ -50,12 +50,18 @@
 - Unity Input System for gameplay and UI input
 - Unity IAP for commerce
 - Unity LevelPlay for rewarded ads
+- DOTween for authored panel transitions, button feedback, reward emphasis, and badge pulses
 
 ### Target Additions
 
-- DOTween is the preferred future UI animation layer for panel transitions, button feedback, and reward emphasis.
 - Additional layout/effects tooling may be adopted later if it clearly improves mobile responsiveness or visual quality.
 - These target additions are not part of the current dependency contract until explicitly installed and accepted.
+
+### Motion Principles
+
+- Use short, purposeful motion for page transitions, modal open/close, badge emphasis, and reward moments.
+- Keep motion interruptible and readable; no tween should block input longer than necessary.
+- Prefer a small shared motion helper over one-off timing logic inside each UI controller.
 
 ## Audio Direction
 

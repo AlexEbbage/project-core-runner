@@ -64,6 +64,17 @@ public class BottomNavBarController : MonoBehaviour
 
             if (navButton.label != null)
                 navButton.label.color = isSelected ? Color.white : new Color(0.85f, 0.85f, 0.85f, 1f);
+
+            if (isSelected)
+            {
+                Transform pulseTarget = navButton.selectedState != null
+                    ? navButton.selectedState.transform
+                    : navButton.button != null
+                        ? navButton.button.transform
+                        : null;
+
+                UiMotion.PulseScale(pulseTarget, UiMotion.SelectionPulseScale, UiMotion.SelectionPulseDuration);
+            }
         }
     }
 

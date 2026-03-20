@@ -113,6 +113,22 @@ Implications:
 - Future telemetry work should extend the shared contract first.
 - Controllers should log through the existing analytics service boundary rather than building local event vocabularies.
 
+### DR-008: Use DOTween as the current UI motion layer
+
+Status: Accepted
+
+Context:
+The UI stack is hand-authored UGUI/TMP, but the hub, overlays, and modal surfaces need consistent motion without rebuilding the menu architecture.
+
+Decision:
+Adopt DOTween as the UI motion layer for authored panel transitions, button feedback, badge emphasis, and reward presentation. Keep motion helpers lightweight, reusable, and safe when optional references are missing.
+
+Implications:
+
+- UI controllers should prefer shared motion helpers over custom timing loops.
+- Motion should stay inside the authored hierarchy and preserve inspector wiring.
+- Future polish work should reuse the adopted motion layer rather than introducing another UI animation system.
+
 ## Template
 
 ```text

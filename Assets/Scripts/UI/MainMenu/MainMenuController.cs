@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 
 public class MainMenuController : MonoBehaviour
@@ -24,8 +23,6 @@ public class MainMenuController : MonoBehaviour
 
     private MainPage _currentPage;
     private bool _initialized;
-    private Coroutine _transitionRoutine;
-
     public MainPage CurrentPage => _currentPage;
 
     private void Awake()
@@ -87,9 +84,6 @@ public class MainMenuController : MonoBehaviour
         if (target == null)
             return;
 
-        if (_transitionRoutine != null)
-            StopCoroutine(_transitionRoutine);
-
         if (instant || current == null)
         {
             ActivatePage(target, true);
@@ -105,7 +99,7 @@ public class MainMenuController : MonoBehaviour
             return;
         }
 
-        _transitionRoutine = StartCoroutine(TransitionPages(current, target));
+        UiMotion.TransitionPages(current, target, transitionDuration);
         _currentPage = page;
         _initialized = true;
         if (updateSelection)
@@ -157,47 +151,6 @@ public class MainMenuController : MonoBehaviour
         mainMenuUI?.RefreshHubState();
     }
 
-    private IEnumerator TransitionPages(RectTransform current, RectTransform target)
-    {
-        CanvasGroup currentGroup = GetCanvasGroup(current);
-        CanvasGroup targetGroup = GetCanvasGroup(target);
-
-        Vector2 offscreenRight = new(Screen.width, 0f);
-        Vector2 offscreenLeft = new(-Screen.width, 0f);
-
-        ActivatePage(target, true);
-        target.anchoredPosition = offscreenRight;
-        if (targetGroup != null)
-            targetGroup.alpha = 0f;
-
-        float elapsed = 0f;
-        Vector2 currentStart = current.anchoredPosition;
-
-        while (elapsed < transitionDuration)
-        {
-            elapsed += Time.unscaledDeltaTime;
-            float t = Mathf.Clamp01(elapsed / Mathf.Max(0.01f, transitionDuration));
-
-            current.anchoredPosition = Vector2.Lerp(currentStart, offscreenLeft, t);
-            target.anchoredPosition = Vector2.Lerp(offscreenRight, Vector2.zero, t);
-
-            if (currentGroup != null)
-                currentGroup.alpha = 1f - t;
-            if (targetGroup != null)
-                targetGroup.alpha = t;
-
-            yield return null;
-        }
-
-        current.anchoredPosition = Vector2.zero;
-        ActivatePage(current, false);
-        target.anchoredPosition = Vector2.zero;
-        if (targetGroup != null)
-            targetGroup.alpha = 1f;
-
-        _transitionRoutine = null;
-    }
-
     private RectTransform GetPageRect(MainPage page)
     {
         return NormalizeHubPage(page) switch
@@ -218,21 +171,10 @@ public class MainMenuController : MonoBehaviour
 
         if (page != null && active)
         {
-            CanvasGroup group = GetCanvasGroup(page);
+            CanvasGroup group = UiMotion.EnsureCanvasGroup(page.gameObject);
             if (group != null)
                 group.alpha = 1f;
         }
-    }
-
-    private CanvasGroup GetCanvasGroup(RectTransform rectTransform)
-    {
-        if (rectTransform == null)
-            return null;
-
-        if (rectTransform.TryGetComponent(out CanvasGroup group))
-            return group;
-
-        return rectTransform.gameObject.AddComponent<CanvasGroup>();
     }
 
     private void LogHubPageSelection(MainPage page)

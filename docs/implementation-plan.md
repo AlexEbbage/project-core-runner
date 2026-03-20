@@ -2,7 +2,7 @@
 
 ## Delivery Strategy
 
-Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. The preferred next delivery slice is to complete analytics coverage across the existing gameplay and progression surfaces before broadening content or polishing UI tooling.
+Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. The current delivery slice is UI tooling and polish: the motion layer has moved into implementation now that the analytics coverage pass is in review.
 
 ## Phases
 
@@ -11,7 +11,7 @@ Use the docs set as the durable operating system for the project. Foundation doc
 | 1 | Foundation | Core docs, architecture, style guide, registries, and decisions reflect repo truth and approved direction | Completed |
 | 2 | First approved feature slice | Exactly one chosen feature, or one explicitly approved milestone bundle, is documented, implemented, validated, and reflected in all registries | In progress |
 | 3 | Expansion | Additional approved features are implemented in priority order with docs kept current | Not started |
-| 4 | Polish and validation | UI polish, tuning, telemetry coverage, testing, and documentation cleanup are complete for the chosen release target | Not started |
+| 4 | Polish and validation | UI polish, tuning, telemetry coverage, testing, and documentation cleanup are complete for the chosen release target | In progress |
 
 ## Implementation Order
 
@@ -23,8 +23,8 @@ Use the docs set as the durable operating system for the project. Foundation doc
 
 ## Current Recommended Order
 
-1. Analytics coverage expansion
-2. UI tooling and polish improvements
+1. UI tooling and polish improvements
+2. Analytics coverage validation and follow-up cleanup
 3. Booster and pre-run economy extension
 4. Environment unlock and level-select completion
 5. Remaining progression-shell polish and tuning
@@ -35,6 +35,7 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - Monetisation expansion depends on an approved catalog and entitlement model.
 - UI tooling changes depend on an explicit package adoption decision.
 - Shop, ship customisation, lab, tasks, daily login, and achievements all require Unity runtime validation before the broader progression milestone can be considered fully reviewed.
+- DOTween is now the approved UI motion layer, so UI polish work should use the reusable motion helper rather than introducing a second transition stack.
 
 ## Validation Notes
 

@@ -37,6 +37,7 @@ public class GameOverUI : MonoBehaviour
     private bool _continueDelayReported;
     private string _defaultContinueButtonLabel;
     private GameManager.GameOverPresentationData _presentation;
+    private bool _isHiding;
 
     private void Awake()
     {
@@ -103,10 +104,8 @@ public class GameOverUI : MonoBehaviour
 
     public void Show(GameManager.GameOverPresentationData presentation)
     {
-        if (rootPanel != null)
-            rootPanel.SetActive(true);
-
         _presentation = presentation;
+        _isHiding = false;
         _continueDelaySeconds = Mathf.Max(0f, presentation.continueUnlockDelaySeconds);
         _continueUnlockedAt = Time.unscaledTime + _continueDelaySeconds;
         _continueDelayReported = false;
@@ -122,14 +121,18 @@ public class GameOverUI : MonoBehaviour
         UpdateContinueButtonState();
         UpdateDoubleRewardsButtonState();
         UpdateContinueDelayVisuals();
+
+        UiMotion.ShowPanel(rootPanel, UiMotion.PanelEnterDuration, UiMotion.PanelEnterScale);
     }
 
     public void Hide()
     {
-        if (rootPanel != null)
-            rootPanel.SetActive(false);
-
         _continueDelayReported = false;
+        if (_isHiding)
+            return;
+
+        _isHiding = true;
+        UiMotion.HidePanel(rootPanel, UiMotion.PanelExitDuration, UiMotion.PanelEnterScale, true, () => _isHiding = false);
     }
 
     private void UpdateContinueButtonState()

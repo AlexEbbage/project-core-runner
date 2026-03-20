@@ -34,12 +34,14 @@ Break approved features into tasks labeled `F#-T#`. Update status as the work ch
 | F19-T1 | F19 | Convert the current challenges destination into a first achievement shell with tier progress and claim states | Codex/User | Implemented (awaiting review) | Uses `AchievementsPageController` plus authored `AchievementsConfig.asset` content |
 | F19-T2 | F19 | Persist achievement tier claims and reward grants through `PlayerProfile` without adding a second save owner | Codex/User | Implemented (awaiting review) | Achievement rewards now use the same profile grant path as tasks and daily login |
 | F15-T1 | F15 | Expand analytics event contract for run outcomes, ad sources, progression, economy, and shop actions | Codex/User | In progress | Shared constants now cover run, ad, hub, shop, hangar, progression, and level-select telemetry; complete the remaining runtime call sites and manual validation pass |
-| F16-T1 | F16 | Decide whether to add DOTween and any additional UI tooling, plus integration boundaries | Codex/User | Not started | Docs should drive package adoption, not the reverse |
+| F16-T1 | F16 | Adopt DOTween as the UI motion layer and define integration boundaries for authored panels, overlays, and badge feedback | Codex/User | Completed | DOTween is now installed and the reusable motion helper is the preferred integration path |
+| F16-T2 | F16 | Apply motion to hub page transitions, feature-panel open/close, game-over, shop modal, and rewarded prompt surfaces | Codex/User | In progress | Focus on the most visible authored screens first |
+| F16-T3 | F16 | Add lightweight motion emphasis for bottom nav, top-bar currency/level feedback, and actionable badges plus verify the motion checklist | Codex/User | Not started | Keep emphasis subtle and readable, not noisy |
 | T1 | Docs Refresh | Complete docs scaffold population and set docs as authoritative project context | Codex | Completed | Done in this pass |
 | T2 | Docs Refresh | Validate docs against repo truth and separate implemented vs partial vs planned status correctly | Codex | Completed | Done in this pass |
 | T3 | Meta Roadmap | Converge progression, economy, and reward systems into a first approved implementation slice | Codex/User | Completed | The XP/levels and level-select slice is complete; broader progression-shell work remains tracked separately |
 | T4 | Level Roadmap | Complete environment unlock and level-select product definition | Codex/User | Not started | Recommended after progression alignment |
-| T5 | UI Roadmap | Lock the UI tooling/polish direction and transition strategy | Codex/User | Not started | Recommended before major UI polish work |
+| T5 | UI Roadmap | Lock the UI tooling/polish direction and transition strategy | Codex/User | Completed | DOTween is the approved UI motion layer and the transition strategy is now captured in the style/decision docs |
 
 ## Notes
 

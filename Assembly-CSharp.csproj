@@ -85,6 +85,14 @@
     <Compile Include="Assets\Scripts\Gameplay\Environment\TunnelWallGenerator.cs" />
     <Compile Include="Assets\Scripts\Monetisation\RemoveAdsIAPManager.cs" />
     <Compile Include="Assets\Scripts\UI\UiButtonClickEffect.cs" />
+    <Compile Include="Assets\Scripts\UI\UiMotion.cs" />
+    <Compile Include="Packages\com.demigiant.dotween\Modules\DOTweenModuleAudio.cs" />
+    <Compile Include="Packages\com.demigiant.dotween\Modules\DOTweenModulePhysics.cs" />
+    <Compile Include="Packages\com.demigiant.dotween\Modules\DOTweenModulePhysics2D.cs" />
+    <Compile Include="Packages\com.demigiant.dotween\Modules\DOTweenModuleSprite.cs" />
+    <Compile Include="Packages\com.demigiant.dotween\Modules\DOTweenModuleUI.cs" />
+    <Compile Include="Packages\com.demigiant.dotween\Modules\DOTweenModuleUnityVersion.cs" />
+    <Compile Include="Packages\com.demigiant.dotween\Modules\DOTweenModuleUtils.cs" />
     <Compile Include="Assets\Scripts\UI\Pause\PauseMenuUI.cs" />
     <Compile Include="Assets\Scripts\SceneManagement\LoadingScreenManager.cs" />
     <Compile Include="Assets\Scripts\Localization\LocalizedText.cs" />
@@ -1095,6 +1103,10 @@
     </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>Library\ScriptAssemblies\UnityEngine.UI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="DOTween">
+      <HintPath>Packages\com.demigiant.dotween\DOTween.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>

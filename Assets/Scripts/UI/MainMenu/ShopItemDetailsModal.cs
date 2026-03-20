@@ -15,6 +15,7 @@ public class ShopItemDetailsModal : MonoBehaviour
     [SerializeField] private TMP_Text buyButtonText;
 
     private Action _onBuyConfirmed;
+    private bool _isHiding;
 
     private void Awake()
     {
@@ -38,7 +39,7 @@ public class ShopItemDetailsModal : MonoBehaviour
         Action onBuyConfirmed)
     {
         _onBuyConfirmed = onBuyConfirmed;
-        gameObject.SetActive(true);
+        _isHiding = false;
 
         if (itemIcon != null)
             itemIcon.sprite = item != null ? item.icon : null;
@@ -58,12 +59,18 @@ public class ShopItemDetailsModal : MonoBehaviour
             buyButtonText.text = string.IsNullOrWhiteSpace(actionLabel)
                 ? LocalizationService.Get("ui.shop_action_default", "View")
                 : actionLabel;
+
+        UiMotion.ShowPanel(gameObject, UiMotion.PanelEnterDuration, UiMotion.PanelEnterScale);
     }
 
     public void Hide()
     {
         _onBuyConfirmed = null;
-        gameObject.SetActive(false);
+        if (_isHiding)
+            return;
+
+        _isHiding = true;
+        UiMotion.HidePanel(gameObject, UiMotion.PanelExitDuration, UiMotion.PanelEnterScale, true, () => _isHiding = false);
     }
 
     private void HandleBuyClicked()

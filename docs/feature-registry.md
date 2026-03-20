@@ -51,7 +51,7 @@ These `F#` identifiers remain the stable feature IDs used by `task-registry.md` 
 | F13 | Services | Ads and Reward Monetisation | Partial | Continue ads, double rewards, and mid-run rewarded offers are wired; the latest game-over flow has landed in code and needs final runtime verification |
 | F14 | Services | Premium Commerce | Partial | Remove-ads exists; broader premium catalog is planned |
 | F15 | Services | Analytics Coverage | In progress | Shared event names and normalized payload keys now cover run outcomes, ads, hub navigation, shop, hangar, progression claims, and level-select actions; manual validation is still pending |
-| F16 | UI | UI Polish and Motion Stack | Planned | High-fidelity motion, transitions, and tooling remain future work |
+| F16 | UI | UI Polish and Motion Stack | In progress | DOTween is now the approved UI motion layer; the active slice is wiring reusable motion across hub transitions, overlays, modals, nav emphasis, and badge feedback. |
 | F17 | Meta | Expanded Content Catalog | In progress | Ship customisation now builds on the authored shop ids with a preview-first hangar flow, and remaining work is runtime verification plus broader future category expansion |
 | F18 | Meta | Long-Term Progression Economy and Lab Upgrades | In progress | The progression milestone now routes lab progression through the hub with purchase-refresh hooks and shared profile ownership, but authored lab-specific presentation and tuning still need completion |
 | F19 | Meta | Achievements and Challenge Tiers | In progress | A first achievement shell, authored config, progress evaluation, and persistent tier-claim flow are now in repo; breadth and runtime verification still remain |
@@ -59,7 +59,7 @@ These `F#` identifiers remain the stable feature IDs used by `task-registry.md` 
 
 ## Review Notes
 
-- Treat `In progress` as the current active bundle work, not a promise of single-feature exclusivity. The repo currently carries approved bundles across `F8`, `F10`, `F11`, `F12`, `F15`, `F17`, `F18`, and `F19`; avoid starting additional features unless the user explicitly approves them.
+- Treat `In progress` as the current active bundle work, not a promise of single-feature exclusivity. The repo currently carries approved bundles across `F8`, `F10`, `F11`, `F12`, `F15`, `F16`, `F17`, `F18`, and `F19`; avoid starting additional features unless the user explicitly approves them.
 - Treat `Implemented` as "present in repo and usable now", not "fully production complete".
 - Treat `Partial` as "some implementation exists but the documented product goal is not complete".
 - Experience rows may map to multiple canonical `F#` features when the player-facing slice spans gameplay, UI, and monetisation.
