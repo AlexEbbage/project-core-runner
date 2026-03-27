@@ -26,6 +26,8 @@ public class MainMenuUI : MonoBehaviour
     private const int DefaultComboMaxLevel = 5;
     private const int DefaultComboBaseCost = 200;
     private const int DefaultComboCostIncrease = 150;
+    private const string ShopDatabaseResourcePath = "ShopDatabase";
+    private const string BoosterCatalogResourcePath = "BoosterCatalog";
 
     [Header("Core References")]
     [SerializeField] private GameManager gameManager;
@@ -972,7 +974,7 @@ public class MainMenuUI : MonoBehaviour
 
         if (shopDatabase == null)
         {
-            shopDatabase = Resources.Load<ShopDatabase>("ShopDatabase");
+            shopDatabase = Resources.Load<ShopDatabase>(ShopDatabaseResourcePath);
 
             if (shopDatabase == null)
             {
@@ -998,7 +1000,7 @@ public class MainMenuUI : MonoBehaviour
 
         if (boosterCatalog == null)
         {
-            boosterCatalog = Resources.Load<BoosterCatalog>("BoosterCatalog");
+            boosterCatalog = Resources.Load<BoosterCatalog>(BoosterCatalogResourcePath);
 
             if (boosterCatalog == null)
             {
@@ -1303,7 +1305,7 @@ public class MainMenuUI : MonoBehaviour
 
         bool dailyLoginAvailable = dailyLoginRewardsManager != null && dailyLoginRewardsManager.CanClaimToday();
         bool tasksAvailable = progressionTasksController != null && progressionTasksController.HasClaimableRewards();
-        bool specialOffersAvailable = !AdsConfig.RemoveAds;
+        bool specialOffersAvailable = !AdsConfig.RemoveAds && removeAdsIAPManager != null;
         bool notificationsAvailable = dailyLoginAvailable || tasksAvailable || specialOffersAvailable;
 
         SetBadgeState(dailyLoginEntryRoot, dailyLoginBadgeRoot, dailyLoginAvailable, ref _dailyLoginBadgeVisible);
@@ -1364,7 +1366,8 @@ public class MainMenuUI : MonoBehaviour
             return;
         }
 
-        OpenSpecialOffersFromHub();
+        if (!AdsConfig.RemoveAds && removeAdsIAPManager != null)
+            OpenSpecialOffersFromHub();
     }
 
     public void NotifyHubEntryOpened(string eventName, string entry)

@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class ProgressionTasksController : MonoBehaviour
 {
+    private const string ProgressionTasksConfigResourcePath = "ProgressionTasksConfig";
+
     [SerializeField] private ProgressionTasksConfig config;
     [SerializeField] private PlayerProfile profile;
     [SerializeField] private GameManager gameManager;
@@ -17,24 +19,16 @@ public class ProgressionTasksController : MonoBehaviour
 
     private void Awake()
     {
-        if (profile == null)
+        if (contentViews != null)
         {
-            PlayerProfile[] profiles = Resources.FindObjectsOfTypeAll<PlayerProfile>();
-            if (profiles != null && profiles.Length > 0)
-                profile = profiles[0];
+            foreach (ProgressionTasksContentView view in contentViews)
+            {
+                if (view != null)
+                    _contentLookup[view.Cadence] = view;
+            }
         }
 
-        if (contentViews == null)
-            return;
-
-        foreach (ProgressionTasksContentView view in contentViews)
-        {
-            if (view != null)
-                _contentLookup[view.Cadence] = view;
-        }
-
-        if (gameManager == null)
-            gameManager = FindFirstObjectByType<GameManager>();
+        EnsureReferences();
     }
 
     private void OnEnable()
@@ -44,6 +38,8 @@ public class ProgressionTasksController : MonoBehaviour
 
     public void Refresh()
     {
+        EnsureReferences();
+
         if (config == null || profile == null)
             return;
 
@@ -58,6 +54,8 @@ public class ProgressionTasksController : MonoBehaviour
 
     public bool HasClaimableRewards()
     {
+        EnsureReferences();
+
         if (config == null || profile == null)
             return false;
 
@@ -243,6 +241,22 @@ public class ProgressionTasksController : MonoBehaviour
         Refresh();
         FindFirstObjectByType<MainMenuController>()?.RefreshHubChrome();
         FindFirstObjectByType<DailyLoginRewardPreviewView>()?.Refresh();
+    }
+
+    private void EnsureReferences()
+    {
+        if (config == null)
+            config = Resources.Load<ProgressionTasksConfig>(ProgressionTasksConfigResourcePath);
+
+        if (profile == null)
+        {
+            PlayerProfile[] profiles = Resources.FindObjectsOfTypeAll<PlayerProfile>();
+            if (profiles != null && profiles.Length > 0)
+                profile = profiles[0];
+        }
+
+        if (gameManager == null)
+            gameManager = FindFirstObjectByType<GameManager>();
     }
 
     private ProgressionTaskRowView GetTaskPrefab(ProgressionTaskRowStyle style)

@@ -26,6 +26,9 @@ public class TopBarController : MonoBehaviour
     {
         if (mainMenuUI == null)
             mainMenuUI = FindFirstObjectByType<MainMenuUI>();
+
+        if (menuController == null)
+            menuController = FindFirstObjectByType<MainMenuController>();
     }
 
     private void OnEnable()

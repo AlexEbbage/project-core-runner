@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public class AchievementsPageController : MonoBehaviour
 {
+    private const string AchievementsConfigResourcePath = "AchievementsConfig";
+
     [SerializeField] private PlayerProfile profile;
     [SerializeField] private AchievementsConfig config;
     [SerializeField] private RectTransform contentRoot;
@@ -23,7 +25,9 @@ public class AchievementsPageController : MonoBehaviour
 
         if (config == null)
         {
-            AchievementsConfig[] configs = Resources.FindObjectsOfTypeAll<AchievementsConfig>();
+            config = Resources.Load<AchievementsConfig>(AchievementsConfigResourcePath);
+
+            AchievementsConfig[] configs = config == null ? Resources.FindObjectsOfTypeAll<AchievementsConfig>() : null;
             if (configs != null && configs.Length > 0)
                 config = configs[0];
         }

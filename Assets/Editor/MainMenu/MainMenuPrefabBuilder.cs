@@ -1642,8 +1642,8 @@ public static class MainMenuPrefabBuilder
 
     private static ProgressionTasksConfig GetOrCreateProgressionTasksConfig()
     {
-        const string configFolder = "Assets/Config/Progression";
-        const string configPath = "Assets/Config/Progression/ProgressionTasksConfig.asset";
+        const string configFolder = "Assets/Resources";
+        const string configPath = "Assets/Resources/ProgressionTasksConfig.asset";
 
         EnsureFolder(configFolder);
         var config = AssetDatabase.LoadAssetAtPath<ProgressionTasksConfig>(configPath);

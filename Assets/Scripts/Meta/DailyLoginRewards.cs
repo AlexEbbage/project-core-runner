@@ -89,37 +89,29 @@ public class DailyLoginRewardsConfig : ScriptableObject
 
 public class DailyLoginRewardsManager : MonoBehaviour
 {
+    private const string DailyLoginRewardsConfigResourcePath = "DailyLoginRewardsConfig";
+
     [SerializeField] private PlayerProfile profile;
     [SerializeField] private DailyLoginRewardsConfig rewardsConfig;
     [SerializeField] private GameManager gameManager;
     [SerializeField] private bool autoClaimOnStart;
     [SerializeField] private bool logRewards = true;
 
+    private void Awake()
+    {
+        EnsureReferences();
+    }
+
     private void Start()
     {
-        if (profile == null)
-        {
-            PlayerProfile[] profiles = Resources.FindObjectsOfTypeAll<PlayerProfile>();
-            if (profiles != null && profiles.Length > 0)
-                profile = profiles[0];
-        }
-
-        if (rewardsConfig == null)
-        {
-            DailyLoginRewardsConfig[] configs = Resources.FindObjectsOfTypeAll<DailyLoginRewardsConfig>();
-            if (configs != null && configs.Length > 0)
-                rewardsConfig = configs[0];
-        }
-
-        if (gameManager == null)
-            gameManager = FindFirstObjectByType<GameManager>();
-
         if (autoClaimOnStart)
             TryClaimReward();
     }
 
     public bool TryClaimReward(bool doubleReward = false)
     {
+        EnsureReferences();
+
         if (profile == null || rewardsConfig == null)
             return false;
 
@@ -149,11 +141,13 @@ public class DailyLoginRewardsManager : MonoBehaviour
 
     public bool CanClaimToday()
     {
+        EnsureReferences();
         return profile != null && profile.CanClaimDailyLogin(DateTime.UtcNow.Date);
     }
 
     public DailyLoginRewardEntry GetNextRewardPreview(out int nextDayIndex)
     {
+        EnsureReferences();
         nextDayIndex = profile != null ? profile.GetNextDailyLoginDayIndex(DateTime.UtcNow.Date) : 0;
         return rewardsConfig != null
             ? rewardsConfig.GetRewardForDay(nextDayIndex)
@@ -162,7 +156,30 @@ public class DailyLoginRewardsManager : MonoBehaviour
 
     public int GetCurrentStreakDay()
     {
+        EnsureReferences();
         return profile != null ? profile.GetDailyLoginDayIndex() : 0;
+    }
+
+    private void EnsureReferences()
+    {
+        if (profile == null)
+        {
+            PlayerProfile[] profiles = Resources.FindObjectsOfTypeAll<PlayerProfile>();
+            if (profiles != null && profiles.Length > 0)
+                profile = profiles[0];
+        }
+
+        if (rewardsConfig == null)
+        {
+            rewardsConfig = Resources.Load<DailyLoginRewardsConfig>(DailyLoginRewardsConfigResourcePath);
+
+            DailyLoginRewardsConfig[] configs = rewardsConfig == null ? Resources.FindObjectsOfTypeAll<DailyLoginRewardsConfig>() : null;
+            if (configs != null && configs.Length > 0)
+                rewardsConfig = configs[0];
+        }
+
+        if (gameManager == null)
+            gameManager = FindFirstObjectByType<GameManager>();
     }
 
     private void GrantReward(DailyLoginRewardEntry reward, bool doubleReward)

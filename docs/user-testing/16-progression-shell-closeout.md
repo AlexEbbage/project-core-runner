@@ -12,8 +12,9 @@ Verify the authored hub and progression surfaces are ready for review closeout w
 ## Verification Result
 
 - Static validation: `dotnet build Assembly-CSharp.csproj -nologo` passed.
+- Static closeout fix: daily login, tasks, and achievements configs now resolve through `Resources` instead of relying only on editor-time asset discovery.
 - Runtime Unity scene verification: not performed in this environment, so the checklist remains the live signoff gate.
-- Closeout status: hub and progression wiring are already present in code; the remaining work is the editor review pass against `GameScene`.
+- Closeout status: hub and progression wiring are already present in code, runtime config loading is hardened, and the remaining work is the editor review pass against `GameScene`.
 
 ## Checklist
 
