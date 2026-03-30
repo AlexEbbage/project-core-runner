@@ -15,6 +15,8 @@ Verify the profile-backed daily login claim flow, streak handling, and manual hu
 - [ ] Confirm the current day/streak reward is clearly highlighted.
 - [ ] Confirm opening the flow does not auto-claim the reward.
 - [ ] Use `Claim` and confirm the reward is granted once.
+- [ ] If rewarded ads are ready and `Remove Ads` is not owned, confirm `Claim x2` appears and doubles the granted reward exactly once.
+- [ ] If the rewarded ad fails or is unavailable, confirm normal `Claim` remains available and nothing is auto-claimed.
 - [ ] Confirm the claim state updates immediately after success.
 - [ ] Reopen the screen and confirm the same day cannot be claimed twice.
 - [ ] Confirm the tasks hub preview or badge state updates after the claim.

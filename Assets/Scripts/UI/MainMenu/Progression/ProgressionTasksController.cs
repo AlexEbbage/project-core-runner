@@ -64,12 +64,13 @@ public class ProgressionTasksController : MonoBehaviour
             if (group == null)
                 continue;
 
-            DateTime cycleStart = GetCycleStartUtc(group.Cadence, DateTime.UtcNow);
+            DateTime cycleStart = ProgressionTaskCycleUtility.GetCycleStartUtc(group.Cadence, DateTime.UtcNow);
             PlayerProfile.TaskCadenceState state = profile.GetOrCreateTaskCadenceState(group.Cadence, cycleStart, group);
+            List<ProgressionTaskDefinition> activeTasks = group.ResolveActiveTasks(state.activeTaskIds);
 
-            for (int i = 0; i < group.Tasks.Count; i++)
+            for (int i = 0; i < activeTasks.Count; i++)
             {
-                ProgressionTaskDefinition task = group.Tasks[i];
+                ProgressionTaskDefinition task = activeTasks[i];
                 if (task == null)
                     continue;
 
@@ -96,7 +97,7 @@ public class ProgressionTasksController : MonoBehaviour
     private void UpdateContent(ProgressionTasksContentView view, ProgressionTaskGroupDefinition group)
     {
         DateTime now = DateTime.UtcNow;
-        DateTime cycleStart = GetCycleStartUtc(group.Cadence, now);
+        DateTime cycleStart = ProgressionTaskCycleUtility.GetCycleStartUtc(group.Cadence, now);
         PlayerProfile.TaskCadenceState state = profile.GetOrCreateTaskCadenceState(group.Cadence, cycleStart, group);
 
         if (view.PointsValueText != null)
@@ -173,7 +174,8 @@ public class ProgressionTasksController : MonoBehaviour
 
         ClearChildren(view.TaskListContent);
 
-        foreach (ProgressionTaskDefinition task in group.Tasks)
+        List<ProgressionTaskDefinition> activeTasks = group.ResolveActiveTasks(state.activeTaskIds);
+        foreach (ProgressionTaskDefinition task in activeTasks)
         {
             if (task == null)
                 continue;
@@ -277,14 +279,7 @@ public class ProgressionTasksController : MonoBehaviour
 
     private static DateTime GetCycleStartUtc(ProgressionCadence cadence, DateTime nowUtc)
     {
-        DateTime date = nowUtc.Date;
-        return cadence switch
-        {
-            ProgressionCadence.Daily => date,
-            ProgressionCadence.Weekly => date.AddDays(-((7 + ((int)date.DayOfWeek - (int)DayOfWeek.Monday)) % 7)),
-            ProgressionCadence.Monthly => new DateTime(date.Year, date.Month, 1, 0, 0, 0, DateTimeKind.Utc),
-            _ => date
-        };
+        return ProgressionTaskCycleUtility.GetCycleStartUtc(cadence, nowUtc);
     }
 
     private static int GetRemainingSeconds(ProgressionCadence cadence, DateTime nowUtc)

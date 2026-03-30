@@ -11,6 +11,7 @@ Verify the first achievements shell on the mapped `Achievements` hub destination
 ## Checklist
 
 - [ ] Confirm the achievements surface can be opened from the hub.
+- [ ] Confirm all five achievement tracks render: `Rising Pilot`, `Collector`, `Tinkerer`, `Cash Flow`, and `Premium Vault`.
 - [ ] Confirm the old challenges destination now reads as an achievement-oriented surface rather than a placeholder shell.
 - [ ] Confirm at least one achievement shows current progress.
 - [ ] Confirm multi-tier progression is understandable.

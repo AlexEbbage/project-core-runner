@@ -18,58 +18,98 @@ MonoBehaviour:
     description: Reach higher profile levels to prove your consistency.
     metricType: 0
     tiers:
-    - targetValue: 2
-      rewardLabel: 100 Coins
-      rewardType: 0
-      rewardAmount: 100
-      rewardItemId: 
     - targetValue: 3
-      rewardLabel: 10 Gems
-      rewardType: 1
-      rewardAmount: 10
+      rewardLabel: 150 Coins
+      rewardType: 0
+      rewardAmount: 150
       rewardItemId: 
-    - targetValue: 5
-      rewardLabel: 250 XP
+    - targetValue: 6
+      rewardLabel: 15 Gems
+      rewardType: 1
+      rewardAmount: 15
+      rewardItemId: 
+    - targetValue: 10
+      rewardLabel: 400 XP
       rewardType: 2
-      rewardAmount: 250
+      rewardAmount: 400
       rewardItemId: 
   - id: achievement_collector
     title: Collector
     description: Grow your garage with more unlocked ships and cosmetics.
     metricType: 1
     tiers:
-    - targetValue: 2
-      rewardLabel: 75 Coins
+    - targetValue: 3
+      rewardLabel: 100 Coins
       rewardType: 0
-      rewardAmount: 75
+      rewardAmount: 100
       rewardItemId: 
-    - targetValue: 4
-      rewardLabel: 12 Gems
+    - targetValue: 8
+      rewardLabel: 20 Gems
       rewardType: 1
-      rewardAmount: 12
+      rewardAmount: 20
       rewardItemId: 
-    - targetValue: 6
-      rewardLabel: 150 Coins
-      rewardType: 0
-      rewardAmount: 150
+    - targetValue: 15
+      rewardLabel: 250 XP
+      rewardType: 2
+      rewardAmount: 250
       rewardItemId: 
   - id: achievement_tinkerer
     title: Tinkerer
     description: Invest in upgrades across the lab to strengthen your runs.
     metricType: 2
     tiers:
-    - targetValue: 1
-      rewardLabel: 50 Coins
-      rewardType: 0
-      rewardAmount: 50
-      rewardItemId: 
-    - targetValue: 3
-      rewardLabel: 8 Gems
-      rewardType: 1
-      rewardAmount: 8
-      rewardItemId: 
     - targetValue: 5
       rewardLabel: 125 Coins
       rewardType: 0
       rewardAmount: 125
+      rewardItemId: 
+    - targetValue: 15
+      rewardLabel: 15 Gems
+      rewardType: 1
+      rewardAmount: 15
+      rewardItemId: 
+    - targetValue: 30
+      rewardLabel: 300 XP
+      rewardType: 2
+      rewardAmount: 300
+      rewardItemId: 
+  - id: achievement_cashflow
+    title: Cash Flow
+    description: Hold onto soft currency long enough to build a real reserve.
+    metricType: 3
+    tiers:
+    - targetValue: 2000
+      rewardLabel: 150 Coins
+      rewardType: 0
+      rewardAmount: 150
+      rewardItemId: 
+    - targetValue: 5000
+      rewardLabel: 25 Gems
+      rewardType: 1
+      rewardAmount: 25
+      rewardItemId: 
+    - targetValue: 10000
+      rewardLabel: 400 XP
+      rewardType: 2
+      rewardAmount: 400
+      rewardItemId: 
+  - id: achievement_vault
+    title: Premium Vault
+    description: Build up premium currency through rewards and progression claims.
+    metricType: 4
+    tiers:
+    - targetValue: 100
+      rewardLabel: 200 Coins
+      rewardType: 0
+      rewardAmount: 200
+      rewardItemId: 
+    - targetValue: 250
+      rewardLabel: 30 Gems
+      rewardType: 1
+      rewardAmount: 30
+      rewardItemId: 
+    - targetValue: 500
+      rewardLabel: 500 XP
+      rewardType: 2
+      rewardAmount: 500
       rewardItemId: 

@@ -12,9 +12,11 @@ Verify tasks show live claimability, cadence state, and milestone rewards using 
 ## Checklist
 
 - [ ] Confirm daily, weekly, and monthly views can be opened if available.
+- [ ] Confirm each cadence shows exactly three active tasks from the authored pool for the current cycle.
 - [ ] Confirm each task shows progress and reward information.
 - [ ] Confirm completed tasks expose a clear `Claim` action instead of silently auto-claiming.
-- [ ] Complete progress on at least one task and confirm the UI updates immediately.
+- [ ] Finish a run and confirm matching task progress updates from the real run result instead of static preview data.
+- [ ] Reopen the page and confirm the same active task subset remains selected for the current cycle.
 - [ ] Claim a single reward and confirm the reward is granted once.
 - [ ] Confirm any milestone or points track updates after claims.
 - [ ] Confirm the daily login preview remains visible in the tasks hub and reflects current claim availability.

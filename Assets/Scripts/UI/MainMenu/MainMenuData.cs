@@ -830,20 +830,35 @@ public class PlayerProfile : ScriptableObject
             taskCadenceStates.Add(state);
         }
 
-        if (state.cycleStartTicks != cycleTicks || state.tasks == null || state.rewards == null || state.tasks.Count == 0)
+        bool isNewCycle = state.cycleStartTicks != cycleTicks;
+        bool hadExistingTasks = state.tasks != null && state.tasks.Count > 0;
+        bool needsRefresh = isNewCycle
+            || state.tasks == null
+            || state.rewards == null
+            || state.tasks.Count == 0
+            || state.activeTaskIds == null
+            || state.activeTaskIds.Count == 0;
+
+        if (needsRefresh)
         {
             state.cycleStartTicks = cycleTicks;
             state.points = definition != null ? Mathf.Max(0, definition.CurrentPoints) : 0;
             state.tasks = new List<TaskProgressState>();
             state.rewards = new List<TaskRewardClaimState>();
+            state.activeTaskIds = new List<string>();
 
             if (definition != null)
             {
-                if (definition.Tasks != null)
+                state.activeTaskIds = isNewCycle || !hadExistingTasks
+                    ? definition.BuildActiveTaskIds(cycleStartUtcDate)
+                    : definition.GetLegacyFallbackActiveTaskIds();
+
+                List<ProgressionTaskDefinition> activeTasks = definition.ResolveActiveTasks(state.activeTaskIds);
+                if (activeTasks != null)
                 {
-                    for (int i = 0; i < definition.Tasks.Count; i++)
+                    for (int i = 0; i < activeTasks.Count; i++)
                     {
-                        ProgressionTaskDefinition task = definition.Tasks[i];
+                        ProgressionTaskDefinition task = activeTasks[i];
                         if (task == null)
                             continue;
 
@@ -886,15 +901,7 @@ public class PlayerProfile : ScriptableObject
 
         TaskCadenceState state = GetOrCreateTaskCadenceState(cadence, cycleStartUtcDate, definition);
         TaskProgressState taskState = state.tasks.Find(entry => entry.id == taskId);
-        ProgressionTaskDefinition taskDefinition = null;
-        for (int i = 0; i < definition.Tasks.Count; i++)
-        {
-            if (definition.Tasks[i] != null && definition.Tasks[i].Id == taskId)
-            {
-                taskDefinition = definition.Tasks[i];
-                break;
-            }
-        }
+        ProgressionTaskDefinition taskDefinition = definition.FindTask(taskId);
 
         if (taskState == null || taskDefinition == null || taskState.claimed || taskState.current < taskDefinition.Target)
             return false;
@@ -930,6 +937,50 @@ public class PlayerProfile : ScriptableObject
         GrantProfileReward(rewardDefinition.RewardType, rewardDefinition.RewardAmount, rewardDefinition.RewardItemId);
         Save();
         return true;
+    }
+
+    public void ApplyRunProgressionToTasks(ProgressionTasksConfig config, ProgressionTaskRunResult runResult, System.DateTime nowUtcDate)
+    {
+        if (config == null || taskCadenceStates == null || runResult.runCount <= 0)
+            return;
+
+        bool updated = false;
+
+        for (int groupIndex = 0; groupIndex < config.TaskGroups.Count; groupIndex++)
+        {
+            ProgressionTaskGroupDefinition group = config.TaskGroups[groupIndex];
+            if (group == null)
+                continue;
+
+            System.DateTime cycleStart = ProgressionTaskCycleUtility.GetCycleStartUtc(group.Cadence, nowUtcDate);
+            TaskCadenceState state = GetOrCreateTaskCadenceState(group.Cadence, cycleStart, group);
+            List<ProgressionTaskDefinition> activeTasks = group.ResolveActiveTasks(state.activeTaskIds);
+
+            for (int taskIndex = 0; taskIndex < activeTasks.Count; taskIndex++)
+            {
+                ProgressionTaskDefinition task = activeTasks[taskIndex];
+                if (task == null)
+                    continue;
+
+                TaskProgressState taskState = state.tasks.Find(entry => entry.id == task.Id);
+                if (taskState == null || taskState.claimed)
+                    continue;
+
+                int delta = task.GetProgressDelta(runResult);
+                if (delta <= 0)
+                    continue;
+
+                int nextValue = Mathf.Min(task.Target, taskState.current + delta);
+                if (nextValue == taskState.current)
+                    continue;
+
+                taskState.current = nextValue;
+                updated = true;
+            }
+        }
+
+        if (updated)
+            Save();
     }
 
     public int GetClaimedAchievementTierCount(string achievementId)
@@ -1032,6 +1083,7 @@ public class PlayerProfile : ScriptableObject
         public ProgressionCadence cadence;
         public long cycleStartTicks;
         public int points;
+        public List<string> activeTaskIds = new();
         public List<TaskProgressState> tasks = new();
         public List<TaskRewardClaimState> rewards = new();
     }

@@ -7,11 +7,15 @@ using UnityEngine.UI;
 [System.Serializable]
 public struct LevelInfo
 {
+    public string id;
     public string displayName;
     public string description;
     public int sides;
     public int requiredProfileLevel;
     public Sprite shapeSprite;
+    [TextArea] public string challengeOne;
+    [TextArea] public string challengeTwo;
+    [TextArea] public string challengeThree;
 }
 
 /// <summary>
@@ -28,6 +32,7 @@ public class MainMenuUI : MonoBehaviour
     private const int DefaultComboCostIncrease = 150;
     private const string ShopDatabaseResourcePath = "ShopDatabase";
     private const string BoosterCatalogResourcePath = "BoosterCatalog";
+    private const string LevelRoadmapResourcePath = "LevelRoadmapConfig";
 
     [Header("Core References")]
     [SerializeField] private GameManager gameManager;
@@ -51,6 +56,7 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private TMP_Text levelUpToastText;
 
     [Header("Levels")]
+    [SerializeField] private LevelRoadmapConfig levelRoadmapConfig;
     [SerializeField] private LevelInfo[] levels;
 
     [Header("Gameplay Systems")]
@@ -155,6 +161,7 @@ public class MainMenuUI : MonoBehaviour
 
         ResolveDataReferences();
         ResolveLabReferences();
+        ResolveLevelRoadmap();
         EnsureLevelSelectScaffold();
         BindProfileEvents();
 
@@ -175,6 +182,7 @@ public class MainMenuUI : MonoBehaviour
         BindProfileEvents();
 
         UpdateBestScoreDisplay();
+        ResolveLevelRoadmap();
         EnsureValidLevelIndex();
         ApplyLevelToWorld();
         UpdateLevelDisplay();
@@ -198,6 +206,7 @@ public class MainMenuUI : MonoBehaviour
 
         mainMenuController?.RefreshHubChrome();
         UpdateBestScoreDisplay();
+        ResolveLevelRoadmap();
         EnsureValidLevelIndex();
         ApplyLevelToWorld();
         UpdateLevelDisplay();
@@ -225,12 +234,13 @@ public class MainMenuUI : MonoBehaviour
 
     public void OnPlayButtonPressed()
     {
+        LevelInfo[] resolvedLevels = GetResolvedLevels();
         ApplyLevelToWorld();
         CloseFeaturePanel(true);
 
         if (IsLevelSelectable(_currentLevelIndex))
         {
-            LevelInfo info = levels[_currentLevelIndex];
+            LevelInfo info = resolvedLevels[_currentLevelIndex];
             gameManager?.LogAnalyticsEvent(AnalyticsEventNames.LevelPlayPressed, new Dictionary<string, object>
             {
                 { AnalyticsEventNames.Params.Source, "level_select" },
@@ -266,7 +276,8 @@ public class MainMenuUI : MonoBehaviour
 
     private void EnsureValidLevelIndex()
     {
-        if (levels == null || levels.Length == 0)
+        LevelInfo[] resolvedLevels = GetResolvedLevels();
+        if (resolvedLevels == null || resolvedLevels.Length == 0)
         {
             _currentLevelIndex = 0;
             return;
@@ -278,7 +289,7 @@ public class MainMenuUI : MonoBehaviour
             selectedIndex = GetFirstUnlockedLevelIndex();
         }
 
-        _currentLevelIndex = Mathf.Clamp(selectedIndex, 0, levels.Length - 1);
+        _currentLevelIndex = Mathf.Clamp(selectedIndex, 0, resolvedLevels.Length - 1);
 
         if (profile != null)
             profile.SetSelectedLevelIndex(_currentLevelIndex);
@@ -299,11 +310,12 @@ public class MainMenuUI : MonoBehaviour
 
     private void ApplyLevelToWorld()
     {
-        if (levels == null || levels.Length == 0)
+        LevelInfo[] resolvedLevels = GetResolvedLevels();
+        if (resolvedLevels == null || resolvedLevels.Length == 0)
             return;
 
         EnsureValidLevelIndex();
-        var info = levels[_currentLevelIndex];
+        var info = resolvedLevels[_currentLevelIndex];
         int sides = Mathf.Max(3, info.sides);
 
         if (tunnelWallGenerator != null)
@@ -312,7 +324,8 @@ public class MainMenuUI : MonoBehaviour
 
     private void OnPrevLevel()
     {
-        if (levels == null || levels.Length == 0)
+        LevelInfo[] resolvedLevels = GetResolvedLevels();
+        if (resolvedLevels == null || resolvedLevels.Length == 0)
             return;
 
         int previousIndex = FindAdjacentSelectableLevelIndex(_currentLevelIndex, -1);
@@ -321,7 +334,8 @@ public class MainMenuUI : MonoBehaviour
 
     private void OnNextLevel()
     {
-        if (levels == null || levels.Length == 0)
+        LevelInfo[] resolvedLevels = GetResolvedLevels();
+        if (resolvedLevels == null || resolvedLevels.Length == 0)
             return;
 
         int nextIndex = FindAdjacentSelectableLevelIndex(_currentLevelIndex, 1);
@@ -330,10 +344,11 @@ public class MainMenuUI : MonoBehaviour
 
     private void RefreshLevelSelectView()
     {
+        LevelInfo[] resolvedLevels = GetResolvedLevels();
         EnsureLevelSelectScaffold();
         EnsureBoosterDefaults();
 
-        if (levels == null || levels.Length == 0)
+        if (resolvedLevels == null || resolvedLevels.Length == 0)
         {
             if (levelNameText != null)
                 levelNameText.text = LocalizationService.Get("ui.no_levels", "No Levels");
@@ -352,13 +367,13 @@ public class MainMenuUI : MonoBehaviour
         }
 
         EnsureValidLevelIndex();
-        LevelInfo info = levels[_currentLevelIndex];
+        LevelInfo info = resolvedLevels[_currentLevelIndex];
 
         if (levelNameText != null)
             levelNameText.text = info.displayName;
 
         if (levelDescriptionText != null)
-            levelDescriptionText.text = GetLevelDescription(info);
+            levelDescriptionText.text = GetLevelSummaryText(info);
 
         if (levelRequirementText != null)
             levelRequirementText.text = GetLevelRequirementText(info, _currentLevelIndex, IsLevelUnlocked(_currentLevelIndex));
@@ -435,6 +450,7 @@ public class MainMenuUI : MonoBehaviour
 
     private void RefreshLevelCards()
     {
+        LevelInfo[] resolvedLevels = GetResolvedLevels();
         if (levelCardsRoot == null)
             return;
 
@@ -453,13 +469,13 @@ public class MainMenuUI : MonoBehaviour
         _runtimeBoosterWidgets.Clear();
 
         TMP_FontAsset font = bestScoreText != null ? bestScoreText.font : TMP_Settings.defaultFontAsset;
-        if (levels != null && levels.Length > 0)
+        if (resolvedLevels != null && resolvedLevels.Length > 0)
         {
             _runtimeLevelWidgets.Add(CreateSectionLabel(levelCardsRoot, "Level Routes"));
 
-            for (int i = 0; i < levels.Length; i++)
+            for (int i = 0; i < resolvedLevels.Length; i++)
             {
-                LevelInfo levelInfo = levels[i];
+                LevelInfo levelInfo = resolvedLevels[i];
                 if (string.IsNullOrWhiteSpace(levelInfo.displayName))
                     continue;
 
@@ -478,7 +494,7 @@ public class MainMenuUI : MonoBehaviour
         card.transform.SetParent(parent, false);
 
         LayoutElement layout = card.GetComponent<LayoutElement>();
-        layout.preferredHeight = 170f;
+        layout.preferredHeight = 246f;
 
         Image background = card.GetComponent<Image>();
         background.color = selected
@@ -505,6 +521,17 @@ public class MainMenuUI : MonoBehaviour
         TMP_Text descriptionText = CreateCardText(card.transform, font, GetLevelDescription(info), 22f, FontStyles.Normal);
         descriptionText.alignment = TextAlignmentOptions.Left;
         descriptionText.enableWordWrapping = true;
+
+        TMP_Text challengeLabel = CreateCardText(card.transform, font, LocalizationService.Get("ui.level_select_challenges", "Challenge Goals"), 18f, FontStyles.Bold);
+        challengeLabel.alignment = TextAlignmentOptions.Left;
+
+        string[] challenges = GetLevelChallenges(info);
+        for (int i = 0; i < challenges.Length; i++)
+        {
+            TMP_Text challengeText = CreateCardText(card.transform, font, $"- {challenges[i]}", 18f, FontStyles.Normal);
+            challengeText.alignment = TextAlignmentOptions.Left;
+            challengeText.enableWordWrapping = true;
+        }
 
         GameObject footer = new GameObject("Footer", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(LayoutElement));
         footer.transform.SetParent(card.transform, false);
@@ -761,6 +788,39 @@ public class MainMenuUI : MonoBehaviour
         return LocalizationService.Format("ui.level_select_description", sides);
     }
 
+    private string GetLevelSummaryText(LevelInfo info)
+    {
+        string description = GetLevelDescription(info);
+        string[] challenges = GetLevelChallenges(info);
+        if (challenges.Length == 0)
+            return description;
+
+        return $"{description}\n{LocalizationService.Get("ui.level_select_challenge_summary", "Challenge Goals")}: {string.Join(" | ", challenges)}";
+    }
+
+    private string GetLevelCardTitle(LevelInfo info, bool selected)
+    {
+        return selected
+            ? $"{info.displayName} - {LocalizationService.Get("ui.level_select_selected", "Selected")}"
+            : info.displayName;
+    }
+
+    private static string[] GetLevelChallenges(LevelInfo info)
+    {
+        var challenges = new List<string>(3);
+
+        if (!string.IsNullOrWhiteSpace(info.challengeOne))
+            challenges.Add(info.challengeOne);
+
+        if (!string.IsNullOrWhiteSpace(info.challengeTwo))
+            challenges.Add(info.challengeTwo);
+
+        if (!string.IsNullOrWhiteSpace(info.challengeThree))
+            challenges.Add(info.challengeThree);
+
+        return challenges.ToArray();
+    }
+
     private string GetLevelRequirementText(LevelInfo info, int index, bool unlocked)
     {
         int requiredLevel = GetRequiredLevel(info, index);
@@ -777,25 +837,28 @@ public class MainMenuUI : MonoBehaviour
 
     private bool IsLevelUnlocked(int index)
     {
+        LevelInfo[] resolvedLevels = GetResolvedLevels();
         if (!IsLevelSelectable(index))
             return false;
 
-        int requiredLevel = GetRequiredLevel(levels[index], index);
+        int requiredLevel = GetRequiredLevel(resolvedLevels[index], index);
         int playerLevel = profile != null ? profile.level : 1;
         return playerLevel >= requiredLevel;
     }
 
     private bool IsLevelSelectable(int index)
     {
-        return levels != null && index >= 0 && index < levels.Length;
+        LevelInfo[] resolvedLevels = GetResolvedLevels();
+        return resolvedLevels != null && index >= 0 && index < resolvedLevels.Length;
     }
 
     private int GetFirstUnlockedLevelIndex()
     {
-        if (levels == null || levels.Length == 0)
+        LevelInfo[] resolvedLevels = GetResolvedLevels();
+        if (resolvedLevels == null || resolvedLevels.Length == 0)
             return 0;
 
-        for (int i = 0; i < levels.Length; i++)
+        for (int i = 0; i < resolvedLevels.Length; i++)
         {
             if (IsLevelUnlocked(i))
                 return i;
@@ -806,10 +869,11 @@ public class MainMenuUI : MonoBehaviour
 
     private int FindAdjacentSelectableLevelIndex(int startIndex, int direction)
     {
-        if (levels == null || levels.Length == 0 || direction == 0)
+        LevelInfo[] resolvedLevels = GetResolvedLevels();
+        if (resolvedLevels == null || resolvedLevels.Length == 0 || direction == 0)
             return -1;
 
-        int count = levels.Length;
+        int count = resolvedLevels.Length;
         int index = Mathf.Clamp(startIndex, 0, count - 1);
 
         for (int i = 0; i < count; i++)
@@ -824,6 +888,7 @@ public class MainMenuUI : MonoBehaviour
 
     private void SelectLevel(int index)
     {
+        LevelInfo[] resolvedLevels = GetResolvedLevels();
         if (!IsLevelSelectable(index))
             return;
 
@@ -837,7 +902,7 @@ public class MainMenuUI : MonoBehaviour
         if (profile != null)
             profile.SetSelectedLevelIndex(index);
 
-        LevelInfo info = levels[index];
+        LevelInfo info = resolvedLevels[index];
         gameManager?.LogAnalyticsEvent(AnalyticsEventNames.LevelSelected, new Dictionary<string, object>
         {
             { AnalyticsEventNames.Params.Source, "level_select" },
@@ -1009,6 +1074,20 @@ public class MainMenuUI : MonoBehaviour
                     boosterCatalog = catalogs[0];
             }
         }
+    }
+
+    private void ResolveLevelRoadmap()
+    {
+        if (levelRoadmapConfig == null)
+            levelRoadmapConfig = Resources.Load<LevelRoadmapConfig>(LevelRoadmapResourcePath);
+    }
+
+    private LevelInfo[] GetResolvedLevels()
+    {
+        if (levelRoadmapConfig != null && levelRoadmapConfig.Levels != null && levelRoadmapConfig.Levels.Length > 0)
+            return levelRoadmapConfig.Levels;
+
+        return levels;
     }
 
     private void ResolveLabReferences()

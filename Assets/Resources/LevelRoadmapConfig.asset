@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52269f91e27846d3a3d9d338379d1d14, type: 3}
+  m_Name: LevelRoadmapConfig
+  m_EditorClassIdentifier: Assembly-CSharp::LevelRoadmapConfig
+  levels:
+  - id: route_hexagon
+    displayName: HEXAGON
+    description: The original tunnel route. Fast to read, fast to replay.
+    sides: 6
+    requiredProfileLevel: 1
+    shapeSprite: {fileID: 0}
+    challengeOne: Reach 2,500 score
+    challengeTwo: Travel 400m
+    challengeThree: Collect 15 coins
+  - id: route_heptagon
+    displayName: HEPTAGON
+    description: A wider seven-side route with a little more visual drift.
+    sides: 7
+    requiredProfileLevel: 2
+    shapeSprite: {fileID: 0}
+    challengeOne: Reach 5,000 score
+    challengeTwo: Travel 700m
+    challengeThree: Collect 25 coins
+  - id: route_octagon
+    displayName: OCTAGON
+    description: Eight walls, longer sight-lines, and a more aspirational chase.
+    sides: 8
+    requiredProfileLevel: 4
+    shapeSprite: {fileID: 0}
+    challengeOne: Reach 8,000 score
+    challengeTwo: Travel 1,000m
+    challengeThree: Collect 40 coins
+  - id: route_nonagon
+    displayName: NONAGON
+    description: A nine-side polygon run built for higher-level score pushes.
+    sides: 9
+    requiredProfileLevel: 6
+    shapeSprite: {fileID: 0}
+    challengeOne: Reach 12,000 score
+    challengeTwo: Travel 1,400m
+    challengeThree: Collect 55 coins
+  - id: route_decagon
+    displayName: DECAGON
+    description: The late-road route: broad, bright, and tuned for long-distance attempts.
+    sides: 10
+    requiredProfileLevel: 8
+    shapeSprite: {fileID: 0}
+    challengeOne: Reach 17,000 score
+    challengeTwo: Travel 1,800m
+    challengeThree: Collect 75 coins

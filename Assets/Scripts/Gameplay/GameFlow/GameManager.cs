@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
+    private const string ProgressionTasksConfigResourcePath = "ProgressionTasksConfig";
+
     public enum GameState
     {
         Menu,
@@ -27,6 +29,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private PlayerPowerupController powerupController;
     [SerializeField] private PlayerProfile playerProfile;
     [SerializeField] private BoosterCatalog boosterCatalog;
+    [SerializeField] private ProgressionTasksConfig progressionTasksConfig;
 
     [Header("Player Visuals (optional)")]
     [SerializeField] private PlayerVisual playerVisual;
@@ -206,6 +209,74 @@ public class GameManager : MonoBehaviour
         return _services.RewardedAds.IsRewardedAdReady();
     }
 
+    public bool CanShowDailyLoginDoubleRewardAd()
+    {
+        if (AdsConfig.RemoveAds || _adInProgress)
+            return false;
+
+        return _services?.RewardedAds != null && _services.RewardedAds.IsRewardedAdReady();
+    }
+
+    public bool TryShowDailyLoginDoubleRewardAd(System.Action<RewardedAdResult> onCompleted)
+    {
+        if (AdsConfig.RemoveAds)
+        {
+            LogAnalyticsEvent(AnalyticsEventNames.AdBypassed, new Dictionary<string, object>
+            {
+                { AnalyticsEventNames.Params.Source, "daily_login_double" },
+                { AnalyticsEventNames.Params.Reason, "remove_ads" },
+                { AnalyticsEventNames.Params.AdType, "rewarded" }
+            });
+            return false;
+        }
+
+        if (_services?.RewardedAds == null || !_services.RewardedAds.IsRewardedAdReady())
+        {
+            LogAnalyticsEvent(AnalyticsEventNames.AdNotReady, new Dictionary<string, object>
+            {
+                { AnalyticsEventNames.Params.Source, "daily_login_double" },
+                { AnalyticsEventNames.Params.AdType, "rewarded" }
+            });
+            return false;
+        }
+
+        _adInProgress = true;
+        Time.timeScale = 1f;
+
+        LogAnalyticsEvent(AnalyticsEventNames.AdShown, new Dictionary<string, object>
+        {
+            { AnalyticsEventNames.Params.Source, "daily_login_double" },
+            { AnalyticsEventNames.Params.AdType, "rewarded" }
+        });
+
+        _services.RewardedAds.ShowRewardedAd(result =>
+        {
+            _adInProgress = false;
+
+            if (result == RewardedAdResult.Rewarded)
+            {
+                LogAnalyticsEvent(AnalyticsEventNames.AdCompleted, new Dictionary<string, object>
+                {
+                    { AnalyticsEventNames.Params.Source, "daily_login_double" },
+                    { AnalyticsEventNames.Params.AdType, "rewarded" }
+                });
+            }
+            else
+            {
+                LogAnalyticsEvent(AnalyticsEventNames.AdSkipped, new Dictionary<string, object>
+                {
+                    { AnalyticsEventNames.Params.Source, "daily_login_double" },
+                    { AnalyticsEventNames.Params.Result, result.ToString() },
+                    { AnalyticsEventNames.Params.AdType, "rewarded" }
+                });
+            }
+
+            onCompleted?.Invoke(result);
+        });
+
+        return true;
+    }
+
     public bool IsContinueAdReady()
     {
         if (_adInProgress)
@@ -248,6 +319,18 @@ public class GameManager : MonoBehaviour
                 BoosterCatalog[] catalogs = Resources.FindObjectsOfTypeAll<BoosterCatalog>();
                 if (catalogs != null && catalogs.Length > 0)
                     boosterCatalog = catalogs[0];
+            }
+        }
+
+        if (progressionTasksConfig == null)
+        {
+            progressionTasksConfig = Resources.Load<ProgressionTasksConfig>(ProgressionTasksConfigResourcePath);
+
+            if (progressionTasksConfig == null)
+            {
+                ProgressionTasksConfig[] configs = Resources.FindObjectsOfTypeAll<ProgressionTasksConfig>();
+                if (configs != null && configs.Length > 0)
+                    progressionTasksConfig = configs[0];
             }
         }
 
@@ -1618,6 +1701,7 @@ public class GameManager : MonoBehaviour
         _runRewardsGranted = true;
         _lastRunRewards = CalculateRunRewards();
         ApplyRunRewards(_lastRunRewards, 1, false);
+        ApplyTaskProgressionFromRun(_lastRunRewards);
         _lastGameOverPresentation = BuildGameOverPresentation();
 
         if (_doubleRunRewardsQueued)
@@ -1686,6 +1770,22 @@ public class GameManager : MonoBehaviour
             { AnalyticsEventNames.Params.Source, "game_over" },
             { AnalyticsEventNames.Params.Amount, _lastRunRewards.coins + _lastRunRewards.gems + _lastRunRewards.xp }
         });
+    }
+
+    private void ApplyTaskProgressionFromRun(RunRewardBundle rewards)
+    {
+        if (playerProfile == null || progressionTasksConfig == null)
+            return;
+
+        float distance = statsTracker != null ? statsTracker.CurrentRunDistance : 0f;
+        float score = scoreManager != null ? scoreManager.CurrentScore : 0f;
+        int coinsCollected = currencyManager != null ? currencyManager.CurrentCoins : 0;
+        bool completedWithoutContinue = continuesUsed <= 0;
+
+        playerProfile.ApplyRunProgressionToTasks(
+            progressionTasksConfig,
+            new ProgressionTaskRunResult(1, distance, score, coinsCollected, rewards.xp, completedWithoutContinue),
+            System.DateTime.UtcNow.Date);
     }
 
     private readonly struct RunRewardBundle

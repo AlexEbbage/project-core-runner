@@ -123,6 +123,7 @@
     <Compile Include="Assets\Scripts\Feedback\VibrationController.cs" />
     <Compile Include="Assets\Scripts\UI\UiInteractionHandler.cs" />
     <Compile Include="Assets\Scripts\UI\MainMenu\Progression\ProgressionTasksConfig.cs" />
+    <Compile Include="Assets\Scripts\UI\MainMenu\LevelRoadmapConfig.cs" />
     <Compile Include="Assets\Scripts\UI\MainMenu\MainMenuUI.cs" />
     <Compile Include="Assets\Scripts\Config\GameBalanceConfig.cs" />
     <Compile Include="Assets\Scripts\Gameplay\Obstacles\ObstacleRingGenerator.cs" />

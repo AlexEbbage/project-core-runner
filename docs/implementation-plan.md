@@ -2,7 +2,7 @@
 
 ## Delivery Strategy
 
-Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. The current delivery slice is the progression-shell review closeout: progression config loading is now hardened for runtime builds, and the remaining signoff gate is the live `GameScene` review pass.
+Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. The current delivery slice is the progression expansion bundle: level roadmap, task breadth, achievement breadth, and daily-login x2 support are now in repo, and the remaining signoff gate is the live `GameScene` review pass.
 
 ## Phases
 
@@ -23,18 +23,17 @@ Use the docs set as the durable operating system for the project. Foundation doc
 
 ## Current Recommended Order
 
-1. Progression-shell review closeout
+1. Progression expansion runtime review
 2. Booster review pass
-3. Environment unlock and level-select completion
-4. Remaining UI polish follow-up if needed
+3. Remaining UI polish and scene-wiring follow-up if needed
+4. Next content expansion after runtime signoff
 
 ## Dependencies and Blockers
 
-- Environment unlock work depends on agreed unlock thresholds and content definitions.
 - Monetisation expansion depends on an approved catalog and entitlement model.
 - UI tooling changes depend on an explicit package adoption decision.
-- Progression-shell config assets are now loaded through `Resources`, but the closeout still depends on a live Unity pass to confirm authored wiring, badges, overlays, and menu-to-run-to-menu flow in `GameScene`.
-- Boosters, shop, ship customisation, lab, tasks, daily login, achievements, and UI polish all require Unity runtime validation before the broader progression milestone can be considered fully reviewed.
+- The progression bundle now depends on a live Unity pass to confirm the five-route roadmap, randomized task pools, run-result task updates, achievement roster rendering, and daily-login x2 flow in `GameScene`.
+- Boosters, shop, ship customisation, lab, tasks, daily login, achievements, and UI polish all still require Unity runtime validation before the broader progression milestone can be considered fully reviewed.
 - DOTween is now the approved UI motion layer, so UI polish work should use the reusable motion helper rather than introducing a second transition stack.
 
 ## Validation Notes

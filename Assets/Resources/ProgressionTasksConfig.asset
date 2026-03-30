@@ -15,193 +15,309 @@ MonoBehaviour:
   taskGroups:
   - cadence: 0
     pointsLabel: Progress Points
-    currentPoints: 120
-    targetPoints: 300
-    timeRemainingSeconds: 22320
+    currentPoints: 0
+    targetPoints: 150
+    timeRemainingSeconds: 0
+    activeTaskCount: 3
     rewards:
     - rewardLabel: 50 Coins
       pointsRequired: 50
       icon: {fileID: 0}
-      state: 1
+      state: 0
       rewardType: 0
       rewardAmount: 50
       rewardItemId: 
-    - rewardLabel: 100 Coins
+    - rewardLabel: 10 Gems
       pointsRequired: 100
-      icon: {fileID: 0}
-      state: 0
-      rewardType: 0
-      rewardAmount: 100
-      rewardItemId: 
-    - rewardLabel: Rare Chest
-      pointsRequired: 200
       icon: {fileID: 0}
       state: 0
       rewardType: 1
       rewardAmount: 10
       rewardItemId: 
+    - rewardLabel: 150 XP
+      pointsRequired: 150
+      icon: {fileID: 0}
+      state: 0
+      rewardType: 2
+      rewardAmount: 150
+      rewardItemId: 
     tasks:
-    - id: task_run
+    - id: daily_runs
       description: Complete 3 runs
-      current: 1
+      metricType: 0
+      current: 0
       target: 3
       icon: {fileID: 0}
       rowStyle: 0
-      rewardLabel: 50 Coins
+      rewardLabel: 60 Coins
       rewardIcon: {fileID: 0}
       rewardType: 0
-      rewardAmount: 50
+      rewardAmount: 60
       rewardItemId: 
       progressPointsReward: 40
-    - id: task_distance
-      description: Travel 2,000m
-      current: 1200
-      target: 2000
+    - id: daily_distance
+      description: Travel 1,500m
+      metricType: 1
+      current: 0
+      target: 1500
       icon: {fileID: 0}
       rowStyle: 1
-      rewardLabel: 30 Coins
+      rewardLabel: 45 Coins
       rewardIcon: {fileID: 0}
       rewardType: 0
-      rewardAmount: 30
+      rewardAmount: 45
       rewardItemId: 
-      progressPointsReward: 30
-    - id: task_perfect
-      description: Finish a run without crashing
-      current: 1
+      progressPointsReward: 35
+    - id: daily_score
+      description: Reach 6,000 score
+      metricType: 2
+      current: 0
+      target: 6000
+      icon: {fileID: 0}
+      rowStyle: 1
+      rewardLabel: 12 Gems
+      rewardIcon: {fileID: 0}
+      rewardType: 1
+      rewardAmount: 12
+      rewardItemId: 
+      progressPointsReward: 45
+    - id: daily_coins
+      description: Collect 25 coins
+      metricType: 3
+      current: 0
+      target: 25
+      icon: {fileID: 0}
+      rowStyle: 0
+      rewardLabel: 75 Coins
+      rewardIcon: {fileID: 0}
+      rewardType: 0
+      rewardAmount: 75
+      rewardItemId: 
+      progressPointsReward: 40
+    - id: daily_xp
+      description: Earn 300 XP
+      metricType: 4
+      current: 0
+      target: 300
+      icon: {fileID: 0}
+      rowStyle: 1
+      rewardLabel: 90 Coins
+      rewardIcon: {fileID: 0}
+      rewardType: 0
+      rewardAmount: 90
+      rewardItemId: 
+      progressPointsReward: 45
+    - id: daily_no_continue
+      description: Finish 1 run without using a continue
+      metricType: 5
+      current: 0
       target: 1
       icon: {fileID: 0}
       rowStyle: 2
-      rewardLabel: 100 Coins
+      rewardLabel: 15 Gems
       rewardIcon: {fileID: 0}
-      rewardType: 0
-      rewardAmount: 100
-      rewardItemId: 
-      progressPointsReward: 60
-  - cadence: 1
-    pointsLabel: Progress Points
-    currentPoints: 480
-    targetPoints: 1200
-    timeRemainingSeconds: 187200
-    rewards:
-    - rewardLabel: 50 Coins
-      pointsRequired: 50
-      icon: {fileID: 0}
-      state: 1
-      rewardType: 0
-      rewardAmount: 50
-      rewardItemId: 
-    - rewardLabel: 100 Coins
-      pointsRequired: 100
-      icon: {fileID: 0}
-      state: 0
-      rewardType: 0
-      rewardAmount: 100
-      rewardItemId: 
-    - rewardLabel: Rare Chest
-      pointsRequired: 200
-      icon: {fileID: 0}
-      state: 0
       rewardType: 1
       rewardAmount: 15
       rewardItemId: 
-    tasks:
-    - id: task_run
-      description: Complete 3 runs
-      current: 1
-      target: 3
-      icon: {fileID: 0}
-      rowStyle: 0
-      rewardLabel: 50 Coins
-      rewardIcon: {fileID: 0}
-      rewardType: 0
-      rewardAmount: 50
-      rewardItemId: 
-      progressPointsReward: 50
-    - id: task_distance
-      description: Travel 2,000m
-      current: 1200
-      target: 2000
-      icon: {fileID: 0}
-      rowStyle: 1
-      rewardLabel: 30 Coins
-      rewardIcon: {fileID: 0}
-      rewardType: 0
-      rewardAmount: 30
-      rewardItemId: 
-      progressPointsReward: 40
-    - id: task_perfect
-      description: Finish a run without crashing
-      current: 1
-      target: 1
-      icon: {fileID: 0}
-      rowStyle: 2
-      rewardLabel: 100 Coins
-      rewardIcon: {fileID: 0}
-      rewardType: 0
-      rewardAmount: 100
-      rewardItemId: 
-      progressPointsReward: 80
-  - cadence: 2
+      progressPointsReward: 55
+  - cadence: 1
     pointsLabel: Progress Points
-    currentPoints: 900
-    targetPoints: 2400
-    timeRemainingSeconds: 1105920
+    currentPoints: 0
+    targetPoints: 180
+    timeRemainingSeconds: 0
+    activeTaskCount: 3
     rewards:
-    - rewardLabel: 50 Coins
-      pointsRequired: 50
-      icon: {fileID: 0}
-      state: 1
-      rewardType: 0
-      rewardAmount: 50
-      rewardItemId: 
     - rewardLabel: 100 Coins
-      pointsRequired: 100
+      pointsRequired: 60
       icon: {fileID: 0}
       state: 0
       rewardType: 0
       rewardAmount: 100
       rewardItemId: 
-    - rewardLabel: Rare Chest
-      pointsRequired: 200
+    - rewardLabel: 20 Gems
+      pointsRequired: 120
       icon: {fileID: 0}
       state: 0
       rewardType: 1
       rewardAmount: 20
       rewardItemId: 
+    - rewardLabel: 250 XP
+      pointsRequired: 180
+      icon: {fileID: 0}
+      state: 0
+      rewardType: 2
+      rewardAmount: 250
+      rewardItemId: 
     tasks:
-    - id: task_run
-      description: Complete 3 runs
-      current: 1
-      target: 3
+    - id: weekly_runs
+      description: Complete 10 runs
+      metricType: 0
+      current: 0
+      target: 10
       icon: {fileID: 0}
       rowStyle: 0
-      rewardLabel: 50 Coins
+      rewardLabel: 120 Coins
       rewardIcon: {fileID: 0}
       rewardType: 0
-      rewardAmount: 50
+      rewardAmount: 120
       rewardItemId: 
-      progressPointsReward: 60
-    - id: task_distance
-      description: Travel 2,000m
-      current: 1200
-      target: 2000
+      progressPointsReward: 55
+    - id: weekly_distance
+      description: Travel 7,500m
+      metricType: 1
+      current: 0
+      target: 7500
       icon: {fileID: 0}
       rowStyle: 1
-      rewardLabel: 30 Coins
+      rewardLabel: 90 Coins
       rewardIcon: {fileID: 0}
       rewardType: 0
-      rewardAmount: 30
+      rewardAmount: 90
+      rewardItemId: 
+      progressPointsReward: 45
+    - id: weekly_score
+      description: Reach 30,000 score
+      metricType: 2
+      current: 0
+      target: 30000
+      icon: {fileID: 0}
+      rowStyle: 1
+      rewardLabel: 18 Gems
+      rewardIcon: {fileID: 0}
+      rewardType: 1
+      rewardAmount: 18
+      rewardItemId: 
+      progressPointsReward: 60
+    - id: weekly_coins
+      description: Collect 120 coins
+      metricType: 3
+      current: 0
+      target: 120
+      icon: {fileID: 0}
+      rowStyle: 0
+      rewardLabel: 150 Coins
+      rewardIcon: {fileID: 0}
+      rewardType: 0
+      rewardAmount: 150
       rewardItemId: 
       progressPointsReward: 50
-    - id: task_perfect
-      description: Finish a run without crashing
-      current: 1
-      target: 1
+    - id: weekly_xp
+      description: Earn 1,500 XP
+      metricType: 4
+      current: 0
+      target: 1500
+      icon: {fileID: 0}
+      rowStyle: 1
+      rewardLabel: 200 XP
+      rewardIcon: {fileID: 0}
+      rewardType: 2
+      rewardAmount: 200
+      rewardItemId: 
+      progressPointsReward: 55
+    - id: weekly_no_continue
+      description: Finish 3 runs without using a continue
+      metricType: 5
+      current: 0
+      target: 3
       icon: {fileID: 0}
       rowStyle: 2
-      rewardLabel: 100 Coins
+      rewardLabel: 25 Gems
+      rewardIcon: {fileID: 0}
+      rewardType: 1
+      rewardAmount: 25
+      rewardItemId: 
+      progressPointsReward: 70
+  - cadence: 2
+    pointsLabel: Progress Points
+    currentPoints: 0
+    targetPoints: 210
+    timeRemainingSeconds: 0
+    activeTaskCount: 3
+    rewards:
+    - rewardLabel: 150 Coins
+      pointsRequired: 70
+      icon: {fileID: 0}
+      state: 0
+      rewardType: 0
+      rewardAmount: 150
+      rewardItemId: 
+    - rewardLabel: 30 Gems
+      pointsRequired: 140
+      icon: {fileID: 0}
+      state: 0
+      rewardType: 1
+      rewardAmount: 30
+      rewardItemId: 
+    - rewardLabel: 400 XP
+      pointsRequired: 210
+      icon: {fileID: 0}
+      state: 0
+      rewardType: 2
+      rewardAmount: 400
+      rewardItemId: 
+    tasks:
+    - id: monthly_runs
+      description: Complete 35 runs
+      metricType: 0
+      current: 0
+      target: 35
+      icon: {fileID: 0}
+      rowStyle: 0
+      rewardLabel: 220 Coins
       rewardIcon: {fileID: 0}
       rewardType: 0
-      rewardAmount: 100
+      rewardAmount: 220
       rewardItemId: 
-      progressPointsReward: 100
+      progressPointsReward: 70
+    - id: monthly_distance
+      description: Travel 30,000m
+      metricType: 1
+      current: 0
+      target: 30000
+      icon: {fileID: 0}
+      rowStyle: 1
+      rewardLabel: 180 Coins
+      rewardIcon: {fileID: 0}
+      rewardType: 0
+      rewardAmount: 180
+      rewardItemId: 
+      progressPointsReward: 65
+    - id: monthly_score
+      description: Reach 120,000 score
+      metricType: 2
+      current: 0
+      target: 120000
+      icon: {fileID: 0}
+      rowStyle: 1
+      rewardLabel: 35 Gems
+      rewardIcon: {fileID: 0}
+      rewardType: 1
+      rewardAmount: 35
+      rewardItemId: 
+      progressPointsReward: 75
+    - id: monthly_coins
+      description: Collect 500 coins
+      metricType: 3
+      current: 0
+      target: 500
+      icon: {fileID: 0}
+      rowStyle: 0
+      rewardLabel: 260 Coins
+      rewardIcon: {fileID: 0}
+      rewardType: 0
+      rewardAmount: 260
+      rewardItemId: 
+      progressPointsReward: 70
+    - id: monthly_xp
+      description: Earn 5,000 XP
+      metricType: 4
+      current: 0
+      target: 5000
+      icon: {fileID: 0}
+      rowStyle: 1
+      rewardLabel: 500 XP
+      rewardIcon: {fileID: 0}
+      rewardType: 2
+      rewardAmount: 500
+      rewardItemId: 
+      progressPointsReward: 80

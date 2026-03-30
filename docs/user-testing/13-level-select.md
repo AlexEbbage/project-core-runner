@@ -12,11 +12,14 @@ Verify the player can read available levels/zones, understand locks, persist the
 ## Checklist
 
 - [ ] Confirm the level select surface can be opened.
+- [ ] Confirm all five polygon routes are visible in authored order: `HEXAGON`, `HEPTAGON`, `OCTAGON`, `NONAGON`, `DECAGON`.
 - [ ] Confirm available levels or zones are readable and selectable.
 - [ ] Confirm locked levels clearly show the required level or lock reason.
 - [ ] Change selection and confirm the preview updates correctly.
+- [ ] Confirm each route card shows three readable challenge goals with no claim buttons or fake completion state.
 - [ ] Confirm selecting a level persists after leaving and returning to the menu.
 - [ ] Start a run from the selected level and confirm the world matches the selection.
+- [ ] Confirm the selected route changes the tunnel side count correctly when the run starts.
 - [ ] If lock states exist, confirm locked content is clearly marked.
 - [ ] If reward or challenge info exists per level, confirm it is understandable.
 - [ ] Return to the menu and confirm the last selected state behaves as intended.
