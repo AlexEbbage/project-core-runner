@@ -1,0 +1,33 @@
+namespace CoreRacer.Services.Logging
+{
+    public enum LogCategory
+    {
+        General,
+        System,
+        Bootstrap,
+        Gameplay,
+        Run,
+        Player,
+        Obstacles,
+        Pickups,
+        Powerups,
+        UI,
+        Economy,
+        Profile,
+        Progression,
+        Save,
+        Ads,
+        Iap,
+        Analytics,
+        Audio,
+        Vfx,
+        LiveOps,
+        Tasks,
+        Achievements,
+        DailyRewards,
+        Consent,
+        Support,
+        Network,
+        Build
+    }
+}

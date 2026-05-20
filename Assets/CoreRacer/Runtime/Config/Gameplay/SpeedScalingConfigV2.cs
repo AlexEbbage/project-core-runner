@@ -1,0 +1,25 @@
+using UnityEngine;
+
+namespace CoreRacer.Config.Gameplay
+{
+    [CreateAssetMenu(menuName = "Core Racer/Gameplay/Speed Scaling V2")]
+    public sealed class SpeedScalingConfigV2 : ScriptableObject
+    {
+        public float BaseForwardSpeed = 10f;
+        public float MaxForwardSpeed = 40f;
+        public float SpeedIncreasePerSecond = 0.2f;
+        public AnimationCurve TimeScalingCurve = AnimationCurve.Linear(0, 0, 1, 1);
+        public float TimeCurveDuration = 120f;
+        public float ComboSpeedFactor = 0.5f;
+        public float ComboMaxSpeedBonus = 15f;
+
+        public float EvaluateForwardSpeed(float elapsedSeconds, float combo)
+        {
+            var t = TimeCurveDuration <= 0f ? 1f : Mathf.Clamp01(elapsedSeconds / TimeCurveDuration);
+            var curve = TimeScalingCurve == null ? 1f : TimeScalingCurve.Evaluate(t);
+            var timeBonus = elapsedSeconds * SpeedIncreasePerSecond * curve;
+            var comboBonus = Mathf.Min(ComboMaxSpeedBonus, combo * ComboSpeedFactor);
+            return Mathf.Clamp(BaseForwardSpeed + timeBonus + comboBonus, BaseForwardSpeed, MaxForwardSpeed);
+        }
+    }
+}

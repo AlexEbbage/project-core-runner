@@ -1,0 +1,36 @@
+using UnityEngine;
+
+namespace CoreRacer.Gameplay.Obstacles
+{
+    public sealed class DoorObstacle : MonoBehaviour
+    {
+        [SerializeField] private Transform doorLeft;
+        [SerializeField] private Transform doorRight;
+        [SerializeField] private float openDistance = 0.9f;
+        [SerializeField] private float openSpeed = 4f;
+        [SerializeField] private bool startsOpen;
+        private float _target;
+        private Vector3 _leftClosed;
+        private Vector3 _rightClosed;
+
+        private void Awake()
+        {
+            if (doorLeft != null) _leftClosed = doorLeft.localPosition;
+            if (doorRight != null) _rightClosed = doorRight.localPosition;
+            _target = startsOpen ? 1f : 0f;
+        }
+
+        public void SetOpen(bool open)
+        {
+            _target = open ? 1f : 0f;
+        }
+
+        private void Update()
+        {
+            var current = doorLeft != null ? Mathf.InverseLerp(_leftClosed.x, _leftClosed.x - openDistance, doorLeft.localPosition.x) : _target;
+            current = Mathf.MoveTowards(current, _target, openSpeed * UnityEngine.Time.deltaTime);
+            if (doorLeft != null) doorLeft.localPosition = _leftClosed + Vector3.left * (openDistance * current);
+            if (doorRight != null) doorRight.localPosition = _rightClosed + Vector3.right * (openDistance * current);
+        }
+    }
+}

@@ -1,0 +1,46 @@
+using CoreRacer.Common.Validation;
+using CoreRacer.Gameplay.Obstacles;
+using CoreRacer.Gameplay.Pickups;
+using CoreRacer.Gameplay.Player;
+using CoreRacer.Gameplay.Powerups;
+using CoreRacer.UI.GameOver;
+using CoreRacer.UI.Hud;
+using UnityEngine;
+
+namespace CoreRacer.Gameplay.Run
+{
+    public sealed class RunSceneReferences : MonoBehaviour
+    {
+        public PlayerController Player;
+        public PlayerHealth PlayerHealth;
+        public RunScoreTracker ScoreTracker;
+        public RunCurrencyTracker CurrencyTracker;
+        public RunStatsTrackerV2 StatsTracker;
+        public ObstacleWorldController ObstacleWorld;
+        public PickupWorldController PickupWorld;
+        public PowerupRuntimeController Powerups;
+        public HudController Hud;
+        public GameOverController GameOver;
+
+        public bool HasRequiredReferences()
+        {
+            return ValidateReferences().IsValid;
+        }
+
+        public ValidationResult ValidateReferences()
+        {
+            var result = new ValidationResult();
+            if (Player == null) result.Error("RunSceneReferences.Player is missing.");
+            if (PlayerHealth == null) result.Error("RunSceneReferences.PlayerHealth is missing.");
+            if (ScoreTracker == null) result.Error("RunSceneReferences.ScoreTracker is missing.");
+            if (CurrencyTracker == null) result.Error("RunSceneReferences.CurrencyTracker is missing.");
+            if (StatsTracker == null) result.Error("RunSceneReferences.StatsTracker is missing.");
+            if (ObstacleWorld == null) result.Warning("RunSceneReferences.ObstacleWorld is missing. Runs can start, but no obstacles will spawn.");
+            if (PickupWorld == null) result.Warning("RunSceneReferences.PickupWorld is missing. Runs can start, but no pickups will spawn.");
+            if (Powerups == null) result.Warning("RunSceneReferences.Powerups is missing. Powerup pickups will not apply effects.");
+            if (Hud == null) result.Warning("RunSceneReferences.Hud is missing. Gameplay HUD will not update.");
+            if (GameOver == null) result.Warning("RunSceneReferences.GameOver is missing. Game-over UI must be triggered manually.");
+            return result;
+        }
+    }
+}
