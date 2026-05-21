@@ -11,7 +11,7 @@ Use the docs set as the durable operating system for the project. Foundation doc
 | 1 | Foundation | Core docs, architecture, style guide, registries, and decisions reflect repo truth and approved direction | Completed |
 | 2 | First approved feature slice | Exactly one chosen feature, or one explicitly approved milestone bundle, is documented, implemented, validated, and reflected in all registries | In progress |
 | 3 | Expansion | Additional approved features are implemented in priority order with docs kept current | Not started |
-| 4 | Polish and validation | UI polish, tuning, telemetry coverage, testing, and documentation cleanup are complete for the chosen release target | In progress |
+| 4 | Polish and validation | UI polish, tuning, telemetry coverage, testing, and documentation cleanup are complete for the chosen release target | In progress; existing asset wiring pass implemented for the clean scene/configs |
 
 ## Implementation Order
 
@@ -27,6 +27,11 @@ Use the docs set as the durable operating system for the project. Foundation doc
 2. Booster review pass
 3. Remaining UI polish and scene-wiring follow-up if needed
 4. Next content expansion after runtime signoff
+
+## Current Asset Wiring Status
+
+- `CoreRacer_Main.unity` now uses generated wrappers around safe existing player, obstacle, pickup, tunnel, audio, and VFX assets.
+- Manual art follow-up is tracked in `docs/rewrite/manual-art-wiring-needed.md`.
 
 ## Dependencies and Blockers
 

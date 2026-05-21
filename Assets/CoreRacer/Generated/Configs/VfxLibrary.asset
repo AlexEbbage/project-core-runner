@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea65cbda1d294284d87d1ac5fdf642f3, type: 3}
+  m_Name: VfxLibrary
+  m_EditorClassIdentifier: 
+  Effects:
+  - Id: 0
+    Prefab: {fileID: 6281983567247679342, guid: d05c5435b868f1f41a52f243764c6cfd, type: 3}
+    InitialPoolSize: 4
+    DisableOnLowQuality: 0
+  - Id: 1
+    Prefab: {fileID: 4849006066653166359, guid: 37145d408c0e28d4a82503bd0bfc64e6, type: 3}
+    InitialPoolSize: 4
+    DisableOnLowQuality: 0
+  - Id: 2
+    Prefab: {fileID: 1179444313693615049, guid: fa44bd9c44dd9734e9742e2d6d56344c, type: 3}
+    InitialPoolSize: 4
+    DisableOnLowQuality: 0
+  - Id: 3
+    Prefab: {fileID: 559360702743119775, guid: b7b453960eea68d4b8b9b4ac8bdbb4a9, type: 3}
+    InitialPoolSize: 4
+    DisableOnLowQuality: 0
+  - Id: 4
+    Prefab: {fileID: 271236069444727821, guid: 59cac8fb66c903248a852579798fd5dc, type: 3}
+    InitialPoolSize: 4
+    DisableOnLowQuality: 0
+  - Id: 5
+    Prefab: {fileID: 1802284002691111166, guid: bd1d8aa2a4d77444ca00485b20cf71a1, type: 3}
+    InitialPoolSize: 4
+    DisableOnLowQuality: 0
+  - Id: 7
+    Prefab: {fileID: 2930153866492791941, guid: 24999c2be336d764bb324c2721e05c5e, type: 3}
+    InitialPoolSize: 4
+    DisableOnLowQuality: 0

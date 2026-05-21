@@ -3,6 +3,7 @@ using CoreRacer.Common;
 using CoreRacer.Common.Events;
 using CoreRacer.Common.Time;
 using CoreRacer.FTUE;
+using CoreRacer.Gameplay.Vfx;
 using CoreRacer.Localization;
 using CoreRacer.Meta.DailyRewards;
 using CoreRacer.Meta.Economy;
@@ -51,6 +52,10 @@ namespace CoreRacer.Bootstrap
         [SerializeField] private TutorialConfig tutorialConfig;
         [SerializeField] private NotificationTemplateConfig notificationTemplateConfig;
         [SerializeField] private List<LiveEventDefinition> liveEvents = new List<LiveEventDefinition>();
+
+        [Header("Presentation Libraries")]
+        [SerializeField] private AudioEventLibrary audioEventLibrary;
+        [SerializeField] private VfxLibrary vfxLibrary;
 
         private void Awake()
         {
@@ -147,6 +152,8 @@ namespace CoreRacer.Bootstrap
             registry.Register(adIapAnalytics);
             registry.Register(settings);
             registry.Register(audio);
+            if (audioEventLibrary != null) registry.Register(audioEventLibrary);
+            if (vfxLibrary != null) registry.Register(vfxLibrary);
             registry.Register(haptics);
             registry.Register<IPushNotificationService>(notifications);
             registry.Register(localization);
