@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05220a967fefcd44eabc8c9dbe970fcd, type: 3}
+  m_Name: TutorialConfig
+  m_EditorClassIdentifier: 
+  TutorialId: core_racer_ftue_v1
+  RunOnFreshInstall: 1
+  Steps:
+  - Id: welcome
+    Kind: 0
+    TitleKey: ftue.welcome.title
+    BodyKey: ftue.welcome.body
+    HighlightTargetId: 
+    PauseGame: 0
+    RequiresExplicitContinue: 1
+    MinimumDisplaySeconds: 0.5
+  - Id: input
+    Kind: 2
+    TitleKey: ftue.input.title
+    BodyKey: ftue.input.body
+    HighlightTargetId: 
+    PauseGame: 0
+    RequiresExplicitContinue: 1
+    MinimumDisplaySeconds: 0.5
+  - Id: pickup
+    Kind: 3
+    TitleKey: ftue.pickup.title
+    BodyKey: ftue.pickup.body
+    HighlightTargetId: 
+    PauseGame: 0
+    RequiresExplicitContinue: 1
+    MinimumDisplaySeconds: 0.5
+  - Id: powerup
+    Kind: 4
+    TitleKey: ftue.powerup.title
+    BodyKey: ftue.powerup.body
+    HighlightTargetId: 
+    PauseGame: 0
+    RequiresExplicitContinue: 1
+    MinimumDisplaySeconds: 0.5
+  - Id: upgrade
+    Kind: 7
+    TitleKey: ftue.upgrade.title
+    BodyKey: ftue.upgrade.body
+    HighlightTargetId: 
+    PauseGame: 0
+    RequiresExplicitContinue: 1
+    MinimumDisplaySeconds: 0.5
+  - Id: complete
+    Kind: 9
+    TitleKey: ftue.complete.title
+    BodyKey: ftue.complete.body
+    HighlightTargetId: 
+    PauseGame: 0
+    RequiresExplicitContinue: 1
+    MinimumDisplaySeconds: 0.5

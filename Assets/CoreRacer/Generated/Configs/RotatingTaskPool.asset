@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 648f348eeb2abb742aa9b4125bf3e5f2, type: 3}
+  m_Name: RotatingTaskPool
+  m_EditorClassIdentifier: 
+  DailySlots: 3
+  WeeklySlots: 5
+  MonthlySlots: 4
+  Tasks:
+  - {fileID: 11400000, guid: d2dfa52373b8e024794750da0746d30f, type: 2}
+  - {fileID: 11400000, guid: 04d52fdc9f2dd064887dcc90efbdda2b, type: 2}
+  - {fileID: 11400000, guid: d588006ae7951b54d827571fa5825b2f, type: 2}
+  - {fileID: 11400000, guid: 1fa0140d6c52ad843948c6e9d2fda774, type: 2}
+  - {fileID: 11400000, guid: 719305ede145a38449fc04e646d85f5a, type: 2}
+  - {fileID: 11400000, guid: 7ddf7a18cb0f50f49be3d2c47d24a232, type: 2}
+  - {fileID: 11400000, guid: c6ee2d16db13fdf4bafec5b9c15710b8, type: 2}
+  - {fileID: 11400000, guid: 8f3388dec9d19c948a955430ad754293, type: 2}
+  - {fileID: 11400000, guid: 924a18dceb186234b9ebab37eecfcfed, type: 2}
+  - {fileID: 11400000, guid: 81fe770b549d7bb439604ab7340d68d6, type: 2}
+  - {fileID: 11400000, guid: e869f56407e86e3409ebd3ef68fa498d, type: 2}
+  - {fileID: 11400000, guid: c8fc8e00b124acf4ba7fd50d2d1dc96e, type: 2}
+  - {fileID: 11400000, guid: 6ce65b9c6f07a1044aaefa0568382038, type: 2}

@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1538660115f2c34f92fd101a6411bb8, type: 3}
+  m_Name: LevelRoadmap
+  m_EditorClassIdentifier: 
+  Levels:
+  - Id: hex_sector_01
+    DisplayName: Hex Sector
+    Description: Classic six-sided tunnel run.
+    RequiredPlayerLevel: 1
+    TunnelSides: 6
+    StartingSpeed: 16
+    DifficultyMultiplier: 1
+    FirstClearReward:
+      Currency: 1
+      Amount: 5
+  - Id: hept_sector_02
+    DisplayName: Hept Sector
+    Description: Classic six-sided tunnel run.
+    RequiredPlayerLevel: 3
+    TunnelSides: 7
+    StartingSpeed: 17
+    DifficultyMultiplier: 1.1
+    FirstClearReward:
+      Currency: 1
+      Amount: 5
+  - Id: oct_sector_03
+    DisplayName: Oct Sector
+    Description: Classic six-sided tunnel run.
+    RequiredPlayerLevel: 6
+    TunnelSides: 8
+    StartingSpeed: 18
+    DifficultyMultiplier: 1.2
+    FirstClearReward:
+      Currency: 1
+      Amount: 5

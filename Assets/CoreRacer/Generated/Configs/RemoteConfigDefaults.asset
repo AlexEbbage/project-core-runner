@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6742b220666d28049aff2ab88b52a01a, type: 3}
+  m_Name: RemoteConfigDefaults
+  m_EditorClassIdentifier: 
+  Values:
+  - Key: ads.interstitial_cooldown_seconds
+    Value: 120
+  - Key: ads.continue_rewarded_enabled
+    Value: true
+  - Key: daily_rewards.double_ad_enabled
+    Value: true
+  - Key: economy.first_session_coin_multiplier
+    Value: 1
+  - Key: gameplay.obstacle_difficulty_multiplier
+    Value: 1
+  - Key: gameplay.powerup_spawn_multiplier
+    Value: 1
+  - Key: shop.premium_offer_enabled
+    Value: true
+  - Key: balance_obstacle_difficulty_multiplier
+    Value: 1
+  - Key: balance_coin_reward_multiplier
+    Value: 1
+  - Key: balance_upgrade_cost_multiplier
+    Value: 1
+  - Key: balance_powerup_duration_multiplier
+    Value: 1
+  - Key: rewarded_ad_bonus_soft_currency
+    Value: 100
+  - Key: interstitial_cooldown_seconds
+    Value: 120

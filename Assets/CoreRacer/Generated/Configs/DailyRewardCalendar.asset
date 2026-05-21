@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a392cab99d6368f4fbc2e42213e1db8e, type: 3}
+  m_Name: DailyRewardCalendar
+  m_EditorClassIdentifier: 
+  LoopAfterFinalDay: 1
+  ResetStreakOnMissedDay: 0
+  GraceDays: 1
+  Days:
+  - DisplayName: Day 1
+    Rewards:
+    - Type: 0
+      Amount: 100
+      ItemId: 
+    IsBonusDay: 0
+  - DisplayName: Day 2
+    Rewards:
+    - Type: 0
+      Amount: 150
+      ItemId: 
+    IsBonusDay: 0
+  - DisplayName: Day 3
+    Rewards:
+    - Type: 2
+      Amount: 100
+      ItemId: 
+    IsBonusDay: 0
+  - DisplayName: Day 4
+    Rewards:
+    - Type: 0
+      Amount: 250
+      ItemId: 
+    IsBonusDay: 0
+  - DisplayName: Day 5
+    Rewards:
+    - Type: 1
+      Amount: 5
+      ItemId: 
+    IsBonusDay: 0
+  - DisplayName: Day 6
+    Rewards:
+    - Type: 0
+      Amount: 500
+      ItemId: 
+    IsBonusDay: 0
+  - DisplayName: Day 7 Bonus
+    Rewards:
+    - Type: 1
+      Amount: 15
+      ItemId: 
+    IsBonusDay: 1
