@@ -1,6 +1,7 @@
 using CoreRacer.Bootstrap;
 using CoreRacer.Common.Time;
 using CoreRacer.Config.Run;
+using CoreRacer.FTUE;
 using CoreRacer.Meta.Profile;
 using CoreRacer.Monetisation.Ads;
 using CoreRacer.Services.Analytics;
@@ -21,6 +22,7 @@ namespace CoreRacer.Gameplay.Run
         private RunContinueService _continues;
         private RewardedAdController _rewardedAds;
         private GameAnalytics _analytics;
+        private TutorialService _tutorial;
         private RunResult _lastResult;
 
         public RunState State => _stateMachine != null ? _stateMachine.State : RunState.None;
@@ -35,6 +37,7 @@ namespace CoreRacer.Gameplay.Run
             var profile = registry != null && registry.TryGet<PlayerProfileService>(out var p) ? p : null;
             registry?.TryGet(out _rewardedAds);
             registry?.TryGet(out _analytics);
+            registry?.TryGet(out _tutorial);
 
             _stateMachine = new RunStateMachine();
             _lifecycle = new RunLifecycleService(_stateMachine, clock);
@@ -62,6 +65,7 @@ namespace CoreRacer.Gameplay.Run
             var levelId = string.IsNullOrWhiteSpace(_selectedLevelId) ? defaultLevelId : _selectedLevelId;
             _analytics?.RunStarted(levelId, shipId);
             _lifecycle.StartNewRun(levelId, shipId);
+            _tutorial?.Notify(TutorialStepKind.WaitForRunStarted, "play");
         }
 
         public void SetSelectedLevelId(string levelId)
@@ -86,6 +90,7 @@ namespace CoreRacer.Gameplay.Run
                 return;
 
             _lifecycle.Crash();
+            _tutorial?.Notify(TutorialStepKind.WaitForCrash, "continue");
             StopRuntimeSystems();
             if (_continues.CanContinue(_lifecycle.Session))
             {

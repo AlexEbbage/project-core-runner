@@ -1,3 +1,5 @@
+using CoreRacer.Bootstrap;
+using CoreRacer.FTUE;
 using CoreRacer.UI.MainMenu.Progression;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,6 +20,8 @@ namespace CoreRacer.UI.MainMenu
         [SerializeField] private RotatingTaskListView weeklyTasks;
         [SerializeField] private RotatingTaskListView monthlyTasks;
 
+        private TutorialService _tutorial;
+
         private void Awake()
         {
         }
@@ -27,6 +31,7 @@ namespace CoreRacer.UI.MainMenu
             if (dailyLoginButton != null) dailyLoginButton.onClick.AddListener(ShowDailyLogin);
             if (tasksButton != null) tasksButton.onClick.AddListener(ShowTasks);
             if (achievementsButton != null) achievementsButton.onClick.AddListener(ShowAchievements);
+            GameServices.TryGet(out _tutorial);
             ShowDailyLogin();
         }
 
@@ -43,6 +48,7 @@ namespace CoreRacer.UI.MainMenu
             SetVisible(tasksPanel, false);
             SetVisible(achievementsPanel, false);
             dailyLoginPage?.Refresh();
+            NotifyPromptOpened();
         }
 
         public void ShowTasks()
@@ -53,6 +59,7 @@ namespace CoreRacer.UI.MainMenu
             dailyTasks?.Refresh();
             weeklyTasks?.Refresh();
             monthlyTasks?.Refresh();
+            NotifyPromptOpened();
         }
 
         public void ShowAchievements()
@@ -61,6 +68,12 @@ namespace CoreRacer.UI.MainMenu
             SetVisible(tasksPanel, false);
             SetVisible(achievementsPanel, true);
             achievementsPage?.Refresh();
+        }
+
+        private void NotifyPromptOpened()
+        {
+            if (_tutorial == null) GameServices.TryGet(out _tutorial);
+            _tutorial?.Notify(TutorialStepKind.WaitForDailyTaskRewardPromptOpened, "progression");
         }
 
         private static void SetVisible(GameObject panel, bool visible)

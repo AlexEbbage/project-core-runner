@@ -12,51 +12,75 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05220a967fefcd44eabc8c9dbe970fcd, type: 3}
   m_Name: TutorialConfig
   m_EditorClassIdentifier: 
-  TutorialId: core_racer_ftue_v1
+  TutorialId: core_racer_ftue_v2
   RunOnFreshInstall: 1
   Steps:
   - Id: welcome
-    Kind: 0
+    Kind: 1
     TitleKey: ftue.welcome.title
     BodyKey: ftue.welcome.body
-    HighlightTargetId: 
+    HighlightTargetId: play
     PauseGame: 0
-    RequiresExplicitContinue: 1
+    RequiresExplicitContinue: 0
     MinimumDisplaySeconds: 0.5
-  - Id: input
+  - Id: move
     Kind: 2
-    TitleKey: ftue.input.title
-    BodyKey: ftue.input.body
-    HighlightTargetId: 
+    TitleKey: ftue.move.title
+    BodyKey: ftue.move.body
+    HighlightTargetId: player
     PauseGame: 0
-    RequiresExplicitContinue: 1
+    RequiresExplicitContinue: 0
     MinimumDisplaySeconds: 0.5
-  - Id: pickup
+  - Id: dodge_first_obstacle
+    Kind: 5
+    TitleKey: ftue.dodge.title
+    BodyKey: ftue.dodge.body
+    HighlightTargetId: obstacle
+    PauseGame: 0
+    RequiresExplicitContinue: 0
+    MinimumDisplaySeconds: 0.5
+  - Id: collect_currency
     Kind: 3
-    TitleKey: ftue.pickup.title
-    BodyKey: ftue.pickup.body
-    HighlightTargetId: 
+    TitleKey: ftue.currency.title
+    BodyKey: ftue.currency.body
+    HighlightTargetId: coin
     PauseGame: 0
-    RequiresExplicitContinue: 1
+    RequiresExplicitContinue: 0
     MinimumDisplaySeconds: 0.5
-  - Id: powerup
+  - Id: collect_powerup
     Kind: 4
     TitleKey: ftue.powerup.title
     BodyKey: ftue.powerup.body
-    HighlightTargetId: 
+    HighlightTargetId: powerup
+    PauseGame: 0
+    RequiresExplicitContinue: 0
+    MinimumDisplaySeconds: 0.5
+  - Id: crash_continue_explanation
+    Kind: 0
+    TitleKey: ftue.crash.title
+    BodyKey: ftue.crash.body
+    HighlightTargetId: continue
     PauseGame: 0
     RequiresExplicitContinue: 1
     MinimumDisplaySeconds: 0.5
-  - Id: upgrade
-    Kind: 7
+  - Id: first_upgrade_prompt
+    Kind: 9
     TitleKey: ftue.upgrade.title
     BodyKey: ftue.upgrade.body
-    HighlightTargetId: 
+    HighlightTargetId: lab
     PauseGame: 0
-    RequiresExplicitContinue: 1
+    RequiresExplicitContinue: 0
+    MinimumDisplaySeconds: 0.5
+  - Id: daily_task_reward_prompt
+    Kind: 10
+    TitleKey: ftue.tasks.title
+    BodyKey: ftue.tasks.body
+    HighlightTargetId: progression
+    PauseGame: 0
+    RequiresExplicitContinue: 0
     MinimumDisplaySeconds: 0.5
   - Id: complete
-    Kind: 9
+    Kind: 11
     TitleKey: ftue.complete.title
     BodyKey: ftue.complete.body
     HighlightTargetId: 

@@ -40,5 +40,10 @@ namespace CoreRacer.Services.Analytics
         public const string TaskClaimed = "task_claimed";
         public const string AchievementClaimed = "achievement_claimed";
         public const string ConsentUpdated = "consent_updated";
+
+        public const string TutorialStarted = "tutorial_started";
+        public const string TutorialStepCompleted = "tutorial_step_completed";
+        public const string TutorialCompleted = "tutorial_completed";
+        public const string TutorialReset = "tutorial_reset";
     }
 }

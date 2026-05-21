@@ -44,7 +44,7 @@ namespace CoreRacer.FTUE
             State.Started = true;
             State.CurrentStepIndex = Math.Max(0, State.CurrentStepIndex);
             Save();
-            _analytics?.Track("tutorial_started");
+            _analytics?.Track(AnalyticsEventNames.TutorialStarted);
             _logger?.Info(LogCategory.Progression, "Tutorial started: " + _config.TutorialId);
             StepChanged?.Invoke(CurrentStep);
         }
@@ -68,7 +68,7 @@ namespace CoreRacer.FTUE
 
             var completedStep = CurrentStep;
             if (completedStep != null)
-                _analytics?.Track("tutorial_step_completed", new System.Collections.Generic.Dictionary<string, object> { ["step_id"] = completedStep.Id, ["step_index"] = State.CurrentStepIndex });
+                _analytics?.Track(AnalyticsEventNames.TutorialStepCompleted, new System.Collections.Generic.Dictionary<string, object> { ["step_id"] = completedStep.Id, ["step_index"] = State.CurrentStepIndex });
 
             State.CurrentStepIndex++;
             if (State.CurrentStepIndex >= _config.Steps.Count || (CurrentStep != null && CurrentStep.Kind == TutorialStepKind.Complete))
@@ -85,7 +85,7 @@ namespace CoreRacer.FTUE
         {
             State.Completed = true;
             Save();
-            _analytics?.Track("tutorial_completed");
+            _analytics?.Track(AnalyticsEventNames.TutorialCompleted);
             _logger?.Info(LogCategory.Progression, "Tutorial completed.");
             Completed?.Invoke();
         }
@@ -94,6 +94,7 @@ namespace CoreRacer.FTUE
         {
             State = new TutorialState { TutorialId = _config != null ? _config.TutorialId : string.Empty };
             Save();
+            _analytics?.Track(AnalyticsEventNames.TutorialReset);
         }
 
         private TutorialState Load()

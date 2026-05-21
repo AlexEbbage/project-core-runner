@@ -3,6 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using CoreRacer.Bootstrap;
+using CoreRacer.FTUE;
+using CoreRacer.Gameplay.Obstacles;
+using CoreRacer.Gameplay.Pickups;
 using CoreRacer.Gameplay.Powerups;
 using CoreRacer.Gameplay.Run;
 using CoreRacer.Localization;
@@ -15,6 +18,7 @@ using CoreRacer.Meta.Tasks;
 using CoreRacer.Services.Compliance;
 using CoreRacer.UI.Compliance;
 using CoreRacer.UI.Debugging;
+using CoreRacer.UI.FTUE;
 using CoreRacer.UI.MainMenu;
 using CoreRacer.UI.MainMenu.Progression;
 using CoreRacer.UI.Settings;
@@ -72,6 +76,7 @@ namespace CoreRacer.Editor.Builders
 
             var stringTable = CreateOrUpdateStringTable();
             var achievements = CreateOrUpdateAchievements();
+            var tutorialConfig = CreateOrUpdateTutorialConfig();
 
             var existingMenuRoot = GameObject.Find("Canvas/MainMenu");
             if (existingMenuRoot != null)
@@ -100,6 +105,7 @@ namespace CoreRacer.Editor.Builders
             var progressionPage = BuildProgressionPage(pagesRoot);
             var settingsPage = BuildSettingsPage(pagesRoot);
             BuildBottomNav(menuRoot.transform as RectTransform, router);
+            BuildTutorialOverlayAndDirector(canvas.transform as RectTransform, runController, router);
 
             SetObject(shell, "topBar", topBar);
             SetObject(shell, "router", router);
@@ -108,7 +114,7 @@ namespace CoreRacer.Editor.Builders
             references.MainMenu = shell;
             EditorUtility.SetDirty(references);
 
-            WireBootstrapper(bootstrapper, stringTable, achievements);
+            WireBootstrapper(bootstrapper, stringTable, achievements, tutorialConfig);
             EditorUtility.SetDirty(bootstrapper);
             EditorUtility.SetDirty(shell);
             EditorUtility.SetDirty(router);
@@ -118,6 +124,13 @@ namespace CoreRacer.Editor.Builders
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log("Core Racer Phase 5 main UI flow build completed.");
+        }
+
+        [MenuItem("Tools/Core Racer/Phase 6 Wire FTUE Tutorial")]
+        public static void WireFtueTutorial()
+        {
+            BuildMainUiFlow();
+            Debug.Log("Core Racer Phase 6 FTUE tutorial wiring completed.");
         }
 
         private static TopBarController BuildTopBar(RectTransform parent)
@@ -406,6 +419,7 @@ namespace CoreRacer.Editor.Builders
             var supportOutput = CreateText(supportPanel, "SupportOutput", "Support bundle output appears here.", 18, TextAnchor.UpperLeft);
             SetObject(supportController, "outputText", supportOutput);
             SetObject(supportController, "generateButton", CreateButton(supportPanel, "GenerateSupportButton", "Generate Support Bundle", out _).GetComponent<Button>());
+            SetObject(supportController, "resetTutorialButton", CreateButton(supportPanel, "ResetTutorialButton", "Reset Tutorial", out _).GetComponent<Button>());
 
             SetObject(hubController, "generalButton", generalButton);
             SetObject(hubController, "comfortButton", comfortButton);
@@ -741,6 +755,7 @@ namespace CoreRacer.Editor.Builders
             AddExtra(entries, "menu.lab.title", "Lab");
             AddExtra(entries, "menu.progression.title", "Progression");
             AddExtra(entries, "menu.settings.title", "Settings");
+            AddFtueStrings(entries);
 
             table.Entries = new List<StringTable.Entry>();
             foreach (var pair in entries)
@@ -788,13 +803,96 @@ namespace CoreRacer.Editor.Builders
             return result;
         }
 
-        private static void WireBootstrapper(GameBootstrapper bootstrapper, StringTable table, List<AchievementDefinition> achievements)
+        private static TutorialConfig CreateOrUpdateTutorialConfig()
+        {
+            var config = LoadAsset<TutorialConfig>(GeneratedConfigFolder + "/TutorialConfig.asset");
+            if (config == null)
+            {
+                config = ScriptableObject.CreateInstance<TutorialConfig>();
+                AssetDatabase.CreateAsset(config, GeneratedConfigFolder + "/TutorialConfig.asset");
+            }
+
+            config.TutorialId = "core_racer_ftue_v2";
+            config.RunOnFreshInstall = true;
+            config.Steps = new List<TutorialStepDefinition>
+            {
+                Step("welcome", TutorialStepKind.WaitForRunStarted, "ftue.welcome.title", "ftue.welcome.body", "play", false, false),
+                Step("move", TutorialStepKind.WaitForInput, "ftue.move.title", "ftue.move.body", "player", false, false),
+                Step("dodge_first_obstacle", TutorialStepKind.WaitForObstacleAvoided, "ftue.dodge.title", "ftue.dodge.body", "obstacle", false, false),
+                Step("collect_currency", TutorialStepKind.WaitForPickup, "ftue.currency.title", "ftue.currency.body", "coin", false, false),
+                Step("collect_powerup", TutorialStepKind.WaitForPowerup, "ftue.powerup.title", "ftue.powerup.body", "powerup", false, false),
+                Step("crash_continue_explanation", TutorialStepKind.Message, "ftue.crash.title", "ftue.crash.body", "continue", false, true),
+                Step("first_upgrade_prompt", TutorialStepKind.WaitForUpgradePromptOpened, "ftue.upgrade.title", "ftue.upgrade.body", "lab", false, false),
+                Step("daily_task_reward_prompt", TutorialStepKind.WaitForDailyTaskRewardPromptOpened, "ftue.tasks.title", "ftue.tasks.body", "progression", false, false),
+                Step("complete", TutorialStepKind.Complete, "ftue.complete.title", "ftue.complete.body", string.Empty, false, true)
+            };
+            EditorUtility.SetDirty(config);
+            return config;
+        }
+
+        private static TutorialStepDefinition Step(string id, TutorialStepKind kind, string titleKey, string bodyKey, string targetId, bool pauseGame, bool explicitContinue)
+        {
+            return new TutorialStepDefinition
+            {
+                Id = id,
+                Kind = kind,
+                TitleKey = titleKey,
+                BodyKey = bodyKey,
+                HighlightTargetId = targetId,
+                PauseGame = pauseGame,
+                RequiresExplicitContinue = explicitContinue,
+                MinimumDisplaySeconds = 0.5f
+            };
+        }
+
+        private static void BuildTutorialOverlayAndDirector(RectTransform canvas, RunController runController, MainMenuPageRouter router)
+        {
+            var existingOverlay = GameObject.Find("Canvas/TutorialOverlay");
+            if (existingOverlay != null)
+                Undo.DestroyObjectImmediate(existingOverlay);
+
+            var overlayRoot = CreateUiObject("TutorialOverlay", canvas);
+            Stretch(overlayRoot, 0f, 0f, 1f, 1f, 0f, 0f, 0f, 0f);
+
+            var panel = CreatePanel("TutorialPanel", overlayRoot, new Color(0.02f, 0.04f, 0.07f, 0.92f));
+            Stretch(panel, 0f, 0f, 1f, 0f, 40f, 160f, -40f, 460f);
+            var layout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
+            layout.spacing = 12f;
+            layout.padding = new RectOffset(24, 24, 24, 24);
+            layout.childForceExpandHeight = false;
+            var title = CreateText(panel, "Title", "Welcome", 32, TextAnchor.MiddleLeft);
+            title.fontStyle = FontStyle.Bold;
+            var body = CreateText(panel, "Body", "Survive the tunnel.", 22, TextAnchor.MiddleLeft);
+            var continueButton = CreateButton(panel, "ContinueButton", "Continue", out _).GetComponent<Button>();
+
+            var overlay = overlayRoot.gameObject.AddComponent<TutorialOverlayController>();
+            SetObject(overlay, "root", panel.gameObject);
+            SetObject(overlay, "titleText", title);
+            SetObject(overlay, "bodyText", body);
+            SetObject(overlay, "continueButton", continueButton);
+            panel.gameObject.SetActive(false);
+
+            var existingDirector = GameObject.Find("TutorialDirector");
+            if (existingDirector != null)
+                Undo.DestroyObjectImmediate(existingDirector);
+
+            var directorObject = new GameObject("TutorialDirector");
+            var director = directorObject.AddComponent<TutorialDirector>();
+            SetObject(director, "runController", runController);
+            SetObject(director, "obstacleWorld", UnityEngine.Object.FindObjectOfType<ObstacleWorldController>());
+            SetObject(director, "pickupWorld", UnityEngine.Object.FindObjectOfType<PickupWorldController>());
+            SetObject(director, "router", router);
+            SetObject(director, "overlay", overlay);
+        }
+
+        private static void WireBootstrapper(GameBootstrapper bootstrapper, StringTable table, List<AchievementDefinition> achievements, TutorialConfig tutorialConfig)
         {
             SetObject(bootstrapper, "shopCatalog", LoadAsset<ShopCatalog>(GeneratedConfigFolder + "/ShopCatalog.asset"));
             SetObject(bootstrapper, "stringTable", table);
             SetObject(bootstrapper, "rotatingTaskPool", LoadAsset<TaskPoolDefinition>(GeneratedConfigFolder + "/RotatingTaskPool.asset"));
             SetObject(bootstrapper, "dailyRewardCalendar", LoadAsset<DailyRewardCalendarConfig>(GeneratedConfigFolder + "/DailyRewardCalendar.asset"));
             SetObject(bootstrapper, "privacyLinks", LoadAsset<PrivacyLinksConfig>(GeneratedConfigFolder + "/PrivacyLinks.asset"));
+            SetObject(bootstrapper, "tutorialConfig", tutorialConfig);
             SetList(bootstrapper, "achievementDefinitions", achievements);
         }
 
@@ -1086,6 +1184,28 @@ namespace CoreRacer.Editor.Builders
         private static void AddExtra(Dictionary<string, string> entries, string key, string value)
         {
             entries[key] = value;
+        }
+
+        private static void AddFtueStrings(Dictionary<string, string> entries)
+        {
+            AddExtra(entries, "ftue.welcome.title", "Welcome, pilot");
+            AddExtra(entries, "ftue.welcome.body", "Pick a route and start your first tunnel run.");
+            AddExtra(entries, "ftue.move.title", "Move left and right");
+            AddExtra(entries, "ftue.move.body", "Use left/right input or drag to rotate around the tunnel.");
+            AddExtra(entries, "ftue.dodge.title", "Dodge the first obstacle");
+            AddExtra(entries, "ftue.dodge.body", "Slip through the open lane and keep moving forward.");
+            AddExtra(entries, "ftue.currency.title", "Collect currency");
+            AddExtra(entries, "ftue.currency.body", "Grab coins during runs to fund upgrades and unlocks.");
+            AddExtra(entries, "ftue.powerup.title", "Collect a powerup");
+            AddExtra(entries, "ftue.powerup.body", "Powerups give short boosts that help you survive longer.");
+            AddExtra(entries, "ftue.crash.title", "Crashes and continues");
+            AddExtra(entries, "ftue.crash.body", "When you crash, a continue offer can get you back into the run.");
+            AddExtra(entries, "ftue.upgrade.title", "Upgrade in the Lab");
+            AddExtra(entries, "ftue.upgrade.body", "The Lab is where powerups become stronger over time.");
+            AddExtra(entries, "ftue.tasks.title", "Claim daily rewards");
+            AddExtra(entries, "ftue.tasks.body", "Daily rewards and rotating tasks give you goals between runs.");
+            AddExtra(entries, "ftue.complete.title", "Ready to race");
+            AddExtra(entries, "ftue.complete.body", "Keep running, upgrading, and claiming rewards.");
         }
 
         private readonly struct AchievementSpec

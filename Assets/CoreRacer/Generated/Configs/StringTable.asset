@@ -189,3 +189,39 @@ MonoBehaviour:
     Value: Progression
   - Key: menu.settings.title
     Value: Settings
+  - Key: ftue.welcome.title
+    Value: Welcome, pilot
+  - Key: ftue.welcome.body
+    Value: Pick a route and start your first tunnel run.
+  - Key: ftue.move.title
+    Value: Move left and right
+  - Key: ftue.move.body
+    Value: Use left/right input or drag to rotate around the tunnel.
+  - Key: ftue.dodge.title
+    Value: Dodge the first obstacle
+  - Key: ftue.dodge.body
+    Value: Slip through the open lane and keep moving forward.
+  - Key: ftue.currency.title
+    Value: Collect currency
+  - Key: ftue.currency.body
+    Value: Grab coins during runs to fund upgrades and unlocks.
+  - Key: ftue.powerup.title
+    Value: Collect a powerup
+  - Key: ftue.powerup.body
+    Value: Powerups give short boosts that help you survive longer.
+  - Key: ftue.crash.title
+    Value: Crashes and continues
+  - Key: ftue.crash.body
+    Value: When you crash, a continue offer can get you back into the run.
+  - Key: ftue.upgrade.title
+    Value: Upgrade in the Lab
+  - Key: ftue.upgrade.body
+    Value: The Lab is where powerups become stronger over time.
+  - Key: ftue.tasks.title
+    Value: Claim daily rewards
+  - Key: ftue.tasks.body
+    Value: Daily rewards and rotating tasks give you goals between runs.
+  - Key: ftue.complete.title
+    Value: Ready to race
+  - Key: ftue.complete.body
+    Value: Keep running, upgrading, and claiming rewards.

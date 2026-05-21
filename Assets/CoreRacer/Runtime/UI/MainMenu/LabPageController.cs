@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using CoreRacer.Bootstrap;
+using CoreRacer.FTUE;
 using CoreRacer.Gameplay.Powerups;
 using CoreRacer.Meta.Economy;
 using CoreRacer.Meta.Profile;
@@ -18,12 +19,19 @@ namespace CoreRacer.UI.MainMenu
 
         private readonly List<LabUpgradeItemView> _rows = new List<LabUpgradeItemView>();
         private PlayerProfileService _profile;
+        private TutorialService _tutorial;
 
-        private void Awake() => GameServices.TryGet(out _profile);
+        private void Awake()
+        {
+            GameServices.TryGet(out _profile);
+            GameServices.TryGet(out _tutorial);
+        }
 
         public override void Show()
         {
             base.Show();
+            if (_tutorial == null) GameServices.TryGet(out _tutorial);
+            _tutorial?.Notify(TutorialStepKind.WaitForUpgradePromptOpened, "lab");
             Refresh();
         }
 
@@ -42,6 +50,8 @@ namespace CoreRacer.UI.MainMenu
                 return;
             }
             _profile.SetUpgradeLevel(_profile.State.PowerupUpgradeLevels, id, current + 1);
+            if (_tutorial == null) GameServices.TryGet(out _tutorial);
+            _tutorial?.Notify(TutorialStepKind.WaitForUpgradePurchased, "lab");
             if (statusText != null)
                 statusText.text = $"{entry.DisplayName} upgraded to Lv {current + 1}.";
             Refresh();

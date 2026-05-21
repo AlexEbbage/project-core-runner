@@ -1,3 +1,5 @@
+using CoreRacer.Bootstrap;
+using CoreRacer.FTUE;
 using UnityEngine;
 
 namespace CoreRacer.Gameplay.Player
@@ -10,11 +12,15 @@ namespace CoreRacer.Gameplay.Player
         [SerializeField] private bool autoPilotActive;
         [SerializeField] private float autoPilotInput;
 
+        private TutorialService _tutorial;
+        private bool _tutorialInputNotified;
+
         public PlayerOrbitalMotor Motor => motor;
 
         public void BeginRun()
         {
             running = true;
+            _tutorialInputNotified = false;
             if (motor != null) motor.ResetMotor(transform.position.z);
         }
 
@@ -35,6 +41,12 @@ namespace CoreRacer.Gameplay.Player
                 return;
 
             var input = autoPilotActive ? autoPilotInput : (inputReader != null ? inputReader.Read().Horizontal : ReadFallbackHorizontal());
+            if (!_tutorialInputNotified && Mathf.Abs(input) > 0.01f)
+            {
+                _tutorialInputNotified = true;
+                if (_tutorial == null) GameServices.TryGet(out _tutorial);
+                _tutorial?.Notify(TutorialStepKind.WaitForInput, "player");
+            }
             motor.Move(input, UnityEngine.Time.deltaTime);
         }
 

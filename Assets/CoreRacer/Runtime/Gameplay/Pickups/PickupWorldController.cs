@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using CoreRacer.Common.Pooling;
+using CoreRacer.Bootstrap;
+using CoreRacer.FTUE;
 using CoreRacer.Gameplay.Powerups;
 using CoreRacer.Gameplay.Run;
 using UnityEngine;
@@ -21,6 +23,9 @@ namespace CoreRacer.Gameplay.Pickups
         private PickupPatternGenerator _patterns;
         private PowerupLootTable _lootTable;
         private float _nextSpawnZ;
+        private bool _tutorialCoinQueued;
+        private bool _tutorialPowerupQueued;
+        private TutorialService _tutorial;
         private bool _running;
 
         private void Awake()
@@ -67,6 +72,20 @@ namespace CoreRacer.Gameplay.Pickups
 
         private void SpawnPattern(float z)
         {
+            if (_tutorialCoinQueued && _coinPool != null)
+            {
+                _tutorialCoinQueued = false;
+                SpawnCoin(TutorialPickupPosition(z));
+                return;
+            }
+
+            if (_tutorialPowerupQueued && _powerupPool != null)
+            {
+                _tutorialPowerupQueued = false;
+                SpawnPowerup(TutorialPickupPosition(z));
+                return;
+            }
+
             if (Random.value < config.PowerupChance && _powerupPool != null)
             {
                 SpawnPowerup(z);
@@ -93,10 +112,15 @@ namespace CoreRacer.Gameplay.Pickups
 
         private void SpawnPowerup(float z)
         {
+            SpawnPowerup(new Vector3(0f, config.RingRadius, z));
+        }
+
+        private void SpawnPowerup(Vector3 position)
+        {
             var pickup = _powerupPool.Take();
             pickup.Type = PickupType.Powerup;
             pickup.PowerupType = _lootTable.Roll();
-            pickup.transform.position = new Vector3(0f, config.RingRadius, z);
+            pickup.transform.position = position;
             pickup.Collected += HandleCollected;
             _active.Add(pickup);
         }
@@ -110,13 +134,36 @@ namespace CoreRacer.Gameplay.Pickups
             {
                 currencyTracker?.AddCoinPickup(pickup.Amount);
                 scoreTracker?.AddPickupScore(10);
+                NotifyTutorial(TutorialStepKind.WaitForPickup, "coin");
                 _coinPool.Return(pickup);
             }
             else
             {
                 powerups?.Activate(pickup.PowerupType);
+                NotifyTutorial(TutorialStepKind.WaitForPowerup, "powerup");
                 _powerupPool.Return(pickup);
             }
+        }
+
+        public void QueueTutorialCoin()
+        {
+            _tutorialCoinQueued = true;
+        }
+
+        public void QueueTutorialPowerup()
+        {
+            _tutorialPowerupQueued = true;
+        }
+
+        private Vector3 TutorialPickupPosition(float z)
+        {
+            return player != null ? new Vector3(player.position.x, player.position.y, z) : new Vector3(0f, config != null ? config.RingRadius : 3f, z);
+        }
+
+        private void NotifyTutorial(TutorialStepKind kind, string targetId)
+        {
+            if (_tutorial == null) GameServices.TryGet(out _tutorial);
+            _tutorial?.Notify(kind, targetId);
         }
 
         private void RecycleBehind(float playerZ)

@@ -32,13 +32,14 @@ Use the docs set as the durable operating system for the project. Foundation doc
 
 - `CoreRacer_Main.unity` now uses generated wrappers around safe existing player, obstacle, pickup, tunnel, audio, and VFX assets.
 - `CoreRacer_Main.unity` now also contains an authored clean hub flow for `Play`, `Shop`, `Hangar`, `Lab`, `Progression`, and `Settings`, with nested level select, daily login, rotating tasks, achievements, comfort, privacy, and support/debug surfaces.
+- `CoreRacer_Main.unity` now has the Phase 6 FTUE tutorial overlay, scene director, deterministic first coin/powerup assistance, support reset action, and save-backed tutorial progress wiring.
 - Manual art follow-up is tracked in `docs/rewrite/manual-art-wiring-needed.md`.
 
 ## Dependencies and Blockers
 
 - Monetisation expansion depends on an approved catalog and entitlement model.
 - UI tooling changes depend on an explicit package adoption decision.
-- The progression bundle now depends on a player-facing review pass in `CoreRacer_Main` to confirm navigation clarity, layout polish, and content readability across the authored hub shell.
+- The progression bundle now depends on a player-facing review pass in `CoreRacer_Main` to confirm navigation clarity, layout polish, content readability, and FTUE pacing across the authored hub shell.
 - Boosters, shop, ship customisation, lab, tasks, daily login, achievements, and UI polish still require broader UX review even though scene wiring, localization validation, and product-catalog validation now pass in the clean scene.
 - DOTween is now the approved UI motion layer, so UI polish work should use the reusable motion helper rather than introducing a second transition stack.
 

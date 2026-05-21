@@ -2,14 +2,20 @@
 
 ## FTUE steps
 
-1. Welcome / objective: survive the hex tunnel.
+1. Welcome / objective: start the first route from the hub.
 2. Input: hold left/right or drag to rotate around the tunnel.
 3. Dodge: avoid the first obstacle pattern.
-4. Collect: collect credits/kibble-equivalent currency pickups.
-5. Powerup: collect and use the first powerup.
-6. Crash/continue: explain respawn offer when appropriate.
-7. Upgrade: guide the first upgrade purchase.
-8. Tasks: show the first claimable daily task.
+4. Collect: collect the deterministic tutorial coin.
+5. Powerup: collect the deterministic tutorial powerup.
+6. Crash/continue: explain respawn offers without forcing a crash.
+7. Upgrade: open the Lab upgrade prompt.
+8. Tasks: open the daily reward/task prompt from Progression.
+
+## Implementation status
+
+- Implemented in `CoreRacer_Main` through the existing save-backed `TutorialService`.
+- Tutorial reset is exposed from the support/debug panel.
+- Debug analytics emits tutorial start, step completion, completion, and reset events through `IAnalyticsService`.
 
 ## Funnel events
 

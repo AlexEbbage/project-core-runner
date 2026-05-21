@@ -11,6 +11,8 @@ namespace CoreRacer.FTUE
         WaitForCrash,
         WaitForUpgradePurchased,
         WaitForDailyRewardClaimed,
+        WaitForUpgradePromptOpened,
+        WaitForDailyTaskRewardPromptOpened,
         Complete
     }
 }
