@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 214de93f196be9946a068765bf878cd9, type: 3}
   m_Name: ObstacleGeneration
   m_EditorClassIdentifier: 
-  RingPrefab: {fileID: 0}
+  RingPrefab: {fileID: 6588800999194114674, guid: 60dd41bfaf235ce40811a0a10cc1f4da, type: 3}
   PrewarmCount: 32
   SpawnStartZ: 20
   SpawnAheadDistance: 160

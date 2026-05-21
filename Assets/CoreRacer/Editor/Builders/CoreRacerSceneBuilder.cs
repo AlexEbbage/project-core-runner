@@ -137,7 +137,7 @@ namespace CoreRacer.Editor.Builders
             rect.anchoredPosition = anchoredPosition;
             var t = go.GetComponent<Text>();
             t.text = text;
-            t.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             t.fontSize = 32;
             t.alignment = TextAnchor.MiddleCenter;
             t.color = Color.white;

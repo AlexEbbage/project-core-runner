@@ -34,8 +34,17 @@ namespace CoreRacer.Gameplay.Player
             if (!running || motor == null)
                 return;
 
-            var input = autoPilotActive ? autoPilotInput : (inputReader != null ? inputReader.Read().Horizontal : Input.GetAxisRaw("Horizontal"));
+            var input = autoPilotActive ? autoPilotInput : (inputReader != null ? inputReader.Read().Horizontal : ReadFallbackHorizontal());
             motor.Move(input, UnityEngine.Time.deltaTime);
+        }
+
+        private float ReadFallbackHorizontal()
+        {
+#if ENABLE_LEGACY_INPUT_MANAGER
+            return Input.GetAxisRaw("Horizontal");
+#else
+            return 0f;
+#endif
         }
     }
 }

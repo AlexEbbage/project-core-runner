@@ -47,6 +47,11 @@ namespace CoreRacer.Gameplay.Run
                 references.PlayerHealth.Died += () => HandlePlayerDeath();
         }
 
+        private void Start()
+        {
+            ShowMainMenu();
+        }
+
         public void StartRun()
         {
             var shipId = "starter_runner";
@@ -59,7 +64,13 @@ namespace CoreRacer.Gameplay.Run
 
         public void PauseRun() => _lifecycle.Pause();
         public void ResumeRun() => _lifecycle.Resume();
-        public void ReturnToMenu() => _lifecycle.ReturnToMenu();
+
+        public void ReturnToMenu()
+        {
+            StopRuntimeSystems();
+            _lifecycle.ReturnToMenu();
+            ShowMainMenu();
+        }
 
         public void HandlePlayerDeath()
         {
@@ -67,14 +78,26 @@ namespace CoreRacer.Gameplay.Run
                 return;
 
             _lifecycle.Crash();
+            StopRuntimeSystems();
             if (_continues.CanContinue(_lifecycle.Session))
+            {
                 _stateMachine.TrySetState(RunState.ContinueOffered);
+                UnityEngine.Time.timeScale = 0f;
+                references.Hud?.Hide();
+                references.PauseMenu?.Hide();
+                references.GameOver?.ShowContinueOffer();
+            }
             else
+            {
                 _lifecycle.EndRun(RunEndReason.PlayerDeath);
+            }
         }
 
         public void ContinueRun()
         {
+            if (State != RunState.ContinueOffered)
+                return;
+
             if (_rewardedAds == null)
             {
                 ApplyContinue();
@@ -88,6 +111,14 @@ namespace CoreRacer.Gameplay.Run
                 else
                     _lifecycle.EndRun(RunEndReason.PlayerDeath);
             });
+        }
+
+        public void DeclineContinue()
+        {
+            if (State != RunState.ContinueOffered && State != RunState.Crashed)
+                return;
+
+            _lifecycle.EndRun(RunEndReason.PlayerDeath);
         }
 
         public void DoubleRunRewards()
@@ -111,12 +142,21 @@ namespace CoreRacer.Gameplay.Run
         private void ApplyContinue()
         {
             _continues.ContinueRun(_lifecycle.Session);
+            UnityEngine.Time.timeScale = 1f;
             _stateMachine.TrySetState(RunState.Running);
+            references.Hud?.Show();
+            references.GameOver?.Hide();
+            references.PauseMenu?.Hide();
             references.Player?.BeginRun();
+            references.ObstacleWorld?.BeginRun();
+            references.PickupWorld?.BeginRun();
         }
 
         private void OnRunStarted()
         {
+            references.MainMenu?.Hide();
+            references.PauseMenu?.Hide();
+            references.GameOver?.Hide();
             references.Player?.BeginRun();
             references.PlayerHealth?.ResetHealth();
             references.ScoreTracker?.BeginRun();
@@ -130,11 +170,9 @@ namespace CoreRacer.Gameplay.Run
 
         private void OnRunEnded(RunEndReason reason)
         {
-            references.Player?.EndRun();
-            references.ScoreTracker?.EndRun();
-            references.StatsTracker?.EndRun();
-            references.ObstacleWorld?.EndRun();
-            references.PickupWorld?.EndRun();
+            StopRuntimeSystems();
+            references.Hud?.Hide();
+            references.PauseMenu?.Hide();
 
             _lastResult = _rewards != null
                 ? _rewards.BuildResult(references.ScoreTracker.CurrentScore, references.CurrencyTracker.Coins, references.StatsTracker.Distance, references.StatsTracker.Duration, references.StatsTracker.PowerupsCollected, reason, false)
@@ -159,6 +197,23 @@ namespace CoreRacer.Gameplay.Run
                 false);
             _rewards.Grant(extra);
             references.GameOver?.ShowDoubleRewardGranted(extra);
+        }
+
+        private void StopRuntimeSystems()
+        {
+            references.Player?.EndRun();
+            references.ScoreTracker?.EndRun();
+            references.StatsTracker?.EndRun();
+            references.ObstacleWorld?.EndRun();
+            references.PickupWorld?.EndRun();
+        }
+
+        private void ShowMainMenu()
+        {
+            references.Hud?.Hide();
+            references.GameOver?.Hide();
+            references.PauseMenu?.Hide();
+            references.MainMenu?.Show();
         }
     }
 }

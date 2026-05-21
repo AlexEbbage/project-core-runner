@@ -5,6 +5,8 @@ using CoreRacer.Gameplay.Player;
 using CoreRacer.Gameplay.Powerups;
 using CoreRacer.UI.GameOver;
 using CoreRacer.UI.Hud;
+using CoreRacer.UI.MainMenu;
+using CoreRacer.UI.Pause;
 using UnityEngine;
 
 namespace CoreRacer.Gameplay.Run
@@ -21,6 +23,8 @@ namespace CoreRacer.Gameplay.Run
         public PowerupRuntimeController Powerups;
         public HudController Hud;
         public GameOverController GameOver;
+        public MainMenuShell MainMenu;
+        public PauseMenuController PauseMenu;
 
         public bool HasRequiredReferences()
         {
@@ -40,6 +44,8 @@ namespace CoreRacer.Gameplay.Run
             if (Powerups == null) result.Warning("RunSceneReferences.Powerups is missing. Powerup pickups will not apply effects.");
             if (Hud == null) result.Warning("RunSceneReferences.Hud is missing. Gameplay HUD will not update.");
             if (GameOver == null) result.Warning("RunSceneReferences.GameOver is missing. Game-over UI must be triggered manually.");
+            if (MainMenu == null) result.Warning("RunSceneReferences.MainMenu is missing. Return-to-menu UI will not be shown automatically.");
+            if (PauseMenu == null) result.Warning("RunSceneReferences.PauseMenu is missing. Pause UI will not be hidden automatically.");
             return result;
         }
     }

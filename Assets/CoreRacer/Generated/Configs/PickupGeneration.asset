@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2af07199e9b285241aa75c849f5ec18f, type: 3}
   m_Name: PickupGeneration
   m_EditorClassIdentifier: 
-  CoinPrefab: {fileID: 0}
-  PowerupPrefab: {fileID: 0}
+  CoinPrefab: {fileID: 387818382918385804, guid: 09ad19742bd036749ada53b6ada3fdcd, type: 3}
+  PowerupPrefab: {fileID: 7533908264868240665, guid: 0e9548754715b4843bbbd700466e0f93, type: 3}
   PrewarmCoins: 64
   PrewarmPowerups: 16
   SpawnAheadDistance: 140
