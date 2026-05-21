@@ -1,0 +1,191 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: StringTable
+  m_EditorClassIdentifier: CoreRacer.Runtime:CoreRacer.Localization:StringTable
+  Entries:
+  - Key: ui.highscore_multiline
+    Value: 'Highscore:
+
+      {0:0}'
+  - Key: ui.no_levels
+    Value: No Levels
+  - Key: ui.level_select_empty
+    Value: No levels available.
+  - Key: ui.level_select_description
+    Value: Tunnel route with {0} sides.
+  - Key: ui.level_select_locked
+    Value: Locked until Lv {0}
+  - Key: ui.level_select_unlocked
+    Value: Unlocked at Lv {0}
+  - Key: ui.level_select_locked_short
+    Value: Locked
+  - Key: ui.level_select_select
+    Value: Select
+  - Key: ui.level_select_selected
+    Value: Selected
+  - Key: ui.level_up_toast
+    Value: Level Up! Lv {0} -> Lv {1}
+  - Key: ui.item_default
+    Value: Item
+  - Key: ui.upgrade_default
+    Value: Upgrade
+  - Key: ui.level_prefix
+    Value: Lv {0}
+  - Key: ui.score
+    Value: 'Score: {0:0}'
+  - Key: ui.highscore
+    Value: 'Highscore: {0:0}'
+  - Key: ui.best
+    Value: 'BEST: {0:0}'
+  - Key: ui.countdown_go
+    Value: GO!
+  - Key: ui.elapsed_time
+    Value: 'Time: {0}'
+  - Key: ui.distance
+    Value: 'Distance: {0}m'
+  - Key: ui.run_coins
+    Value: 'Coins: {0}'
+  - Key: ui.game_over_rewards
+    Value: 'Rewards: +{0} Coins  +{1} Gems  +{2} XP'
+  - Key: ui.combo_modifier
+    Value: 'Combo: x{0:0.0}'
+  - Key: ui.continue_in
+    Value: Continue in {0}s
+  - Key: ui.continue_ready
+    Value: Continue
+  - Key: ui.continues_used
+    Value: 'Continues Used: {0}/{1}'
+  - Key: ui.continues_remaining
+    Value: 'Continues Remaining: {0}/{1}'
+  - Key: ui.rewarded_run_title
+    Value: Boost your run!
+  - Key: ui.rewarded_run_body
+    Value: Watch a rewarded ad to claim a bonus.
+  - Key: ui.rewarded_run_accept
+    Value: Watch Ad
+  - Key: ui.rewarded_run_decline
+    Value: No Thanks
+  - Key: ui.rewarded_run_reward_coin_multiplier
+    Value: 'Reward: Coin Multiplier'
+  - Key: ui.rewarded_run_reward_score_multiplier
+    Value: 'Reward: Score Multiplier'
+  - Key: ui.rewarded_run_reward_coins
+    Value: 'Reward: +{0} Coins'
+  - Key: ui.shop_owned
+    Value: Owned
+  - Key: ui.shop_price_soft
+    Value: '{0} Coins'
+  - Key: ui.shop_price_premium_currency
+    Value: '{0} Gems'
+  - Key: ui.shop_price_premium
+    Value: Premium
+  - Key: ui.shop_price_restore
+    Value: Account
+  - Key: ui.shop_action_default
+    Value: View
+  - Key: ui.shop_action_buy
+    Value: Buy
+  - Key: ui.shop_action_need_more
+    Value: Need More
+  - Key: ui.shop_action_owned
+    Value: Owned
+  - Key: ui.shop_action_remove_ads
+    Value: Go Premium
+  - Key: ui.shop_action_restore
+    Value: Restore
+  - Key: ui.shop_status_owned
+    Value: Already owned on this profile.
+  - Key: ui.shop_status_remove_ads
+    Value: Unlock ad-free runs and retire interrupting ads.
+  - Key: ui.shop_status_restore
+    Value: Restore prior premium purchases on this account.
+  - Key: ui.shop_status_ready
+    Value: Ready to purchase.
+  - Key: ui.shop_status_need_soft
+    Value: You need more coins for this item.
+  - Key: ui.shop_status_need_premium
+    Value: You need more gems for this item.
+  - Key: ui.hangar_action_locked
+    Value: Locked
+  - Key: ui.hangar_action_equip
+    Value: Equip
+  - Key: ui.hangar_action_equipped
+    Value: Equipped
+  - Key: ui.hangar_status_locked
+    Value: Locked
+  - Key: ui.hangar_status_owned
+    Value: Unlocked
+  - Key: ui.hangar_status_equipped
+    Value: Equipped
+  - Key: ui.hangar_tab_ships
+    Value: Ships
+  - Key: ui.hangar_tab_skins
+    Value: Skins
+  - Key: ui.hangar_tab_trails
+    Value: Trails
+  - Key: ui.hangar_tab_corefx
+    Value: Core FX
+  - Key: ui.hangar_tab_upgrades
+    Value: Upgrades
+  - Key: ui.hangar_preview_title
+    Value: Current Loadout
+  - Key: ui.hangar_preview_ship
+    Value: Ship
+  - Key: ui.hangar_preview_cosmetics
+    Value: Cosmetics
+  - Key: ui.hangar_no_ship
+    Value: No ship selected
+  - Key: ui.hangar_none
+    Value: None
+  - Key: ui.hangar_stat_speed
+    Value: SPD
+  - Key: ui.hangar_stat_handling
+    Value: HDL
+  - Key: ui.hangar_stat_boost
+    Value: BST
+  - Key: ui.task_complete
+    Value: Completed
+  - Key: ui.task_claimed
+    Value: Claimed
+  - Key: ui.task_action_claim
+    Value: Claim
+  - Key: ui.task_action_claimed
+    Value: Claimed
+  - Key: ui.task_action_in_progress
+    Value: In Progress
+  - Key: ui.daily_login_claim_button
+    Value: Claim
+  - Key: ui.daily_login_claimed_button
+    Value: Claimed
+  - Key: ui.achievement_progress
+    Value: Progress
+  - Key: ui.achievement_claim
+    Value: Claim
+  - Key: ui.achievement_claimed
+    Value: Claimed
+  - Key: ui.achievement_locked
+    Value: Locked
+  - Key: menu.play.title
+    Value: Level Select
+  - Key: menu.play.action
+    Value: Play
+  - Key: menu.shop.title
+    Value: Shop
+  - Key: menu.hangar.title
+    Value: Hangar
+  - Key: menu.lab.title
+    Value: Lab
+  - Key: menu.progression.title
+    Value: Progression
+  - Key: menu.settings.title
+    Value: Settings

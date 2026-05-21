@@ -7,6 +7,7 @@ namespace CoreRacer.UI.MainMenu
 {
     public sealed class RotatingTaskListView : MonoBehaviour
     {
+        [SerializeField] private TaskCadence cadenceFilter = TaskCadence.Daily;
         [SerializeField] private Transform contentRoot;
         [SerializeField] private RotatingTaskRowView rowPrefab;
 
@@ -24,7 +25,7 @@ namespace CoreRacer.UI.MainMenu
             if (_tasks == null || rowPrefab == null || contentRoot == null)
                 return;
 
-            var models = _tasks.GetActiveTasks();
+            var models = FilterByCadence(_tasks.GetActiveTasks());
             EnsureRows(models.Count);
             for (int i = 0; i < _rows.Count; i++)
             {
@@ -32,6 +33,22 @@ namespace CoreRacer.UI.MainMenu
                 _rows[i].gameObject.SetActive(active);
                 if (active) _rows[i].Render(models[i], Claim);
             }
+        }
+
+        private List<RotatingTaskViewModel> FilterByCadence(IReadOnlyList<RotatingTaskViewModel> allModels)
+        {
+            var filtered = new List<RotatingTaskViewModel>();
+            if (allModels == null)
+                return filtered;
+
+            for (int i = 0; i < allModels.Count; i++)
+            {
+                var model = allModels[i];
+                if (model != null && model.Cadence == cadenceFilter)
+                    filtered.Add(model);
+            }
+
+            return filtered;
         }
 
         private void Claim(string taskId)

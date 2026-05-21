@@ -10,6 +10,7 @@ namespace CoreRacer.Meta.Achievements
         private readonly PlayerProfileService _profile;
         private readonly RewardGrantService _rewards;
         private readonly List<AchievementDefinition> _definitions;
+        public IReadOnlyList<AchievementDefinition> Definitions => _definitions;
 
         public AchievementService(PlayerProfileService profile, RewardGrantService rewards, List<AchievementDefinition> definitions)
         {

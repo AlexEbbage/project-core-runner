@@ -13,6 +13,7 @@ namespace CoreRacer.Gameplay.Run
         [SerializeField] private RunSceneReferences references;
         [SerializeField] private RunConfig config;
         [SerializeField] private string defaultLevelId = "hex_sector_01";
+        private string _selectedLevelId;
 
         private RunStateMachine _stateMachine;
         private RunLifecycleService _lifecycle;
@@ -58,8 +59,15 @@ namespace CoreRacer.Gameplay.Run
             if (GameServices.TryGet<PlayerProfileService>(out var profile))
                 shipId = profile.State.SelectedShipId;
 
-            _analytics?.RunStarted(defaultLevelId, shipId);
-            _lifecycle.StartNewRun(defaultLevelId, shipId);
+            var levelId = string.IsNullOrWhiteSpace(_selectedLevelId) ? defaultLevelId : _selectedLevelId;
+            _analytics?.RunStarted(levelId, shipId);
+            _lifecycle.StartNewRun(levelId, shipId);
+        }
+
+        public void SetSelectedLevelId(string levelId)
+        {
+            if (!string.IsNullOrWhiteSpace(levelId))
+                _selectedLevelId = levelId;
         }
 
         public void PauseRun() => _lifecycle.Pause();

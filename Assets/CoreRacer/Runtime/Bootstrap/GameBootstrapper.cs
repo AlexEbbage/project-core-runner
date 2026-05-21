@@ -5,6 +5,7 @@ using CoreRacer.Common.Time;
 using CoreRacer.FTUE;
 using CoreRacer.Gameplay.Vfx;
 using CoreRacer.Localization;
+using CoreRacer.Meta.Achievements;
 using CoreRacer.Meta.DailyRewards;
 using CoreRacer.Meta.Economy;
 using CoreRacer.Meta.Profile;
@@ -52,6 +53,7 @@ namespace CoreRacer.Bootstrap
         [SerializeField] private TutorialConfig tutorialConfig;
         [SerializeField] private NotificationTemplateConfig notificationTemplateConfig;
         [SerializeField] private List<LiveEventDefinition> liveEvents = new List<LiveEventDefinition>();
+        [SerializeField] private List<AchievementDefinition> achievementDefinitions = new List<AchievementDefinition>();
 
         [Header("Presentation Libraries")]
         [SerializeField] private AudioEventLibrary audioEventLibrary;
@@ -127,6 +129,7 @@ namespace CoreRacer.Bootstrap
             var notificationScheduler = new LocalNotificationScheduler(notifications, notificationTemplateConfig);
             var rotatingTasks = new RotatingTaskService(profile, rewards, storage, serializer, clock, rotatingTaskPool, analyticsService, logger);
             var dailyRewards = new DailyRewardCalendarService(profile, rewards, clock, dailyRewardCalendar, analyticsService, logger);
+            var achievements = new AchievementService(profile, rewards, achievementDefinitions);
             var tutorial = new TutorialService(storage, serializer, tutorialConfig, analyticsService, logger);
             var firstSessionFunnel = new FirstSessionFunnelTracker(storage, analyticsService);
             var supportExporter = new SupportBundleExporter(storage, null, economyLedger);
@@ -173,6 +176,7 @@ namespace CoreRacer.Bootstrap
             registry.Register(notificationScheduler);
             registry.Register(rotatingTasks);
             registry.Register(dailyRewards);
+            registry.Register(achievements);
             registry.Register(tutorial);
             registry.Register(firstSessionFunnel);
             registry.Register(supportExporter);

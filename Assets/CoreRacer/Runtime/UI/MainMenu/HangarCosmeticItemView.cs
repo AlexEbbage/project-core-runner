@@ -9,18 +9,20 @@ namespace CoreRacer.UI.MainMenu
     {
         [SerializeField] private Image icon;
         [SerializeField] private Text titleText;
+        [SerializeField] private Text actionLabelText;
         [SerializeField] private GameObject selectedBadge;
         [SerializeField] private GameObject lockedBadge;
         [SerializeField] private Button selectButton;
         private string _id;
         private Action<string> _onSelected;
 
-        public void Bind(UnlockableDefinition definition, bool unlocked, bool selected, Action<string> onSelected)
+        public void Bind(UnlockableDefinition definition, bool unlocked, bool selected, string actionLabel, Action<string> onSelected)
         {
             _id = definition != null ? definition.Id : string.Empty;
             _onSelected = onSelected;
             if (icon != null) icon.sprite = definition != null ? definition.Icon : null;
             if (titleText != null) titleText.text = definition != null ? definition.DisplayName : "Missing";
+            if (actionLabelText != null) actionLabelText.text = actionLabel ?? string.Empty;
             if (selectedBadge != null) selectedBadge.SetActive(selected);
             if (lockedBadge != null) lockedBadge.SetActive(!unlocked);
             if (selectButton != null) selectButton.interactable = unlocked;

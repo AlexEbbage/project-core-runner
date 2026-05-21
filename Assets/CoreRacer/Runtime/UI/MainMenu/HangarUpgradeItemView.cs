@@ -11,11 +11,12 @@ namespace CoreRacer.UI.MainMenu
         [SerializeField] private Text titleText;
         [SerializeField] private Text levelText;
         [SerializeField] private Text costText;
+        [SerializeField] private Text actionLabelText;
         [SerializeField] private Button upgradeButton;
         private UpgradeType _upgradeType;
         private Action<UpgradeType> _onUpgrade;
 
-        public void Bind(ShipUpgradeDefinition definition, int currentLevel, Action<UpgradeType> onUpgrade)
+        public void Bind(ShipUpgradeDefinition definition, int currentLevel, string actionLabel, bool interactable, Action<UpgradeType> onUpgrade)
         {
             _upgradeType = definition != null ? definition.UpgradeType : default;
             _onUpgrade = onUpgrade;
@@ -23,7 +24,8 @@ namespace CoreRacer.UI.MainMenu
             if (titleText != null) titleText.text = definition != null ? definition.DisplayName : "Missing upgrade";
             if (levelText != null) levelText.text = definition != null ? $"Lv {currentLevel}/{definition.MaxLevel}" : string.Empty;
             if (costText != null) costText.text = definition != null && currentLevel < definition.MaxLevel ? $"{definition.GetCostForLevel(currentLevel):N0}" : "MAX";
-            if (upgradeButton != null) upgradeButton.interactable = definition != null && currentLevel < definition.MaxLevel;
+            if (actionLabelText != null) actionLabelText.text = actionLabel ?? string.Empty;
+            if (upgradeButton != null) upgradeButton.interactable = interactable && definition != null && currentLevel < definition.MaxLevel;
         }
 
         private void OnEnable()

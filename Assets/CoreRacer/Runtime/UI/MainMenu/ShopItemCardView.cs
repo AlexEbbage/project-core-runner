@@ -11,13 +11,15 @@ namespace CoreRacer.UI.MainMenu
         [SerializeField] private Text titleText;
         [SerializeField] private Text descriptionText;
         [SerializeField] private Text priceText;
+        [SerializeField] private Text statusText;
+        [SerializeField] private Text actionLabelText;
         [SerializeField] private GameObject featuredBadge;
         [SerializeField] private Button buyButton;
 
         private string _itemId;
         private Action<string> _onBuy;
 
-        public void Bind(ShopItemDefinition item, Action<string> onBuy)
+        public void Bind(ShopItemDefinition item, string status, string actionLabel, Action<string> onBuy, bool interactable = true)
         {
             _itemId = item != null ? item.Id : string.Empty;
             _onBuy = onBuy;
@@ -25,7 +27,10 @@ namespace CoreRacer.UI.MainMenu
             if (titleText != null) titleText.text = item != null ? item.DisplayName : "Missing item";
             if (descriptionText != null) descriptionText.text = item != null ? item.Description : string.Empty;
             if (priceText != null) priceText.text = item != null ? FormatPrice(item) : string.Empty;
+            if (statusText != null) statusText.text = status ?? string.Empty;
+            if (actionLabelText != null) actionLabelText.text = actionLabel ?? string.Empty;
             if (featuredBadge != null) featuredBadge.SetActive(item != null && item.IsFeatured);
+            if (buyButton != null) buyButton.interactable = interactable;
         }
 
         private void OnEnable()

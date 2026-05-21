@@ -6,7 +6,7 @@ Verify the authored hub and progression surfaces are ready for review closeout w
 
 ## Setup
 
-- Open `GameScene`.
+- Open `CoreRacer_Main`.
 - Start from the main menu hub and move through the visible progression surfaces.
 
 ## Verification Result
@@ -14,7 +14,7 @@ Verify the authored hub and progression surfaces are ready for review closeout w
 - Static validation: `dotnet build Assembly-CSharp.csproj -nologo` passed.
 - Static closeout fix: daily login, tasks, and achievements configs now resolve through `Resources` instead of relying only on editor-time asset discovery.
 - Runtime Unity scene verification: not performed in this environment, so the checklist remains the live signoff gate.
-- Closeout status: hub and progression wiring are already present in code, runtime config loading is hardened, and the remaining work is the editor review pass against `GameScene`.
+- Closeout status: the clean `CoreRacer_Main` scene now has the authored hub/progression shell, runtime config loading is hardened, and the remaining work is the player-facing review pass for layout and content polish.
 
 ## Checklist
 

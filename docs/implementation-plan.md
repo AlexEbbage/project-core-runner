@@ -2,7 +2,7 @@
 
 ## Delivery Strategy
 
-Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. The current delivery slice is the progression expansion bundle: level roadmap, task breadth, achievement breadth, and daily-login x2 support are now in repo, and the remaining signoff gate is the live `GameScene` review pass.
+Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. The current delivery slice is the progression expansion bundle: level roadmap, task breadth, achievement breadth, and daily-login x2 support are now in repo, and the clean `CoreRacer_Main` scene now carries the authored Phase 5 hub shell needed for runtime validation.
 
 ## Phases
 
@@ -31,14 +31,15 @@ Use the docs set as the durable operating system for the project. Foundation doc
 ## Current Asset Wiring Status
 
 - `CoreRacer_Main.unity` now uses generated wrappers around safe existing player, obstacle, pickup, tunnel, audio, and VFX assets.
+- `CoreRacer_Main.unity` now also contains an authored clean hub flow for `Play`, `Shop`, `Hangar`, `Lab`, `Progression`, and `Settings`, with nested level select, daily login, rotating tasks, achievements, comfort, privacy, and support/debug surfaces.
 - Manual art follow-up is tracked in `docs/rewrite/manual-art-wiring-needed.md`.
 
 ## Dependencies and Blockers
 
 - Monetisation expansion depends on an approved catalog and entitlement model.
 - UI tooling changes depend on an explicit package adoption decision.
-- The progression bundle now depends on a live Unity pass to confirm the five-route roadmap, randomized task pools, run-result task updates, achievement roster rendering, and daily-login x2 flow in `GameScene`.
-- Boosters, shop, ship customisation, lab, tasks, daily login, achievements, and UI polish all still require Unity runtime validation before the broader progression milestone can be considered fully reviewed.
+- The progression bundle now depends on a player-facing review pass in `CoreRacer_Main` to confirm navigation clarity, layout polish, and content readability across the authored hub shell.
+- Boosters, shop, ship customisation, lab, tasks, daily login, achievements, and UI polish still require broader UX review even though scene wiring, localization validation, and product-catalog validation now pass in the clean scene.
 - DOTween is now the approved UI motion layer, so UI polish work should use the reusable motion helper rather than introducing a second transition stack.
 
 ## Validation Notes

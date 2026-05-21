@@ -12,6 +12,8 @@ namespace CoreRacer.UI.MainMenu
         [SerializeField] private Text titleText;
         [SerializeField] private Text descriptionText;
         [SerializeField] private Text priceText;
+        [SerializeField] private Text statusText;
+        [SerializeField] private Text actionLabelText;
         [SerializeField] private Button buyButton;
         [SerializeField] private Button closeButton;
         private string _itemId;
@@ -29,7 +31,7 @@ namespace CoreRacer.UI.MainMenu
             if (closeButton != null) closeButton.onClick.RemoveListener(Hide);
         }
 
-        public void Open(ShopItemDefinition item, Action<string> onBuy)
+        public void Open(ShopItemDefinition item, string status, string actionLabel, bool interactable, Action<string> onBuy)
         {
             _itemId = item != null ? item.Id : string.Empty;
             _onBuy = onBuy;
@@ -37,6 +39,9 @@ namespace CoreRacer.UI.MainMenu
             if (titleText != null) titleText.text = item != null ? item.DisplayName : "Missing item";
             if (descriptionText != null) descriptionText.text = item != null ? item.Description : string.Empty;
             if (priceText != null) priceText.text = item != null && item.Price.Amount > 0 ? $"{item.Price.Amount:N0} {item.Price.Type}" : "Free";
+            if (statusText != null) statusText.text = status ?? string.Empty;
+            if (actionLabelText != null) actionLabelText.text = actionLabel ?? string.Empty;
+            if (buyButton != null) buyButton.interactable = interactable;
             Show();
         }
 

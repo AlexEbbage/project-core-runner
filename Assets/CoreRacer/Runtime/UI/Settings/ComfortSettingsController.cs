@@ -16,6 +16,7 @@ namespace CoreRacer.UI.Settings
         [SerializeField] private Slider inputSensitivitySlider;
 
         private AccessibilitySettingsService _settings;
+        private bool _bound;
 
         private void OnEnable()
         {
@@ -26,13 +27,17 @@ namespace CoreRacer.UI.Settings
 
         private void Bind()
         {
-            if (screenShakeSlider != null) screenShakeSlider.onValueChanged.AddListener(v => _settings?.Update(s => s.ScreenShakeIntensity = v));
-            if (flashSlider != null) flashSlider.onValueChanged.AddListener(v => _settings?.Update(s => s.FlashIntensity = v));
-            if (reducedVfxToggle != null) reducedVfxToggle.onValueChanged.AddListener(v => _settings?.Update(s => s.ReducedVfxMode = v));
-            if (highContrastToggle != null) highContrastToggle.onValueChanged.AddListener(v => _settings?.Update(s => s.HighContrastMode = v));
-            if (hapticsToggle != null) hapticsToggle.onValueChanged.AddListener(v => _settings?.Update(s => s.HapticsEnabled = v));
-            if (dragControlsToggle != null) dragControlsToggle.onValueChanged.AddListener(v => _settings?.Update(s => s.DragControlsEnabled = v));
-            if (inputSensitivitySlider != null) inputSensitivitySlider.onValueChanged.AddListener(v => _settings?.Update(s => s.InputSensitivity = v));
+            if (_bound)
+                return;
+
+            if (screenShakeSlider != null) screenShakeSlider.onValueChanged.AddListener(SetScreenShake);
+            if (flashSlider != null) flashSlider.onValueChanged.AddListener(SetFlash);
+            if (reducedVfxToggle != null) reducedVfxToggle.onValueChanged.AddListener(SetReducedVfx);
+            if (highContrastToggle != null) highContrastToggle.onValueChanged.AddListener(SetHighContrast);
+            if (hapticsToggle != null) hapticsToggle.onValueChanged.AddListener(SetHaptics);
+            if (dragControlsToggle != null) dragControlsToggle.onValueChanged.AddListener(SetDragControls);
+            if (inputSensitivitySlider != null) inputSensitivitySlider.onValueChanged.AddListener(SetInputSensitivity);
+            _bound = true;
         }
 
         public void Refresh()
@@ -47,5 +52,13 @@ namespace CoreRacer.UI.Settings
             if (dragControlsToggle != null) dragControlsToggle.SetIsOnWithoutNotify(s.DragControlsEnabled);
             if (inputSensitivitySlider != null) inputSensitivitySlider.SetValueWithoutNotify(s.InputSensitivity);
         }
+
+        private void SetScreenShake(float value) => _settings?.Update(s => s.ScreenShakeIntensity = value);
+        private void SetFlash(float value) => _settings?.Update(s => s.FlashIntensity = value);
+        private void SetReducedVfx(bool value) => _settings?.Update(s => s.ReducedVfxMode = value);
+        private void SetHighContrast(bool value) => _settings?.Update(s => s.HighContrastMode = value);
+        private void SetHaptics(bool value) => _settings?.Update(s => s.HapticsEnabled = value);
+        private void SetDragControls(bool value) => _settings?.Update(s => s.DragControlsEnabled = value);
+        private void SetInputSensitivity(float value) => _settings?.Update(s => s.InputSensitivity = value);
     }
 }

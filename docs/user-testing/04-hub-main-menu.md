@@ -2,11 +2,11 @@
 
 ## Goal
 
-Verify the hub lands on `Level Select`, routes clearly to the five target destinations, and exposes side-entry reward/progression actions with sensible badge state.
+Verify the `CoreRacer_Main` hub lands on `Level Select`, routes clearly to the five target destinations, and exposes side-entry reward/progression actions with sensible badge state.
 
 ## Setup
 
-- Open `GameScene`.
+- Open `CoreRacer_Main`.
 - Stay in menu state.
 
 ## Checklist

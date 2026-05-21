@@ -14,6 +14,7 @@
 ## Still needs manual art/content direction
 
 - UI icon sprites were not assigned. The clean scene currently exposes generic button background `Image` components, not dedicated icon slots for settings, rewarded ads, or menu actions. Assigning `ADE_cog_icon.png` or `Advert Icon.png` to those backgrounds would be visually incorrect.
+- Phase 5 authored the clean hub flow with functional placeholder UI surfaces, but dedicated final iconography and richer art treatment for some menu buttons, settings subsections, and progression rows are still open art tasks.
 - VFX events without strong existing matches remain intentionally unmapped:
   - `SpeedStreaks`
   - `ScoreMultiplierAura`
