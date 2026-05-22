@@ -2,7 +2,11 @@
   "name": "CoreRacer.Runtime",
   "rootNamespace": "CoreRacer",
   "references": [
-    "UnityEngine.UI"
+    "UnityEngine.UI",
+    "UnityEngine.Purchasing",
+    "UnityEngine.Purchasing.Stores",
+    "Unity.Notifications.Android",
+    "Unity.Notifications.iOS"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

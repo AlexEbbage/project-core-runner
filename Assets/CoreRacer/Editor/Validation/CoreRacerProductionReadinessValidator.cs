@@ -101,15 +101,10 @@ namespace CoreRacer.Editor.Validation
 
         private static void ValidateSdkSymbols(List<string> warnings)
         {
-#if !CORE_RACER_LEVELPLAY
-            warnings.Add("CORE_RACER_LEVELPLAY scripting define is not set. LevelPlay adapter remains placeholder-only.");
-#endif
-#if !CORE_RACER_FIREBASE
-            warnings.Add("CORE_RACER_FIREBASE scripting define is not set. Firebase analytics/crash integration remains placeholder-only.");
-#endif
-#if !CORE_RACER_UNITY_IAP
-            warnings.Add("CORE_RACER_UNITY_IAP scripting define is not set. Unity IAP adapter remains placeholder-only until you wire your installed Unity IAP package version.");
-#endif
+            var errors = new List<string>();
+            CoreRacerSdkStatusValidator.AppendReadinessMessages(CoreRacerSdkStatusValidator.GetStatuses(), warnings, errors);
+            foreach (var error in errors)
+                warnings.Add(error);
         }
 
         private static void ValidateBuildSettings(List<string> warnings)

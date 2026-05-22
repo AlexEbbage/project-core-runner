@@ -46,7 +46,7 @@ The double-reward button should still call the rewarded ad path for premium user
 
 ## IAP
 
-Install/configure Unity IAP, wire your installed package API in the guarded `CORE_RACER_UNITY_IAP` section, then confirm:
+Unity IAP is installed and the Phase 7 adapter is wired under `CoreRacer_Bootstrapper/SdkAdapters`. Before release, confirm:
 
 - Google Play product ID exactly matches `premium_user` or update `IapProductIds.PremiumUser` everywhere.
 - Purchase success calls `IapPurchaseService.CompletePurchase(productId)`.
@@ -56,7 +56,7 @@ Install/configure Unity IAP, wire your installed package API in the guarded `COR
 
 ## Ads
 
-In LevelPlay adapters, wire:
+LevelPlay dependency files are present, but no supported LevelPlay/IronSource C# runtime API was reflected during Phase 7. Keep rewarded/interstitial scene fields unassigned until the SDK API is verified. Then wire:
 
 - Load callbacks
 - Availability checks
@@ -69,7 +69,9 @@ Do not bypass the `AdPolicyService`; all ad decisions should go through it.
 
 ## Analytics and logging
 
-Keep `DebugAnalyticsService` in editor only. For production, wire Firebase or your chosen provider into `IAnalyticsService`.
+Firebase Analytics is installed and wired through `FirebaseAnalyticsServiceAdapter`. Keep gameplay/UI logging through `IAnalyticsService` and `GameAnalytics`; do not call Firebase directly from feature code.
+
+Firebase Crashlytics is not installed. Keep `FirebaseCrashlyticsAdapter` unassigned until the Crashlytics package is installed and `Firebase.Crashlytics.Crashlytics` is reflected.
 
 Use `IGameLogger` for important production breadcrumbs:
 
@@ -82,3 +84,10 @@ Use `IGameLogger` for important production breadcrumbs:
 - Profile migration
 - Scene wiring errors
 
+## Notifications and Addressables
+
+Unity Mobile Notifications is installed and `MobilePushNotificationService` is wired for daily local reminders. Confirm platform permission UX and device behavior on Android/iOS release builds.
+
+Addressables is not installed. Keep using the Resources fallback until `com.unity.addressables` is installed, reflected, and `CORE_RACER_ADDRESSABLES` is enabled.
+
+Run `Tools/Core Racer/Validate SDK Status` before every release candidate.

@@ -32,6 +32,15 @@ namespace CoreRacer.Monetisation.Iap
             Initialize();
         }
 
+        private void OnDestroy()
+        {
+            if (_iap == null)
+                return;
+
+            _iap.PurchaseRequested -= OnPurchaseRequested;
+            _iap.RestoreRequested -= RestorePurchases;
+        }
+
         public void Initialize()
         {
             if (_controller != null)
@@ -53,7 +62,7 @@ namespace CoreRacer.Monetisation.Iap
             _analytics?.Track(AnalyticsEventNames.PurchaseStarted);
             if (_controller == null)
             {
-                _logger.Warn(LogCategory.Iap, "Unity IAP controller is not initialized.", this);
+                LogWarning("Unity IAP controller is not initialized.");
                 return;
             }
             _controller.InitiatePurchase(IapProductIds.PremiumUser);
@@ -65,10 +74,10 @@ namespace CoreRacer.Monetisation.Iap
             var apple = _extensions.GetExtension<IAppleExtensions>();
             apple.RestoreTransactions((success, message) =>
             {
-                _logger.Info(LogCategory.Iap, $"Restore purchases completed. success={success}, message={message}", this);
+                LogInfo($"Restore purchases completed. success={success}, message={message}");
             });
 #else
-            _logger.Info(LogCategory.Iap, "Restore is handled automatically by Google Play for non-consumables.", this);
+            LogInfo("Restore is handled automatically by Google Play for non-consumables.");
 #endif
         }
 
@@ -76,7 +85,7 @@ namespace CoreRacer.Monetisation.Iap
         {
             _controller = controller;
             _extensions = extensions;
-            _logger.Info(LogCategory.Iap, "Unity IAP initialized.", this);
+            LogInfo("Unity IAP initialized.");
 
             var premium = controller.products.WithID(IapProductIds.PremiumUser);
             if (premium != null && premium.hasReceipt)
@@ -85,12 +94,12 @@ namespace CoreRacer.Monetisation.Iap
 
         public void OnInitializeFailed(InitializationFailureReason error)
         {
-            _logger.Warn(LogCategory.Iap, "Unity IAP initialization failed: " + error, this);
+            LogWarning("Unity IAP initialization failed: " + error);
         }
 
         public void OnInitializeFailed(InitializationFailureReason error, string message)
         {
-            _logger.Warn(LogCategory.Iap, "Unity IAP initialization failed: " + error + " " + message, this);
+            LogWarning("Unity IAP initialization failed: " + error + " " + message);
         }
 
         public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs args)
@@ -101,12 +110,24 @@ namespace CoreRacer.Monetisation.Iap
 
         public void OnPurchaseFailed(Product product, PurchaseFailureReason failureReason)
         {
-            _logger.Warn(LogCategory.Iap, $"Purchase failed: {product?.definition?.id}, reason={failureReason}", this);
+            LogWarning($"Purchase failed: {product?.definition?.id}, reason={failureReason}");
         }
 
         public void OnPurchaseFailed(Product product, PurchaseFailureDescription failureDescription)
         {
-            _logger.Warn(LogCategory.Iap, $"Purchase failed: {product?.definition?.id}, reason={failureDescription.reason}, message={failureDescription.message}", this);
+            LogWarning($"Purchase failed: {product?.definition?.id}, reason={failureDescription.reason}, message={failureDescription.message}");
+        }
+
+        private void LogInfo(string message)
+        {
+            if (_logger != null) _logger.Info(LogCategory.Iap, message, this);
+            else Debug.Log("[CoreRacer:IAP] " + message, this);
+        }
+
+        private void LogWarning(string message)
+        {
+            if (_logger != null) _logger.Warn(LogCategory.Iap, message, this);
+            else Debug.LogWarning("[CoreRacer:IAP] " + message, this);
         }
     }
 #else
