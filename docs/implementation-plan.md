@@ -34,6 +34,7 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - `CoreRacer_Main.unity` now also contains an authored clean hub flow for `Play`, `Shop`, `Hangar`, `Lab`, `Progression`, and `Settings`, with nested level select, daily login, rotating tasks, achievements, comfort, privacy, and support/debug surfaces.
 - `CoreRacer_Main.unity` now has the Phase 6 FTUE tutorial overlay, scene director, deterministic first coin/powerup assistance, support reset action, and save-backed tutorial progress wiring.
 - `CoreRacer_Main.unity` now has Phase 7 safe SDK adapter wiring for verified Unity IAP, Firebase Analytics, and Mobile Notifications APIs; LevelPlay, Crashlytics, and Addressables remain disabled/manual setup blockers.
+- Phase 8 final validation and handoff is captured in `docs/rewrite/final-handoff.md`; closed testing remains blocked by placeholder privacy links and the build settings still targeting legacy `Assets/Scenes/GameScene.unity`.
 - Manual art follow-up is tracked in `docs/rewrite/manual-art-wiring-needed.md`.
 
 ## Dependencies and Blockers
@@ -44,6 +45,7 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - Boosters, shop, ship customisation, lab, tasks, daily login, achievements, and UI polish still require broader UX review even though scene wiring, localization validation, and product-catalog validation now pass in the clean scene.
 - DOTween is now the approved UI motion layer, so UI polish work should use the reusable motion helper rather than introducing a second transition stack.
 - SDK release blockers remain for LevelPlay C# API installation/verification, Firebase Crashlytics installation, Addressables installation if remote content is required, and replacement of placeholder privacy links.
+- Build settings must be corrected or explicitly approved before closed testing because they currently include `Assets/Scenes/GameScene.unity` instead of the clean `CoreRacer_Main.unity`.
 
 ## Validation Notes
 
