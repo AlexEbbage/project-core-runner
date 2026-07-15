@@ -29,7 +29,7 @@ namespace CoreRacer.Gameplay.Player
 
         public void ResetMotor(float startZ = 0f)
         {
-            angleDegrees = 90f;
+            angleDegrees = 270f;
             _speedMultiplier = 1f;
             ApplyPosition(startZ);
         }
@@ -45,7 +45,7 @@ namespace CoreRacer.Gameplay.Player
         {
             var radians = angleDegrees * Mathf.Deg2Rad;
             transform.position = new Vector3(Mathf.Cos(radians) * orbitRadius, Mathf.Sin(radians) * orbitRadius, z);
-            transform.rotation = Quaternion.Euler(0f, 0f, angleDegrees - 90f);
+            transform.rotation = Quaternion.Euler(0f, 0f, angleDegrees + 90f);
         }
     }
 }

@@ -60,6 +60,10 @@ namespace CoreRacer.Tests.PlayMode
             Assert.IsTrue(references.Hud.gameObject.activeInHierarchy);
             Assert.IsTrue(cameraFollow.gameObject.activeInHierarchy);
             Assert.IsTrue(cameraFollow.FollowsTargetRoll, "The gameplay camera must roll with the player so the tunnel appears to rotate instead of the ship.");
+            Assert.AreEqual(270f, references.Player.Motor.AngleDegrees, 0.01f, "A run must start on the bottom rail of the tunnel.");
+            Assert.Less(references.Player.transform.position.y, 0f, "The player must begin below the tunnel centre.");
+            Assert.Less(cameraFollow.transform.position.y, 0f, "The follow camera must begin behind the player on the bottom rail.");
+            Assert.Less(Mathf.Abs(Mathf.DeltaAngle(cameraFollow.transform.eulerAngles.z, 0f)), 0.1f, "The bottom-rail start must keep the camera visually upright.");
             Assert.AreEqual(6, tunnel.Sides, "The default roadmap route must configure a six-sided tunnel.");
             Assert.AreEqual(48, tunnel.SectionCount, "The core run must generate the authored tunnel section count.");
             Assert.NotNull(tunnel.GeneratedMesh, "Starting a run must produce a procedural tunnel mesh.");
