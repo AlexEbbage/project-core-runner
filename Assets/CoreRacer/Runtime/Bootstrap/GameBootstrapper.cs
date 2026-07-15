@@ -9,11 +9,13 @@ using CoreRacer.Meta.Achievements;
 using CoreRacer.Meta.DailyRewards;
 using CoreRacer.Meta.Economy;
 using CoreRacer.Meta.Profile;
+using CoreRacer.Meta.Progression;
 using CoreRacer.Meta.Shop;
 using CoreRacer.Meta.Tasks;
 using CoreRacer.Monetisation.Ads;
 using CoreRacer.Monetisation.Iap;
 using CoreRacer.Monetisation.Premium;
+using CoreRacer.Monetisation.Commercial;
 using CoreRacer.Services.Accessibility;
 using CoreRacer.Services.Analytics;
 using CoreRacer.Services.Crash;
@@ -32,8 +34,12 @@ using UnityEngine;
 
 namespace CoreRacer.Bootstrap
 {
+    [DefaultExecutionOrder(-10000)]
     public sealed class GameBootstrapper : MonoBehaviour
     {
+        private static GameBootstrapper _instance;
+        private ServiceRegistry _registry;
+        private bool _initialized;
         [Header("Optional scene services")]
         [SerializeField] private MonoBehaviour rewardedAdServiceBehaviour;
         [SerializeField] private MonoBehaviour interstitialAdServiceBehaviour;
@@ -59,11 +65,26 @@ namespace CoreRacer.Bootstrap
         [SerializeField] private AudioEventLibrary audioEventLibrary;
         [SerializeField] private VfxLibrary vfxLibrary;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStaticState()
+        {
+            _instance = null;
+            GameServices.ClearRegistry();
+        }
+
         private void Awake()
         {
+            if (_instance != null && _instance != this)
+            {
+                Debug.LogWarning("Duplicate GameBootstrapper detected. Destroying the duplicate before it can replace the service registry.", this);
+                Destroy(gameObject);
+                return;
+            }
+
+            _instance = this;
             DontDestroyOnLoad(gameObject);
             var registry = new ServiceRegistry();
-            GameServices.SetRegistry(registry);
+            _registry = registry;
 
             var logger = new GameLogger(
 #if UNITY_EDITOR
@@ -119,9 +140,10 @@ namespace CoreRacer.Bootstrap
 
             var rewarded = rewardedAdServiceBehaviour as IRewardedAdService;
             var interstitial = interstitialAdServiceBehaviour as IInterstitialAdService;
-            var rewardedController = new RewardedAdController(rewarded, adPolicy, gameAnalytics);
-            var interstitialController = new InterstitialAdController(interstitial, adPolicy, gameAnalytics);
-            var iap = new IapPurchaseService(premium);
+            var rewardedController = new RewardedAdController(rewarded, adPolicy, gameAnalytics, adIapAnalytics);
+            var interstitialController = new InterstitialAdController(interstitial, adPolicy, gameAnalytics, adIapAnalytics);
+            var iap = new IapPurchaseService(premium, adIapAnalytics);
+            var commercialReadiness = new CommercialReadinessService(consent, premium, rewardedController, interstitialController, iap);
             var purchases = new PurchaseService(profile, rewards);
             var shop = new ShopService(shopCatalog, profile, rewards, premium, iap);
             var notifications = pushNotificationServiceBehaviour as IPushNotificationService ?? new NoOpPushNotificationService();
@@ -130,6 +152,7 @@ namespace CoreRacer.Bootstrap
             var rotatingTasks = new RotatingTaskService(profile, rewards, storage, serializer, clock, rotatingTaskPool, analyticsService, logger);
             var dailyRewards = new DailyRewardCalendarService(profile, rewards, clock, dailyRewardCalendar, analyticsService, logger);
             var achievements = new AchievementService(profile, rewards, achievementDefinitions);
+            var progressionSnapshot = new ProgressionSnapshotService(profile, rotatingTasks);
             var tutorial = new TutorialService(storage, serializer, tutorialConfig, analyticsService, logger);
             var firstSessionFunnel = new FirstSessionFunnelTracker(storage, analyticsService);
             var supportExporter = new SupportBundleExporter(storage, null, economyLedger);
@@ -148,6 +171,7 @@ namespace CoreRacer.Bootstrap
             registry.Register(rewardedController);
             registry.Register(interstitialController);
             registry.Register(iap);
+            registry.Register(commercialReadiness);
             registry.Register<IAnalyticsService>(analyticsService);
             registry.Register(gameAnalytics);
             registry.Register(runFunnelAnalytics);
@@ -177,11 +201,31 @@ namespace CoreRacer.Bootstrap
             registry.Register(rotatingTasks);
             registry.Register(dailyRewards);
             registry.Register(achievements);
+            registry.Register(progressionSnapshot);
             registry.Register(tutorial);
             registry.Register(firstSessionFunnel);
             registry.Register(supportExporter);
 
+            // Install only after composition is complete so no consumer can observe a half-built registry.
+            GameServices.SetRegistry(registry);
+            _initialized = true;
             logger.Info(LogCategory.Bootstrap, "Core Racer services bootstrapped.", this);
+        }
+
+        private void OnDestroy()
+        {
+            if (_instance != this)
+                return;
+
+            _instance = null;
+            if (_initialized)
+            {
+                _registry?.Clear();
+                GameServices.ClearRegistry(_registry);
+            }
+
+            _registry = null;
+            _initialized = false;
         }
     }
 }

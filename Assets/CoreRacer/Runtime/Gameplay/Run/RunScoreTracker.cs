@@ -14,10 +14,11 @@ namespace CoreRacer.Gameplay.Run
         private float _score;
         private float _combo;
         private float _scorePowerupMultiplier = 1f;
+        private float _shipComboMultiplier = 1f;
 
         public int CurrentScore => Mathf.FloorToInt(_score);
         public float Combo => _combo;
-        public float CurrentMultiplier => 1f + _combo * ComboToMultiplierFactor;
+        public float CurrentMultiplier => 1f + _combo * ComboToMultiplierFactor * _shipComboMultiplier;
         public float ComboToMultiplierFactor => balance != null ? balance.ComboToMultiplierFactor : 0.1f;
         public event Action<int> ScoreChanged;
         public event Action<float> ComboChanged;
@@ -37,6 +38,11 @@ namespace CoreRacer.Gameplay.Run
         public void SetScorePowerupMultiplier(float multiplier)
         {
             _scorePowerupMultiplier = Mathf.Max(1f, multiplier);
+        }
+
+        public void SetShipComboMultiplier(float multiplier)
+        {
+            _shipComboMultiplier = Mathf.Clamp(multiplier, 0.5f, 3f);
         }
 
         public void AddPickupScore(int baseScore)

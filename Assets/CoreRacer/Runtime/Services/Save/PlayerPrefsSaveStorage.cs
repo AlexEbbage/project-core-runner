@@ -2,27 +2,24 @@ using UnityEngine;
 
 namespace CoreRacer.Services.Save
 {
-    public sealed class PlayerPrefsSaveStorage : ISaveStorage
+    public sealed class PlayerPrefsSaveStorage : ISaveStorage, IFlushableSaveStorage
     {
-        public bool Exists(string key)
-        {
-            return PlayerPrefs.HasKey(key);
-        }
+        public bool Exists(string key) => PlayerPrefs.HasKey(key);
 
-        public string Load(string key)
-        {
-            return PlayerPrefs.GetString(key, string.Empty);
-        }
+        public string Load(string key) => PlayerPrefs.GetString(key, string.Empty);
 
         public void Save(string key, string value)
         {
             PlayerPrefs.SetString(key, value ?? string.Empty);
-            PlayerPrefs.Save();
         }
 
         public void Delete(string key)
         {
             PlayerPrefs.DeleteKey(key);
+        }
+
+        public void Flush()
+        {
             PlayerPrefs.Save();
         }
     }

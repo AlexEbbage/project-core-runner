@@ -15,11 +15,18 @@ namespace CoreRacer.Config.Gameplay
 
         public float EvaluateForwardSpeed(float elapsedSeconds, float combo)
         {
+            return EvaluateForwardSpeed(elapsedSeconds, combo, BaseForwardSpeed);
+        }
+
+        public float EvaluateForwardSpeed(float elapsedSeconds, float combo, float startingSpeed)
+        {
+            var baseSpeed = Mathf.Max(0f, startingSpeed);
+            var maxSpeed = Mathf.Max(baseSpeed, MaxForwardSpeed);
             var t = TimeCurveDuration <= 0f ? 1f : Mathf.Clamp01(elapsedSeconds / TimeCurveDuration);
             var curve = TimeScalingCurve == null ? 1f : TimeScalingCurve.Evaluate(t);
-            var timeBonus = elapsedSeconds * SpeedIncreasePerSecond * curve;
-            var comboBonus = Mathf.Min(ComboMaxSpeedBonus, combo * ComboSpeedFactor);
-            return Mathf.Clamp(BaseForwardSpeed + timeBonus + comboBonus, BaseForwardSpeed, MaxForwardSpeed);
+            var timeBonus = Mathf.Max(0f, elapsedSeconds) * SpeedIncreasePerSecond * curve;
+            var comboBonus = Mathf.Min(ComboMaxSpeedBonus, Mathf.Max(0f, combo) * ComboSpeedFactor);
+            return Mathf.Clamp(baseSpeed + timeBonus + comboBonus, baseSpeed, maxSpeed);
         }
     }
 }

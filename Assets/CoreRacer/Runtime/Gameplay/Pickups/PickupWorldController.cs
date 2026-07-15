@@ -16,6 +16,7 @@ namespace CoreRacer.Gameplay.Pickups
         [SerializeField] private RunScoreTracker scoreTracker;
         [SerializeField] private RunCurrencyTracker currencyTracker;
         [SerializeField] private PowerupRuntimeController powerups;
+        [SerializeField] private RunStatsTrackerV2 statsTracker;
 
         private ComponentPool<PickupView> _coinPool;
         private ComponentPool<PickupView> _powerupPool;
@@ -30,12 +31,22 @@ namespace CoreRacer.Gameplay.Pickups
 
         private void Awake()
         {
+            if (statsTracker == null)
+                statsTracker = FindObjectOfType<RunStatsTrackerV2>();
             if (config == null) return;
+            config = Instantiate(config);
             var parent = pickupParent != null ? pickupParent : transform;
             if (config.CoinPrefab != null) _coinPool = new ComponentPool<PickupView>(config.CoinPrefab, parent, config.PrewarmCoins);
             if (config.PowerupPrefab != null) _powerupPool = new ComponentPool<PickupView>(config.PowerupPrefab, parent, config.PrewarmPowerups);
             _patterns = new PickupPatternGenerator(config);
             _lootTable = new PowerupLootTable(config);
+        }
+
+
+        public void ConfigureForRun(int tunnelSides)
+        {
+            if (config != null)
+                config.TunnelSides = Mathf.Clamp(tunnelSides, 3, 16);
         }
 
         public void BeginRun()
@@ -139,6 +150,7 @@ namespace CoreRacer.Gameplay.Pickups
             }
             else
             {
+                statsTracker?.RecordPowerupCollected();
                 powerups?.Activate(pickup.PowerupType);
                 NotifyTutorial(TutorialStepKind.WaitForPowerup, "powerup");
                 _powerupPool.Return(pickup);

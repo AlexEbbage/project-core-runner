@@ -1,4 +1,3 @@
-using System;
 using CoreRacer.Meta.Economy;
 using CoreRacer.Meta.Profile;
 using CoreRacer.Monetisation.Iap;
@@ -34,14 +33,18 @@ namespace CoreRacer.Meta.Shop
                 case ShopItemKind.Unlock:
                     return PurchaseUnlock(item);
                 case ShopItemKind.CurrencyPack:
-                    _rewards.Grant(RewardGrant.Currency(item.CurrencyGrant));
-                    return PurchaseResult.Ok(item.Id);
+                    // Currency packs must be fulfilled by a validated store receipt. Never grant catalog currency directly.
+                    return PurchaseResult.Fail(item.Id, PurchaseFailureReason.StoreUnavailable);
                 case ShopItemKind.PremiumUser:
-                    _iap.BuyPremium();
-                    return PurchaseResult.Ok(item.Id);
+                    if (_premium != null && _premium.HasPremium)
+                        return PurchaseResult.Fail(item.Id, PurchaseFailureReason.AlreadyOwned);
+                    if (_iap == null || !_iap.TryBuyPremium())
+                        return PurchaseResult.Fail(item.Id, PurchaseFailureReason.StoreUnavailable);
+                    return PurchaseResult.Pending(item.Id);
                 case ShopItemKind.RestorePurchases:
-                    _iap.RestorePurchases();
-                    return PurchaseResult.Ok(item.Id);
+                    if (_iap == null || !_iap.TryRestorePurchases())
+                        return PurchaseResult.Fail(item.Id, PurchaseFailureReason.StoreUnavailable);
+                    return PurchaseResult.Pending(item.Id);
                 default:
                     return PurchaseResult.Fail(itemId, PurchaseFailureReason.InvalidItem);
             }
@@ -50,15 +53,26 @@ namespace CoreRacer.Meta.Shop
         private PurchaseResult PurchaseUnlock(ShopItemDefinition item)
         {
             var grantId = string.IsNullOrWhiteSpace(item.GrantItemId) ? item.Id : item.GrantItemId;
-            if (_profile.State.Inventory.IsUnlocked(grantId))
-                return PurchaseResult.Fail(item.Id, PurchaseFailureReason.AlreadyOwned);
+            var failure = PurchaseFailureReason.None;
+            var committed = _profile.TryMutate(state =>
+            {
+                if (state.Inventory.IsUnlocked(grantId))
+                {
+                    failure = PurchaseFailureReason.AlreadyOwned;
+                    return false;
+                }
 
-            if (!_profile.State.Wallet.CanSpend(item.Price))
-                return PurchaseResult.Fail(item.Id, PurchaseFailureReason.InsufficientCurrency);
+                if (!state.Wallet.TrySpend(item.Price))
+                {
+                    failure = PurchaseFailureReason.InsufficientCurrency;
+                    return false;
+                }
 
-            _profile.TrySpend(item.Price);
-            _rewards.Grant(RewardGrant.Unlock(grantId));
-            return PurchaseResult.Ok(item.Id);
+                _rewards.ApplyToState(state, RewardGrant.Unlock(grantId));
+                return true;
+            });
+
+            return committed ? PurchaseResult.Ok(item.Id) : PurchaseResult.Fail(item.Id, failure);
         }
     }
 }

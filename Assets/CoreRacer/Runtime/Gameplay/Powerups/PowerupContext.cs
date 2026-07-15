@@ -1,3 +1,4 @@
+using CoreRacer.Gameplay.Pickups;
 using CoreRacer.Gameplay.Player;
 using CoreRacer.Gameplay.Run;
 
@@ -9,5 +10,7 @@ namespace CoreRacer.Gameplay.Powerups
         public PlayerHealth Health;
         public RunScoreTracker ScoreTracker;
         public RunCurrencyTracker CurrencyTracker;
+        public PickupMagnetController Magnet;
+        public AutoPilotSteeringController AutoPilotSteering;
     }
 }

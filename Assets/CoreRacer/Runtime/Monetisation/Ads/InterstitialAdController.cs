@@ -1,5 +1,6 @@
 using System;
 using CoreRacer.Services.Analytics;
+using CoreRacer.Services.Metrics;
 
 namespace CoreRacer.Monetisation.Ads
 {
@@ -8,13 +9,17 @@ namespace CoreRacer.Monetisation.Ads
         private readonly IInterstitialAdService _ads;
         private readonly AdPolicyService _policy;
         private readonly GameAnalytics _analytics;
+        private readonly AdIapAnalytics _adIapAnalytics;
 
-        public InterstitialAdController(IInterstitialAdService ads, AdPolicyService policy, GameAnalytics analytics)
+        public InterstitialAdController(IInterstitialAdService ads, AdPolicyService policy, GameAnalytics analytics, AdIapAnalytics adIapAnalytics = null)
         {
             _ads = ads;
             _policy = policy;
             _analytics = analytics;
+            _adIapAnalytics = adIapAnalytics;
         }
+
+        public bool HasProvider => _ads != null;
 
         public void ShowIfAllowed(Action<InterstitialAdResult> completed = null)
         {
@@ -22,6 +27,7 @@ namespace CoreRacer.Monetisation.Ads
 
             if (!_policy.RequiresAd(placement))
             {
+                _adIapAnalytics?.AdBypassedByPremium(placement);
                 completed?.Invoke(InterstitialAdResult.BypassedByPremium);
                 return;
             }

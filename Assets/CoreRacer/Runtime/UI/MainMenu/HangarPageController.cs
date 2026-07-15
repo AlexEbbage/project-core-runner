@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using CoreRacer.Bootstrap;
 using CoreRacer.Localization;
+using CoreRacer.Meta.Economy;
+using CoreRacer.Meta.Progression;
 using CoreRacer.Meta.Profile;
 using CoreRacer.Meta.Ships;
 using CoreRacer.UI.Shared;
@@ -75,8 +77,7 @@ namespace CoreRacer.UI.MainMenu
         public void EquipShip(string shipId)
         {
             if (_profile == null || !_profile.State.Inventory.IsUnlocked(shipId)) return;
-            _profile.State.SelectedShipId = shipId;
-            _profile.Save();
+            _profile.Mutate(state => state.SelectedShipId = shipId);
             Refresh();
         }
 
@@ -98,7 +99,7 @@ namespace CoreRacer.UI.MainMenu
             if (previewCosmeticsText != null)
                 previewCosmeticsText.text = $"{ResolveName(shipDatabase.GetSkin(_profile.State.SelectedSkinId))} / {ResolveName(shipDatabase.GetTrail(_profile.State.SelectedTrailId))} / {ResolveName(shipDatabase.GetCoreFx(_profile.State.SelectedCoreFxId))}";
             if (statusText != null)
-                statusText.text = "Ship upgrades remain disabled until the clean run runtime consumes them.";
+                statusText.text = "Select cosmetics or improve persistent ship upgrades.";
         }
 
         private void BindUnlockables<T>(List<T> definitions, Transform root, List<HangarCosmeticItemView> rows, string selectedId, System.Action<string> onSelect) where T : UnlockableDefinition
@@ -151,7 +152,10 @@ namespace CoreRacer.UI.MainMenu
 
                 var definition = shipDatabase.Upgrades[i];
                 var level = _profile.GetUpgradeLevel(_profile.State.ShipUpgradeLevels, definition.UpgradeType.ToString());
-                _upgradeRows[i].Bind(definition, level, "Runtime Pending", false, AttemptUpgrade);
+                var cost = definition.GetCostForLevel(level);
+                var canAfford = _profile.State.Wallet.CanSpend(new CurrencyAmount(definition.Currency, cost));
+                var actionLabel = level >= definition.MaxLevel ? "MAX" : canAfford ? "Upgrade" : "Not enough currency";
+                _upgradeRows[i].Bind(definition, level, actionLabel, canAfford && level < definition.MaxLevel, AttemptUpgrade);
             }
         }
 
@@ -192,8 +196,7 @@ namespace CoreRacer.UI.MainMenu
         {
             if (!CanEquip(id))
                 return;
-            _profile.State.SelectedSkinId = id;
-            _profile.Save();
+            _profile.Mutate(state => state.SelectedSkinId = id);
             Refresh();
         }
 
@@ -201,8 +204,7 @@ namespace CoreRacer.UI.MainMenu
         {
             if (!CanEquip(id))
                 return;
-            _profile.State.SelectedTrailId = id;
-            _profile.Save();
+            _profile.Mutate(state => state.SelectedTrailId = id);
             Refresh();
         }
 
@@ -210,8 +212,7 @@ namespace CoreRacer.UI.MainMenu
         {
             if (!CanEquip(id))
                 return;
-            _profile.State.SelectedCoreFxId = id;
-            _profile.Save();
+            _profile.Mutate(state => state.SelectedCoreFxId = id);
             Refresh();
         }
 
@@ -222,8 +223,62 @@ namespace CoreRacer.UI.MainMenu
 
         private void AttemptUpgrade(UpgradeType upgradeType)
         {
+            if (_profile == null || shipDatabase == null)
+                return;
+
+            ShipUpgradeDefinition definition = null;
+            for (var i = 0; i < shipDatabase.Upgrades.Count; i++)
+            {
+                if (shipDatabase.Upgrades[i] != null && shipDatabase.Upgrades[i].UpgradeType == upgradeType)
+                {
+                    definition = shipDatabase.Upgrades[i];
+                    break;
+                }
+            }
+
+            if (definition == null)
+                return;
+
+            var id = upgradeType.ToString();
+            var purchased = _profile.TryMutate(state =>
+            {
+                var current = GetLevel(state.ShipUpgradeLevels, id);
+                if (current >= definition.MaxLevel)
+                    return false;
+
+                var price = new CurrencyAmount(definition.Currency, definition.GetCostForLevel(current));
+                if (!state.Wallet.TrySpend(price))
+                    return false;
+
+                SetLevel(state.ShipUpgradeLevels, id, current + 1);
+                return true;
+            });
+
             if (statusText != null)
-                statusText.text = $"{upgradeType} upgrades are not connected to the clean run runtime yet.";
+                statusText.text = purchased ? $"{definition.DisplayName} upgraded." : "Upgrade could not be purchased.";
+            Refresh();
+        }
+
+        private static int GetLevel(List<SerializableIntById> levels, string id)
+        {
+            if (levels == null)
+                return 0;
+            for (var i = 0; i < levels.Count; i++)
+                if (levels[i].Id == id)
+                    return levels[i].Value;
+            return 0;
+        }
+
+        private static void SetLevel(List<SerializableIntById> levels, string id, int value)
+        {
+            for (var i = 0; i < levels.Count; i++)
+            {
+                if (levels[i].Id != id)
+                    continue;
+                levels[i] = new SerializableIntById(id, value);
+                return;
+            }
+            levels.Add(new SerializableIntById(id, value));
         }
 
         private void ShowSection(HangarSection section)

@@ -29,6 +29,12 @@ namespace CoreRacer.Meta.DailyRewards
 
         public bool CanClaimToday()
         {
+            if (_config == null || _config.Days.Count == 0)
+                return false;
+
+            if (!_config.LoopAfterFinalDay && _profile.State.DailyLoginStreak >= _config.Days.Count)
+                return false;
+
             return _profile.State.LastDailyRewardDateUtc != TodayKey();
         }
 
@@ -36,7 +42,11 @@ namespace CoreRacer.Meta.DailyRewards
         {
             if (_config == null || _config.Days.Count == 0)
                 return 0;
-            return Math.Max(0, _profile.State.DailyLoginStreak % _config.Days.Count);
+
+            if (_config.LoopAfterFinalDay)
+                return Math.Max(0, _profile.State.DailyLoginStreak % _config.Days.Count);
+
+            return Math.Min(Math.Max(0, _profile.State.DailyLoginStreak), _config.Days.Count - 1);
         }
 
         public IReadOnlyList<DailyRewardDay> GetCalendarPreview()
@@ -46,48 +56,57 @@ namespace CoreRacer.Meta.DailyRewards
 
         public bool TryClaim(bool doubled)
         {
-            if (!CanClaimToday() || _config == null || _config.Days.Count == 0)
+            if (!CanClaimToday())
                 return false;
 
-            ApplyMissedDayPolicy();
-            int index = GetCurrentCalendarIndex();
-            var day = _config.Days[index];
-            Grant(day.Rewards);
-            if (doubled)
-                Grant(day.Rewards);
+            var today = TodayKey();
+            var claimedIndex = -1;
+            var committed = _profile.TryMutate(state =>
+            {
+                if (state.LastDailyRewardDateUtc == today)
+                    return false;
 
-            _profile.State.DailyLoginStreak++;
-            if (!_config.LoopAfterFinalDay && _profile.State.DailyLoginStreak >= _config.Days.Count)
-                _profile.State.DailyLoginStreak = _config.Days.Count - 1;
-            _profile.State.LastDailyRewardDateUtc = TodayKey();
-            _profile.Save();
+                ApplyMissedDayPolicy(state);
+                if (!_config.LoopAfterFinalDay && state.DailyLoginStreak >= _config.Days.Count)
+                    return false;
+
+                claimedIndex = _config.LoopAfterFinalDay
+                    ? Math.Max(0, state.DailyLoginStreak % _config.Days.Count)
+                    : Math.Min(Math.Max(0, state.DailyLoginStreak), _config.Days.Count - 1);
+
+                var day = _config.Days[claimedIndex];
+                _rewards.ApplyManyToState(state, day.Rewards);
+                if (doubled)
+                    _rewards.ApplyManyToState(state, day.Rewards);
+
+                state.DailyLoginStreak++;
+                state.LastDailyRewardDateUtc = today;
+                return true;
+            });
+
+            if (!committed)
+                return false;
 
             _analytics?.Track(AnalyticsEventNames.DailyRewardClaimed, new Dictionary<string, object>
             {
-                ["day_index"] = index + 1,
+                ["day_index"] = claimedIndex + 1,
                 ["doubled"] = doubled
             });
-            _logger.Info(LogCategory.DailyRewards, $"Claimed daily reward day {index + 1}.");
+            _logger?.Info(LogCategory.DailyRewards, $"Claimed daily reward day {claimedIndex + 1}.");
             return true;
         }
 
-        private void ApplyMissedDayPolicy()
+        private void ApplyMissedDayPolicy(PlayerProfileState state)
         {
-            if (_config == null || !_config.ResetStreakOnMissedDay || string.IsNullOrEmpty(_profile.State.LastDailyRewardDateUtc))
+            if (_config == null || !_config.ResetStreakOnMissedDay || string.IsNullOrEmpty(state.LastDailyRewardDateUtc))
                 return;
 
-            if (!DateTime.TryParse(_profile.State.LastDailyRewardDateUtc, out var lastClaimDate))
+            if (!DateTime.TryParse(state.LastDailyRewardDateUtc, out var lastClaimDate))
                 return;
 
             var daysMissed = (_clock.UtcNow.Date - lastClaimDate.Date).Days - 1;
             if (daysMissed > _config.GraceDays)
-                _profile.State.DailyLoginStreak = 0;
-        }
-
-        private void Grant(List<RewardGrant> rewards)
-        {
-            for (int i = 0; i < rewards.Count; i++)
-                _rewards.Grant(rewards[i]);
+                state.DailyLoginStreak = 0;
         }
 
         private string TodayKey()

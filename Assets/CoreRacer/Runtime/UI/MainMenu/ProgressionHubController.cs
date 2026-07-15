@@ -21,6 +21,7 @@ namespace CoreRacer.UI.MainMenu
         [SerializeField] private RotatingTaskListView monthlyTasks;
 
         private TutorialService _tutorial;
+        private ProgressionPanel _currentPanel = ProgressionPanel.DailyLogin;
 
         private void Awake()
         {
@@ -32,7 +33,7 @@ namespace CoreRacer.UI.MainMenu
             if (tasksButton != null) tasksButton.onClick.AddListener(ShowTasks);
             if (achievementsButton != null) achievementsButton.onClick.AddListener(ShowAchievements);
             GameServices.TryGet(out _tutorial);
-            ShowDailyLogin();
+            RefreshVisiblePanel();
         }
 
         private void OnDisable()
@@ -44,6 +45,7 @@ namespace CoreRacer.UI.MainMenu
 
         public void ShowDailyLogin()
         {
+            _currentPanel = ProgressionPanel.DailyLogin;
             SetVisible(dailyLoginPanel, true);
             SetVisible(tasksPanel, false);
             SetVisible(achievementsPanel, false);
@@ -53,6 +55,7 @@ namespace CoreRacer.UI.MainMenu
 
         public void ShowTasks()
         {
+            _currentPanel = ProgressionPanel.Tasks;
             SetVisible(dailyLoginPanel, false);
             SetVisible(tasksPanel, true);
             SetVisible(achievementsPanel, false);
@@ -64,16 +67,40 @@ namespace CoreRacer.UI.MainMenu
 
         public void ShowAchievements()
         {
+            _currentPanel = ProgressionPanel.Achievements;
             SetVisible(dailyLoginPanel, false);
             SetVisible(tasksPanel, false);
             SetVisible(achievementsPanel, true);
             achievementsPage?.Refresh();
         }
 
+        public void RefreshVisiblePanel()
+        {
+            switch (_currentPanel)
+            {
+                case ProgressionPanel.Tasks:
+                    ShowTasks();
+                    break;
+                case ProgressionPanel.Achievements:
+                    ShowAchievements();
+                    break;
+                default:
+                    ShowDailyLogin();
+                    break;
+            }
+        }
+
         private void NotifyPromptOpened()
         {
             if (_tutorial == null) GameServices.TryGet(out _tutorial);
             _tutorial?.Notify(TutorialStepKind.WaitForDailyTaskRewardPromptOpened, "progression");
+        }
+
+        private enum ProgressionPanel
+        {
+            DailyLogin,
+            Tasks,
+            Achievements
         }
 
         private static void SetVisible(GameObject panel, bool visible)

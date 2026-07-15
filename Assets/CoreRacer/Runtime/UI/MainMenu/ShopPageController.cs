@@ -3,6 +3,8 @@ using CoreRacer.Localization;
 using CoreRacer.Meta.Economy;
 using CoreRacer.Meta.Profile;
 using CoreRacer.Meta.Shop;
+using CoreRacer.Monetisation.Iap;
+using CoreRacer.Monetisation.Premium;
 using CoreRacer.UI.Shared;
 using UnityEngine;
 using UnityEngine.UI;
@@ -21,14 +23,70 @@ namespace CoreRacer.UI.MainMenu
         private ShopService _shopService;
         private PurchaseService _purchaseService;
         private PlayerProfileService _profile;
+        private PremiumEntitlementService _premium;
+        private IapPurchaseService _iap;
         private LocalizationServiceV2 _localization;
 
         private void Awake()
         {
-            GameServices.TryGet(out _shopService);
-            GameServices.TryGet(out _purchaseService);
-            GameServices.TryGet(out _profile);
-            GameServices.TryGet(out _localization);
+            ResolveDependencies();
+        }
+
+        private void ResolveDependencies()
+        {
+            if (_shopService == null) GameServices.TryGet(out _shopService);
+            if (_purchaseService == null) GameServices.TryGet(out _purchaseService);
+            if (_profile == null) GameServices.TryGet(out _profile);
+            if (_premium == null) GameServices.TryGet(out _premium);
+            if (_iap == null) GameServices.TryGet(out _iap);
+            if (_localization == null) GameServices.TryGet(out _localization);
+        }
+
+
+        private void OnEnable()
+        {
+            ResolveDependencies();
+            if (_premium != null) _premium.PremiumChanged += OnPremiumChanged;
+            if (_iap != null)
+            {
+                _iap.PurchaseCompleted += OnPurchaseCompleted;
+                _iap.RestoreCompleted += OnRestoreCompleted;
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (_premium != null) _premium.PremiumChanged -= OnPremiumChanged;
+            if (_iap != null)
+            {
+                _iap.PurchaseCompleted -= OnPurchaseCompleted;
+                _iap.RestoreCompleted -= OnRestoreCompleted;
+            }
+        }
+
+        private void OnPremiumChanged(bool hasPremium)
+        {
+            if (statusText != null)
+                statusText.text = hasPremium ? Localize("ui.shop_status_premium_active") : string.Empty;
+            Refresh();
+        }
+
+        private void OnPurchaseCompleted(string productId, IapPurchaseResult result)
+        {
+            if (statusText != null)
+                statusText.text = result == IapPurchaseResult.Success
+                    ? Localize("ui.shop_status_purchase_complete")
+                    : $"{Localize("ui.shop_status_purchase_failed")}: {result}";
+            Refresh();
+        }
+
+        private void OnRestoreCompleted(IapPurchaseResult result)
+        {
+            if (statusText != null)
+                statusText.text = result == IapPurchaseResult.Success
+                    ? Localize("ui.shop_status_restore_complete")
+                    : $"{Localize("ui.shop_status_restore_failed")}: {result}";
+            Refresh();
         }
 
         public override void Show()
@@ -43,7 +101,11 @@ namespace CoreRacer.UI.MainMenu
             {
                 var result = _shopService.TryPurchase(itemId);
                 if (statusText != null)
-                    statusText.text = result.Success ? $"Purchased {itemId}." : $"Purchase failed: {result.FailureReason}.";
+                {
+                    statusText.text = result.IsPending
+                        ? Localize("ui.shop_status_pending")
+                        : result.Success ? $"Purchased {itemId}." : $"Purchase failed: {result.FailureReason}.";
+                }
                 Refresh();
                 return;
             }
@@ -107,8 +169,12 @@ namespace CoreRacer.UI.MainMenu
             if (item == null)
                 return false;
 
-            if (item.Kind == ShopItemKind.RestorePurchases || item.Kind == ShopItemKind.PremiumUser)
-                return true;
+            if (item.Kind == ShopItemKind.CurrencyPack)
+                return false;
+            if (item.Kind == ShopItemKind.RestorePurchases)
+                return _iap != null && _iap.HasStoreAdapter && !_iap.IsRestorePending;
+            if (item.Kind == ShopItemKind.PremiumUser)
+                return (_premium == null || !_premium.HasPremium) && _iap != null && _iap.HasStoreAdapter && !_iap.IsPurchasePending;
 
             if (_profile == null)
                 return true;
@@ -149,7 +215,7 @@ namespace CoreRacer.UI.MainMenu
             if (item == null)
                 return string.Empty;
             if (item.Kind == ShopItemKind.PremiumUser)
-                return Localize("ui.shop_status_remove_ads");
+                return _premium != null && _premium.HasPremium ? Localize("ui.shop_status_premium_active") : Localize("ui.shop_status_remove_ads");
             if (item.Kind == ShopItemKind.RestorePurchases)
                 return Localize("ui.shop_status_restore");
             if (_profile == null)

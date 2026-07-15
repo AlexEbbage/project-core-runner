@@ -32,13 +32,42 @@ namespace CoreRacer.Gameplay.Run
             };
         }
 
+        public RunResult BuildBonusResult(RunResult settledResult)
+        {
+            return new RunResult
+            {
+                Score = 0,
+                Coins = UnityEngine.Mathf.Max(0, settledResult.Coins),
+                Experience = UnityEngine.Mathf.Max(0, settledResult.Experience),
+                PremiumCurrency = UnityEngine.Mathf.Max(0, settledResult.PremiumCurrency),
+                Distance = 0f,
+                DurationSeconds = 0f,
+                PowerupsCollected = 0,
+                EndReason = settledResult.EndReason
+            };
+        }
+
+        /// <summary>Settles one completed run in one profile commit.</summary>
         public void Grant(RunResult result)
         {
-            _profile.AddCurrency(CurrencyType.Soft, result.Coins);
-            if (result.PremiumCurrency > 0)
-                _profile.AddCurrency(CurrencyType.Premium, result.PremiumCurrency);
-            _profile.AddExperience(result.Experience);
-            _profile.RecordRun(result.Score, result.Coins, result.Distance, result.PowerupsCollected);
+            _profile.Mutate(state =>
+            {
+                state.Wallet.Add(CurrencyType.Soft, result.Coins);
+                state.Wallet.Add(CurrencyType.Premium, result.PremiumCurrency);
+                _profile.ApplyExperience(state, result.Experience);
+                _profile.ApplyRunRecord(state, result.Score, result.Coins, result.Distance, result.PowerupsCollected);
+            });
+        }
+
+        /// <summary>Grants only the bonus delta. It never records a second run or powerup collection.</summary>
+        public void GrantBonus(RunResult bonus)
+        {
+            _profile.Mutate(state =>
+            {
+                state.Wallet.Add(CurrencyType.Soft, bonus.Coins);
+                state.Wallet.Add(CurrencyType.Premium, bonus.PremiumCurrency);
+                _profile.ApplyExperience(state, bonus.Experience);
+            });
         }
     }
 }

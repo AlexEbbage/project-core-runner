@@ -1,0 +1,8 @@
+Assets/CoreRacer/Editor/Verticals/CoreRacerSuperPatchAutoInstaller.cs
+Assets/CoreRacer/Editor/Verticals/CoreRacerSuperPatchAutoInstaller.cs.meta
+README_CORE_RACER_SUPER_PATCH_1_1.md
+_PatchReports/CoreRacer_SuperPatch_1_1_Playability_Report.md
+CHANGED_FILES.txt
+NEW_FILES.txt
+DELETE_NOTHING.txt
+PATCH_SHA256.txt

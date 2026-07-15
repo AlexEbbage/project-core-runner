@@ -3,10 +3,10 @@ using System;
 namespace CoreRacer.Services.Save
 {
     /// <summary>
-    /// Backwards-compatible save wrapper: stores the normal raw value, plus backup and checksum keys.
-    /// Existing un-checksummed saves still load normally.
+    /// Backwards-compatible save wrapper with checksum validation and a previous-known-good backup.
+    /// A logical save writes all related keys before flushing the backend once.
     /// </summary>
-    public sealed class SafeSaveStorage : ISaveStorage
+    public sealed class SafeSaveStorage : ISaveStorage, IFlushableSaveStorage
     {
         private readonly ISaveStorage _inner;
 
@@ -15,40 +15,42 @@ namespace CoreRacer.Services.Save
             _inner = inner ?? throw new ArgumentNullException(nameof(inner));
         }
 
-        public bool Exists(string key)
-        {
-            return _inner.Exists(key);
-        }
+        public bool Exists(string key) => _inner.Exists(key);
 
         public string Load(string key)
         {
             var primary = _inner.Load(key);
-            var checksumKey = GetChecksumKey(key);
-
-            if (string.IsNullOrEmpty(primary) || !_inner.Exists(checksumKey))
-                return primary;
-
-            var expectedChecksum = _inner.Load(checksumKey);
-            var actualChecksum = ComputeChecksum(primary);
-            if (string.Equals(expectedChecksum, actualChecksum, StringComparison.Ordinal))
+            if (IsValid(key, primary))
                 return primary;
 
             var backup = _inner.Load(GetBackupKey(key));
-            if (!string.IsNullOrEmpty(backup) && string.Equals(_inner.Load(GetBackupChecksumKey(key)), ComputeChecksum(backup), StringComparison.Ordinal))
+            if (IsValidBackup(key, backup))
                 return backup;
 
-            // Fall back to primary instead of hard-failing; repository migrations can still decide what to do.
+            // Legacy saves may not have checksums yet. Preserve compatibility rather than deleting data.
             return primary;
         }
 
         public void Save(string key, string value)
         {
             value = value ?? string.Empty;
-            var checksum = ComputeChecksum(value);
+
+            var existingPrimary = _inner.Load(key);
+            if (_inner.Exists(key) && IsValid(key, existingPrimary))
+            {
+                _inner.Save(GetBackupKey(key), existingPrimary);
+                _inner.Save(GetBackupChecksumKey(key), ComputeChecksum(existingPrimary));
+            }
+            else if (!_inner.Exists(GetBackupKey(key)))
+            {
+                // First save: a valid copy is still preferable to no recovery path.
+                _inner.Save(GetBackupKey(key), value);
+                _inner.Save(GetBackupChecksumKey(key), ComputeChecksum(value));
+            }
+
             _inner.Save(key, value);
-            _inner.Save(GetChecksumKey(key), checksum);
-            _inner.Save(GetBackupKey(key), value);
-            _inner.Save(GetBackupChecksumKey(key), checksum);
+            _inner.Save(GetChecksumKey(key), ComputeChecksum(value));
+            Flush();
         }
 
         public void Delete(string key)
@@ -57,6 +59,29 @@ namespace CoreRacer.Services.Save
             _inner.Delete(GetChecksumKey(key));
             _inner.Delete(GetBackupKey(key));
             _inner.Delete(GetBackupChecksumKey(key));
+            Flush();
+        }
+
+        public void Flush()
+        {
+            if (_inner is IFlushableSaveStorage flushable)
+                flushable.Flush();
+        }
+
+        private bool IsValid(string key, string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return !_inner.Exists(GetChecksumKey(key));
+            if (!_inner.Exists(GetChecksumKey(key)))
+                return true;
+            return string.Equals(_inner.Load(GetChecksumKey(key)), ComputeChecksum(value), StringComparison.Ordinal);
+        }
+
+        private bool IsValidBackup(string key, string value)
+        {
+            return !string.IsNullOrEmpty(value)
+                && _inner.Exists(GetBackupChecksumKey(key))
+                && string.Equals(_inner.Load(GetBackupChecksumKey(key)), ComputeChecksum(value), StringComparison.Ordinal);
         }
 
         private static string GetChecksumKey(string key) => key + ".checksum";
@@ -65,12 +90,13 @@ namespace CoreRacer.Services.Save
 
         private static string ComputeChecksum(string value)
         {
+            value = value ?? string.Empty;
             unchecked
             {
                 const uint offset = 2166136261;
                 const uint prime = 16777619;
                 uint hash = offset;
-                for (int i = 0; i < value.Length; i++)
+                for (var i = 0; i < value.Length; i++)
                 {
                     hash ^= value[i];
                     hash *= prime;

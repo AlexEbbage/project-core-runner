@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CoreRacer.Meta.Profile;
 
 namespace CoreRacer.Meta.Economy
@@ -44,21 +45,47 @@ namespace CoreRacer.Meta.Economy
             if (reward == null)
                 return;
 
+            _profile.Mutate(state => ApplyToState(state, reward));
+        }
+
+        public void GrantMany(IReadOnlyList<RewardGrant> rewards)
+        {
+            if (rewards == null || rewards.Count == 0)
+                return;
+
+            _profile.Mutate(state => ApplyManyToState(state, rewards));
+        }
+
+        /// <summary>Applies a reward without saving. The owning operation must commit the profile once.</summary>
+        public void ApplyToState(PlayerProfileState state, RewardGrant reward)
+        {
+            if (state == null || reward == null)
+                return;
+
             switch (reward.Type)
             {
                 case RewardGrantType.SoftCurrency:
-                    _profile.AddCurrency(CurrencyType.Soft, reward.Amount);
+                    state.Wallet.Add(CurrencyType.Soft, reward.Amount);
                     break;
                 case RewardGrantType.PremiumCurrency:
-                    _profile.AddCurrency(CurrencyType.Premium, reward.Amount);
+                    state.Wallet.Add(CurrencyType.Premium, reward.Amount);
                     break;
                 case RewardGrantType.Experience:
-                    _profile.AddExperience(reward.Amount);
+                    _profile.ApplyExperience(state, reward.Amount);
                     break;
                 case RewardGrantType.UnlockItem:
-                    _profile.UnlockItem(reward.ItemId);
+                    state.Inventory.Unlock(reward.ItemId);
                     break;
             }
+        }
+
+        public void ApplyManyToState(PlayerProfileState state, IReadOnlyList<RewardGrant> rewards)
+        {
+            if (state == null || rewards == null)
+                return;
+
+            for (var i = 0; i < rewards.Count; i++)
+                ApplyToState(state, rewards[i]);
         }
     }
 }

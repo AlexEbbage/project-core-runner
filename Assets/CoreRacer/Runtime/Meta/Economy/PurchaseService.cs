@@ -7,16 +7,20 @@ namespace CoreRacer.Meta.Economy
         None,
         AlreadyOwned,
         InsufficientCurrency,
-        InvalidItem
+        InvalidItem,
+        Pending,
+        StoreUnavailable
     }
 
     public struct PurchaseResult
     {
         public bool Success;
+        public bool IsPending;
         public PurchaseFailureReason FailureReason;
         public string ItemId;
 
         public static PurchaseResult Ok(string itemId) => new PurchaseResult { Success = true, ItemId = itemId };
+        public static PurchaseResult Pending(string itemId) => new PurchaseResult { IsPending = true, ItemId = itemId, FailureReason = PurchaseFailureReason.Pending };
         public static PurchaseResult Fail(string itemId, PurchaseFailureReason reason) => new PurchaseResult { Success = false, ItemId = itemId, FailureReason = reason };
     }
 
@@ -36,15 +40,26 @@ namespace CoreRacer.Meta.Economy
             if (string.IsNullOrWhiteSpace(itemId))
                 return PurchaseResult.Fail(itemId, PurchaseFailureReason.InvalidItem);
 
-            if (_profile.State.Inventory.IsUnlocked(itemId))
-                return PurchaseResult.Fail(itemId, PurchaseFailureReason.AlreadyOwned);
+            var failure = PurchaseFailureReason.None;
+            var committed = _profile.TryMutate(state =>
+            {
+                if (state.Inventory.IsUnlocked(itemId))
+                {
+                    failure = PurchaseFailureReason.AlreadyOwned;
+                    return false;
+                }
 
-            if (!_profile.State.Wallet.CanSpend(price))
-                return PurchaseResult.Fail(itemId, PurchaseFailureReason.InsufficientCurrency);
+                if (!state.Wallet.TrySpend(price))
+                {
+                    failure = PurchaseFailureReason.InsufficientCurrency;
+                    return false;
+                }
 
-            _profile.TrySpend(price);
-            _rewards.Grant(RewardGrant.Unlock(itemId));
-            return PurchaseResult.Ok(itemId);
+                _rewards.ApplyToState(state, RewardGrant.Unlock(itemId));
+                return true;
+            });
+
+            return committed ? PurchaseResult.Ok(itemId) : PurchaseResult.Fail(itemId, failure);
         }
     }
 }

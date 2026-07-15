@@ -29,14 +29,17 @@ namespace CoreRacer.UI.MainMenu
 
         private void Awake()
         {
-            GameServices.TryGet(out _profile);
-            GameServices.TryGet(out _localization);
+            ResolveDependencies();
         }
 
         private void OnEnable()
         {
+            ResolveDependencies();
             if (playButton != null)
+            {
+                playButton.onClick.RemoveListener(PlaySelected);
                 playButton.onClick.AddListener(PlaySelected);
+            }
             Refresh();
         }
 
@@ -138,7 +141,7 @@ namespace CoreRacer.UI.MainMenu
             }
         }
 
-        private void PlaySelected()
+        public void PlaySelected()
         {
             if (roadmap == null || _selectedIndex < 0 || _selectedIndex >= roadmap.Levels.Count)
                 return;
@@ -149,6 +152,17 @@ namespace CoreRacer.UI.MainMenu
 
             SyncRunController(level);
             runController?.StartRun();
+        }
+
+        private void ResolveDependencies()
+        {
+            if (runController == null)
+                runController = FindObjectOfType<RunController>();
+
+            if (_profile == null)
+                GameServices.TryGet(out _profile);
+            if (_localization == null)
+                GameServices.TryGet(out _localization);
         }
 
         private void SyncRunController(LevelDefinition level)

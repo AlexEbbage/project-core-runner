@@ -21,11 +21,22 @@ namespace CoreRacer.Gameplay.Obstacles
 
         private void Awake()
         {
+            if (config != null)
+                config = Instantiate(config);
+
             if (config != null && config.RingPrefab != null)
             {
                 _difficulty = new ObstacleDifficultyProvider(config);
                 _spawner = new ObstacleRingSpawner(config, ringParent != null ? ringParent : transform);
             }
+        }
+
+
+        public void ConfigureForRun(int tunnelSides, float difficultyMultiplier)
+        {
+            if (config != null)
+                config.TunnelSides = Mathf.Clamp(tunnelSides, 3, 16);
+            _difficulty?.SetMultiplier(difficultyMultiplier);
         }
 
         public void BeginRun()

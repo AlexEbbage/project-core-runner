@@ -53,12 +53,18 @@ namespace CoreRacer.Meta.Achievements
             if (definition == null || !IsComplete(definition) || IsClaimed(id))
                 return false;
 
-            for (int i = 0; i < definition.Rewards.Count; i++)
-                _rewards.Grant(definition.Rewards[i]);
+            return _profile.TryMutate(state =>
+            {
+                for (var i = 0; i < state.ClaimedAchievements.Count; i++)
+                {
+                    if (state.ClaimedAchievements[i].Id == id && state.ClaimedAchievements[i].Value)
+                        return false;
+                }
 
-            _profile.State.ClaimedAchievements.Add(new SerializableBoolById(id, true));
-            _profile.Save();
-            return true;
+                _rewards.ApplyManyToState(state, definition.Rewards);
+                state.ClaimedAchievements.Add(new SerializableBoolById(id, true));
+                return true;
+            });
         }
     }
 }

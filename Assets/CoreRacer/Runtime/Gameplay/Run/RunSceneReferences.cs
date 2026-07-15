@@ -15,6 +15,7 @@ namespace CoreRacer.Gameplay.Run
     {
         public PlayerController Player;
         public PlayerHealth PlayerHealth;
+        public PlayerCosmeticsController PlayerCosmetics;
         public RunScoreTracker ScoreTracker;
         public RunCurrencyTracker CurrencyTracker;
         public RunStatsTrackerV2 StatsTracker;
@@ -36,6 +37,7 @@ namespace CoreRacer.Gameplay.Run
             var result = new ValidationResult();
             if (Player == null) result.Error("RunSceneReferences.Player is missing.");
             if (PlayerHealth == null) result.Error("RunSceneReferences.PlayerHealth is missing.");
+            if (PlayerCosmetics == null) result.Warning("RunSceneReferences.PlayerCosmetics is missing. Selected ships/cosmetics will not be applied.");
             if (ScoreTracker == null) result.Error("RunSceneReferences.ScoreTracker is missing.");
             if (CurrencyTracker == null) result.Error("RunSceneReferences.CurrencyTracker is missing.");
             if (StatsTracker == null) result.Error("RunSceneReferences.StatsTracker is missing.");

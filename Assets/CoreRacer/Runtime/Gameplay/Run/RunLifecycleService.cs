@@ -8,6 +8,7 @@ namespace CoreRacer.Gameplay.Run
         private readonly RunStateMachine _stateMachine;
         private readonly IGameClock _clock;
         private readonly RunSession _session = new RunSession();
+        private bool _endRaised;
 
         public RunSession Session => _session;
         public event Action RunStarted;
@@ -21,14 +22,21 @@ namespace CoreRacer.Gameplay.Run
             _clock = clock;
         }
 
-        public void StartNewRun(string levelId, string shipId)
+        public bool StartNewRun(string levelId, string shipId)
         {
-            if (!_stateMachine.TrySetState(RunState.Running))
-                return;
+            // RunStateMachine allows idempotent same-state transitions for general callers.
+            // Starting a run is not idempotent: a second Play click must not reset the active session.
+            if (_stateMachine.State != RunState.MainMenu && _stateMachine.State != RunState.Starting)
+                return false;
 
+            if (!_stateMachine.TrySetState(RunState.Running))
+                return false;
+
+            _endRaised = false;
             _session.Reset(levelId, shipId, UnityEngine.Time.realtimeSinceStartup);
             _clock.TimeScale = 1f;
             RunStarted?.Invoke();
+            return true;
         }
 
         public void Pause()
@@ -52,11 +60,18 @@ namespace CoreRacer.Gameplay.Run
             _stateMachine.TrySetState(RunState.Crashed);
         }
 
-        public void EndRun(RunEndReason reason)
+        public bool EndRun(RunEndReason reason)
         {
+            if (_endRaised || _stateMachine.State == RunState.GameOver || _stateMachine.State == RunState.MainMenu || _stateMachine.State == RunState.ReturningToMenu)
+                return false;
+
+            if (!_stateMachine.TrySetState(RunState.GameOver))
+                return false;
+
+            _endRaised = true;
             _clock.TimeScale = 1f;
-            _stateMachine.TrySetState(RunState.GameOver);
             RunEnded?.Invoke(reason);
+            return true;
         }
 
         public void ReturnToMenu()

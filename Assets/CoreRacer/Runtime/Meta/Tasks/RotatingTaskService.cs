@@ -12,6 +12,8 @@ namespace CoreRacer.Meta.Tasks
 {
     public sealed class RotatingTaskService
     {
+        private const string ClaimPrefix = "rotating:";
+
         private readonly PlayerProfileService _profile;
         private readonly RewardGrantService _rewards;
         private readonly ISaveStorage _storage;
@@ -49,14 +51,12 @@ namespace CoreRacer.Meta.Tasks
         {
             RefreshRotations();
             var result = new List<RotatingTaskViewModel>();
-            for (int i = 0; i < _state.ActiveSlots.Count; i++)
+            for (var i = 0; i < _state.ActiveSlots.Count; i++)
             {
                 var slot = _state.ActiveSlots[i];
                 var definition = FindDefinition(slot.TaskId);
-                if (definition == null)
-                    continue;
-
-                result.Add(BuildViewModel(slot, definition));
+                if (definition != null)
+                    result.Add(BuildViewModel(slot, definition));
             }
             return result;
         }
@@ -69,12 +69,30 @@ namespace CoreRacer.Meta.Tasks
             if (slot == null || definition == null || slot.Claimed)
                 return false;
 
-            var viewModel = BuildViewModel(slot, definition);
-            if (viewModel.Status != RotatingTaskStatus.Completed)
+            if (BuildViewModel(slot, definition).Status != RotatingTaskStatus.Completed)
                 return false;
 
-            for (int i = 0; i < definition.Rewards.Count; i++)
-                _rewards.Grant(definition.Rewards[i]);
+            var claimId = BuildClaimId(slot);
+            var committed = _profile.TryMutate(state =>
+            {
+                if (HasClaim(state.ClaimedTasks, claimId))
+                    return false;
+
+                _rewards.ApplyManyToState(state, definition.Rewards);
+                state.ClaimedTasks.Add(new SerializableBoolById(claimId, true));
+                return true;
+            });
+
+            if (!committed)
+            {
+                // Recover the task UI if the profile commit already succeeded before a task-save interruption.
+                if (HasClaim(_profile.State.ClaimedTasks, claimId))
+                {
+                    slot.Claimed = true;
+                    Save();
+                }
+                return false;
+            }
 
             slot.Claimed = true;
             Save();
@@ -83,7 +101,7 @@ namespace CoreRacer.Meta.Tasks
                 ["task_id"] = taskId,
                 ["cadence"] = definition.Cadence.ToString()
             });
-            _logger.Info(LogCategory.Tasks, $"Claimed rotating task '{taskId}'.");
+            _logger?.Info(LogCategory.Tasks, $"Claimed rotating task '{taskId}'.");
             return true;
         }
 
@@ -98,55 +116,62 @@ namespace CoreRacer.Meta.Tasks
 
         private void RefreshRotations()
         {
-            RemoveExpired(TaskCadence.Daily);
-            RemoveExpired(TaskCadence.Weekly);
-            RemoveExpired(TaskCadence.Monthly);
-            EnsureSlots(TaskCadence.Daily, _pool != null ? _pool.DailySlots : 0);
-            EnsureSlots(TaskCadence.Weekly, _pool != null ? _pool.WeeklySlots : 0);
-            EnsureSlots(TaskCadence.Monthly, _pool != null ? _pool.MonthlySlots : 0);
-            Save();
+            var changed = false;
+            changed |= RemoveExpired(TaskCadence.Daily);
+            changed |= RemoveExpired(TaskCadence.Weekly);
+            changed |= RemoveExpired(TaskCadence.Monthly);
+            changed |= EnsureSlots(TaskCadence.Daily, _pool != null ? _pool.DailySlots : 0);
+            changed |= EnsureSlots(TaskCadence.Weekly, _pool != null ? _pool.WeeklySlots : 0);
+            changed |= EnsureSlots(TaskCadence.Monthly, _pool != null ? _pool.MonthlySlots : 0);
+            if (changed)
+                Save();
         }
 
-        private void RemoveExpired(TaskCadence cadence)
+        private bool RemoveExpired(TaskCadence cadence)
         {
             var now = _clock.UtcNow;
-            _state.ActiveSlots.RemoveAll(slot => slot.Cadence == cadence && TryParse(slot.ExpiresAtUtcIso, out var expiresAt) && now >= expiresAt);
+            return _state.ActiveSlots.RemoveAll(slot => slot.Cadence == cadence &&
+                TryParse(slot.ExpiresAtUtcIso, out var expiresAt) && now >= expiresAt) > 0;
         }
 
-        private void EnsureSlots(TaskCadence cadence, int targetCount)
+        private bool EnsureSlots(TaskCadence cadence, int targetCount)
         {
             if (targetCount <= 0 || _pool == null)
-                return;
+                return false;
 
-            int current = 0;
-            for (int i = 0; i < _state.ActiveSlots.Count; i++)
+            var current = 0;
+            for (var i = 0; i < _state.ActiveSlots.Count; i++)
                 if (_state.ActiveSlots[i].Cadence == cadence)
                     current++;
 
+            var changed = false;
             while (current < targetCount)
             {
                 if (!AssignForCadence(cadence))
                     break;
                 current++;
+                changed = true;
             }
+            return changed;
         }
 
         private bool AssignForCadence(TaskCadence cadence)
         {
-            var candidates = _pool?.GetTasksFor(cadence) ?? new List<RotatingTaskDefinition>();
-            if (candidates.Count == 0)
+            var source = _pool?.GetTasksFor(cadence) ?? new List<RotatingTaskDefinition>();
+            if (source.Count == 0)
                 return false;
 
+            var candidates = new List<RotatingTaskDefinition>(source);
             var used = new HashSet<string>();
-            for (int i = 0; i < _state.ActiveSlots.Count; i++)
+            for (var i = 0; i < _state.ActiveSlots.Count; i++)
                 used.Add(_state.ActiveSlots[i].TaskId);
 
             candidates.RemoveAll(x => x == null || string.IsNullOrEmpty(x.Id) || used.Contains(x.Id));
             if (candidates.Count == 0)
                 return false;
 
-            var seed = (_clock.UtcNow.Date.ToString("yyyyMMdd") + cadence).GetHashCode();
-            var random = new Random(seed + _state.ActiveSlots.Count);
+            var seedText = _clock.UtcNow.Date.ToString("yyyyMMdd") + ":" + cadence;
+            var random = new Random(StableHash(seedText) + _state.ActiveSlots.Count);
             var chosen = WeightedPick(candidates, random);
             var now = _clock.UtcNow;
 
@@ -159,17 +184,17 @@ namespace CoreRacer.Meta.Tasks
                 AssignedAtUtcIso = now.ToString("o"),
                 ExpiresAtUtcIso = GetExpiry(now, cadence).ToString("o")
             });
-            _logger.Info(LogCategory.Tasks, $"Assigned {cadence} task '{chosen.Id}'.");
+            _logger?.Info(LogCategory.Tasks, $"Assigned {cadence} task '{chosen.Id}'.");
             return true;
         }
 
         private RotatingTaskViewModel BuildViewModel(RotatingTaskSlot slot, RotatingTaskDefinition definition)
         {
-            int absolute = GetAbsoluteProgress(definition);
-            int progress = definition.Metric == ProgressionTaskMetric.BestScore
+            var absolute = GetAbsoluteProgress(definition);
+            var progress = definition.Metric == ProgressionTaskMetric.BestScore
                 ? absolute
                 : Math.Max(0, absolute - slot.ProgressStartValue);
-            int target = Math.Max(1, definition.TargetValue);
+            var target = Math.Max(1, definition.TargetValue);
             var status = slot.Claimed ? RotatingTaskStatus.Claimed : progress >= target ? RotatingTaskStatus.Completed : RotatingTaskStatus.Active;
             if (TryParse(slot.ExpiresAtUtcIso, out var expiresAt) && _clock.UtcNow >= expiresAt && !slot.Claimed)
                 status = RotatingTaskStatus.Expired;
@@ -205,7 +230,7 @@ namespace CoreRacer.Meta.Tasks
         {
             if (_pool == null)
                 return null;
-            for (int i = 0; i < _pool.Tasks.Count; i++)
+            for (var i = 0; i < _pool.Tasks.Count; i++)
             {
                 var task = _pool.Tasks[i];
                 if (task != null && task.Id == id)
@@ -216,25 +241,54 @@ namespace CoreRacer.Meta.Tasks
 
         private RotatingTaskSaveData Load()
         {
-            if (!_storage.Exists(SaveKeys.RotatingTasks))
+            if (_storage == null || !_storage.Exists(SaveKeys.RotatingTasks))
                 return new RotatingTaskSaveData();
-            return _serializer.Deserialize<RotatingTaskSaveData>(_storage.Load(SaveKeys.RotatingTasks));
+            var loaded = _serializer.Deserialize<RotatingTaskSaveData>(_storage.Load(SaveKeys.RotatingTasks));
+            loaded = loaded ?? new RotatingTaskSaveData();
+            loaded.ActiveSlots = loaded.ActiveSlots ?? new List<RotatingTaskSlot>();
+            return loaded;
         }
 
         private void Save()
         {
-            _storage.Save(SaveKeys.RotatingTasks, _serializer.Serialize(_state));
+            _storage?.Save(SaveKeys.RotatingTasks, _serializer.Serialize(_state));
+        }
+
+        private static bool HasClaim(List<SerializableBoolById> claims, string id)
+        {
+            if (claims == null)
+                return false;
+            for (var i = 0; i < claims.Count; i++)
+                if (claims[i].Id == id && claims[i].Value)
+                    return true;
+            return false;
+        }
+
+        private static string BuildClaimId(RotatingTaskSlot slot)
+        {
+            return ClaimPrefix + slot.TaskId + ":" + slot.AssignedAtUtcIso;
+        }
+
+        private static int StableHash(string value)
+        {
+            unchecked
+            {
+                var hash = (int)2166136261;
+                for (var i = 0; i < value.Length; i++)
+                    hash = (hash ^ value[i]) * 16777619;
+                return hash;
+            }
         }
 
         private static RotatingTaskDefinition WeightedPick(List<RotatingTaskDefinition> tasks, Random random)
         {
-            int total = 0;
-            for (int i = 0; i < tasks.Count; i++)
+            var total = 0;
+            for (var i = 0; i < tasks.Count; i++)
                 total += Math.Max(1, tasks[i].Weight);
 
-            int roll = random.Next(0, Math.Max(1, total));
-            int cursor = 0;
-            for (int i = 0; i < tasks.Count; i++)
+            var roll = random.Next(0, Math.Max(1, total));
+            var cursor = 0;
+            for (var i = 0; i < tasks.Count; i++)
             {
                 cursor += Math.Max(1, tasks[i].Weight);
                 if (roll < cursor)
@@ -258,9 +312,6 @@ namespace CoreRacer.Meta.Tasks
             }
         }
 
-        private static bool TryParse(string value, out DateTimeOffset date)
-        {
-            return DateTimeOffset.TryParse(value, out date);
-        }
+        private static bool TryParse(string value, out DateTimeOffset date) => DateTimeOffset.TryParse(value, out date);
     }
 }

@@ -23,7 +23,7 @@ namespace CoreRacer.Meta.DailyRewards
 
         public bool CanClaimToday()
         {
-            return _profile.State.LastDailyRewardDateUtc != _clock.UtcNow.Date.ToString("yyyy-MM-dd");
+            return _profile.State.LastDailyRewardDateUtc != TodayKey();
         }
 
         public bool TryClaim(bool doubled)
@@ -31,16 +31,27 @@ namespace CoreRacer.Meta.DailyRewards
             if (!CanClaimToday() || _rewardCycle.Count == 0)
                 return false;
 
-            var index = Math.Max(0, _profile.State.DailyLoginStreak % _rewardCycle.Count);
-            var reward = _rewardCycle[index];
-            _rewards.Grant(reward);
-            if (doubled)
-                _rewards.Grant(reward);
+            var today = TodayKey();
+            return _profile.TryMutate(state =>
+            {
+                if (state.LastDailyRewardDateUtc == today)
+                    return false;
 
-            _profile.State.DailyLoginStreak++;
-            _profile.State.LastDailyRewardDateUtc = _clock.UtcNow.Date.ToString("yyyy-MM-dd");
-            _profile.Save();
-            return true;
+                var index = Math.Max(0, state.DailyLoginStreak % _rewardCycle.Count);
+                var reward = _rewardCycle[index];
+                _rewards.ApplyToState(state, reward);
+                if (doubled)
+                    _rewards.ApplyToState(state, reward);
+
+                state.DailyLoginStreak++;
+                state.LastDailyRewardDateUtc = today;
+                return true;
+            });
+        }
+
+        private string TodayKey()
+        {
+            return _clock.UtcNow.Date.ToString("yyyy-MM-dd");
         }
     }
 }

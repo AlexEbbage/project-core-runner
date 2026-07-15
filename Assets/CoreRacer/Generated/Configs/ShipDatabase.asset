@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd66889ffcd44c26bd3e616f78753844, type: 3}
+  m_Name: ShipDatabase
+  m_EditorClassIdentifier: 
+  Ships:
+  - {fileID: 11400000, guid: ace82dea097d49d4d89a67b66a908ab5, type: 2}
+  Skins:
+  - {fileID: 11400000, guid: 6a74caf39d39d014bb14466fb998a833, type: 2}
+  Trails:
+  - {fileID: 11400000, guid: f3a0cc19af0c0e84eafa6fbccc7ae460, type: 2}
+  CoreFx:
+  - {fileID: 11400000, guid: ba4bb358cde165445a901091c4efb3a7, type: 2}
+  Upgrades:
+  - {fileID: 11400000, guid: 4fe6db527b72fb9418769e11d7e2154d, type: 2}
+  - {fileID: 11400000, guid: 19014d8f69495974eb2a78dc3e935644, type: 2}
+  - {fileID: 11400000, guid: e66ca0eee17229b4381cd1e685f9b4f1, type: 2}
+  - {fileID: 11400000, guid: a6f59edbd75f9db4ab449aad714860f8, type: 2}

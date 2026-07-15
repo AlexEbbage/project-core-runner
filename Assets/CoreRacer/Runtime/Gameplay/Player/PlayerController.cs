@@ -27,12 +27,20 @@ namespace CoreRacer.Gameplay.Player
         public void EndRun()
         {
             running = false;
+            autoPilotActive = false;
+            autoPilotInput = 0f;
+            motor?.SetSpeedMultiplier(1f);
         }
 
         public void SetAutoPilot(bool active, float input = 0f)
         {
             autoPilotActive = active;
             autoPilotInput = Mathf.Clamp(input, -1f, 1f);
+        }
+
+        public void SetSpeedMultiplier(float multiplier)
+        {
+            motor?.SetSpeedMultiplier(multiplier);
         }
 
         private void Update()

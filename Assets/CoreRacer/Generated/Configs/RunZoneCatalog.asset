@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: f5369117c9f54289af087d0ac522398d, type: 3}
   m_Name: RunZoneCatalog
   m_EditorClassIdentifier: CoreRacer.Runtime:CoreRacer.Gameplay.Environment:RunZoneCatalog
   Zones:

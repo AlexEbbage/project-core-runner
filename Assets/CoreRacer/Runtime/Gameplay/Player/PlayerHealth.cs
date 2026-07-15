@@ -9,15 +9,21 @@ namespace CoreRacer.Gameplay.Player
         [SerializeField] private GameBalanceConfigV2 balance;
         private float _health;
         private float _invulnerableUntil;
+        private float _maxHealthBonus;
 
         public float CurrentHealth => _health;
-        public float MaxHealth => balance != null ? balance.MaxHealth : 2f;
+        public float MaxHealth => (balance != null ? balance.MaxHealth : 2f) + _maxHealthBonus;
         public bool IsAlive => _health > 0f;
         public bool IsInvulnerable => UnityEngine.Time.time < _invulnerableUntil;
         public event Action<float, float> HealthChanged;
         public event Action Died;
 
         private void Awake() => ResetHealth();
+
+        public void SetMaxHealthBonus(float bonus)
+        {
+            _maxHealthBonus = Mathf.Max(0f, bonus);
+        }
 
         public void ResetHealth()
         {

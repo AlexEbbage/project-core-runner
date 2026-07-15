@@ -4,8 +4,9 @@ namespace CoreRacer.Gameplay.Obstacles
     {
         private readonly ObstacleGenerationConfig _config;
         private float _elapsed;
+        private float _multiplier = 1f;
 
-        public float CurrentDifficulty => _config.BaseDifficulty + _elapsed * _config.DifficultyPerSecond;
+        public float CurrentDifficulty => (_config.BaseDifficulty + _elapsed * _config.DifficultyPerSecond) * _multiplier;
 
         public ObstacleDifficultyProvider(ObstacleGenerationConfig config)
         {
@@ -17,9 +18,14 @@ namespace CoreRacer.Gameplay.Obstacles
             _elapsed = 0f;
         }
 
+        public void SetMultiplier(float multiplier)
+        {
+            _multiplier = UnityEngine.Mathf.Max(0.05f, multiplier);
+        }
+
         public void Tick(float deltaTime)
         {
-            _elapsed += deltaTime;
+            _elapsed += UnityEngine.Mathf.Max(0f, deltaTime);
         }
     }
 }
