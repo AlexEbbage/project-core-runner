@@ -107,7 +107,16 @@ namespace CoreRacer.Gameplay.Run
 
         public void StartRun()
         {
+            TryStartRun();
+        }
+
+        public bool TryStartRun()
+        {
             ResolveServices();
+            ResolveSelectedLevel();
+            if (!ValidateCoreRunStart())
+                return false;
+
             var shipId = "starter_runner";
             PlayerProfileService profile = null;
             if (GameServices.TryGet(out profile))
@@ -119,15 +128,41 @@ namespace CoreRacer.Gameplay.Run
                 references?.PlayerCosmetics?.Apply(profile.State);
             }
 
-            ResolveSelectedLevel();
             var levelId = _selectedLevel != null ? _selectedLevel.Id : (string.IsNullOrWhiteSpace(_selectedLevelId) ? defaultLevelId : _selectedLevelId);
             ApplySelectedRunDefinition();
+            Time.timeScale = 1f;
             if (!_lifecycle.StartNewRun(levelId, shipId))
-                return;
+            {
+                Debug.LogError($"Core run could not start from state {State}. Return to the menu before starting another run.", this);
+                return false;
+            }
 
             _analytics?.RunStarted(levelId, shipId);
             _tutorial?.Notify(TutorialStepKind.WaitForRunStarted, "play");
+            Debug.Log($"Core run started. Level='{levelId}', Ship='{shipId}'.", this);
+            return true;
         }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        public bool TryQuickPlayCoreRun()
+        {
+            if (levelRoadmap == null || levelRoadmap.Levels == null || levelRoadmap.Levels.Count == 0)
+            {
+                Debug.LogError("Quick Play failed: the run controller has no level roadmap entries.", this);
+                return false;
+            }
+
+            var knownLevel = levelRoadmap.Levels[0];
+            if (knownLevel == null || string.IsNullOrWhiteSpace(knownLevel.Id))
+            {
+                Debug.LogError("Quick Play failed: the first roadmap entry is missing or has no id.", this);
+                return false;
+            }
+
+            SetSelectedLevel(knownLevel);
+            return TryStartRun();
+        }
+#endif
 
         public void SetSelectedLevelId(string levelId)
         {
@@ -413,6 +448,53 @@ namespace CoreRacer.Gameplay.Run
             if (_rewardedAds == null) GameServices.TryGet(out _rewardedAds);
             if (_analytics == null) GameServices.TryGet(out _analytics);
             if (_tutorial == null) GameServices.TryGet(out _tutorial);
+        }
+
+        private bool ValidateCoreRunStart()
+        {
+            if (_lifecycle == null)
+            {
+                Debug.LogError("Core run failed: the run lifecycle is not initialized.", this);
+                return false;
+            }
+
+            if (references == null)
+            {
+                Debug.LogError("Core run failed: RunController.references is not assigned.", this);
+                return false;
+            }
+
+            var validation = references.ValidateReferences();
+            for (var i = 0; i < validation.Errors.Count; i++)
+                Debug.LogError("Core run reference error: " + validation.Errors[i], references);
+            for (var i = 0; i < validation.Warnings.Count; i++)
+                Debug.LogWarning("Core run reference warning: " + validation.Warnings[i], references);
+
+            var valid = validation.IsValid;
+            valid &= RequireCoreReference(references.Player != null && references.Player.Motor != null, "Player and Player.Motor");
+            valid &= RequireCoreReference(zoneManager != null, "RunZoneManagerV2");
+            valid &= RequireCoreReference(references.ObstacleWorld != null, "ObstacleWorld");
+            valid &= RequireCoreReference(references.PickupWorld != null, "PickupWorld");
+            valid &= RequireCoreReference(references.Hud != null, "Hud");
+            valid &= RequireCoreReference(references.GameOver != null, "GameOver");
+            valid &= RequireCoreReference(references.MainMenu != null, "MainMenu");
+
+            if (_selectedLevel == null)
+            {
+                Debug.LogError($"Core run failed: selected level '{_selectedLevelId}' was not found in the roadmap.", this);
+                valid = false;
+            }
+
+            return valid;
+        }
+
+        private bool RequireCoreReference(bool present, string referenceName)
+        {
+            if (present)
+                return true;
+
+            Debug.LogError($"Core run failed: required reference '{referenceName}' is missing.", this);
+            return false;
         }
 
         private void StopRuntimeSystems()

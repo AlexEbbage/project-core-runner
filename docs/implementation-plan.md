@@ -2,7 +2,7 @@
 
 ## Delivery Strategy
 
-Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. The current delivery slice is the progression expansion bundle: level roadmap, task breadth, achievement breadth, and daily-login x2 support are now in repo, and the clean `CoreRacer_Main` scene now carries the authored Phase 5 hub shell needed for runtime validation.
+Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. The current delivery slice is core-run playability: restore the visible Play route, provide a development-only Quick Play route, and prove the run lifecycle in the live `CoreRacer_Main` scene before any broader feature work resumes.
 
 ## Phases
 
@@ -23,10 +23,10 @@ Use the docs set as the durable operating system for the project. Foundation doc
 
 ## Current Recommended Order
 
-1. Progression expansion runtime review
-2. Booster review pass
-3. Remaining UI polish and scene-wiring follow-up if needed
-4. Next content expansion after runtime signoff
+1. Human playability signoff for Play, control, crash, Retry, and Home
+2. Decide whether dynamic tunnel-section generation is required or whether the current static tunnel mesh is intentional
+3. Fix the overlapping Game Over layout without regenerating the authored UI
+4. Resume progression and booster review only after the core loop is signed off
 
 ## Current Asset Wiring Status
 
@@ -34,7 +34,8 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - `CoreRacer_Main.unity` now also contains an authored clean hub flow for `Play`, `Shop`, `Hangar`, `Lab`, `Progression`, and `Settings`, with nested level select, daily login, rotating tasks, achievements, comfort, privacy, and support/debug surfaces.
 - `CoreRacer_Main.unity` now has the Phase 6 FTUE tutorial overlay, scene director, deterministic first coin/powerup assistance, support reset action, and save-backed tutorial progress wiring.
 - `CoreRacer_Main.unity` now has Phase 7 safe SDK adapter wiring for verified Unity IAP, Firebase Analytics, and Mobile Notifications APIs; LevelPlay, Crashlytics, and Addressables remain disabled/manual setup blockers.
-- Phase 8 final validation and handoff is captured in `docs/rewrite/final-handoff.md`; closed testing remains blocked by placeholder privacy links and the build settings still targeting legacy `Assets/Scenes/GameScene.unity`.
+- `CoreRacer_Main.unity` now routes the visible bottom Play button directly through validated level selection into run startup. The development editor command is `Tools > Core Racer > Playability > Start Core Run`.
+- Phase 8 final validation and handoff is captured in `docs/rewrite/final-handoff.md`; closed testing remains blocked by placeholder privacy links. Live inspection on 2026-07-15 confirmed `Assets/CoreRacer/Scenes/CoreRacer_Main.unity` is the only enabled Build Settings scene.
 - Manual art follow-up is tracked in `docs/rewrite/manual-art-wiring-needed.md`.
 
 ## Dependencies and Blockers
@@ -45,7 +46,9 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - Boosters, shop, ship customisation, lab, tasks, daily login, achievements, and UI polish still require broader UX review even though scene wiring, localization validation, and product-catalog validation now pass in the clean scene.
 - DOTween is now the approved UI motion layer, so UI polish work should use the reusable motion helper rather than introducing a second transition stack.
 - SDK release blockers remain for LevelPlay C# API installation/verification, Firebase Crashlytics installation, Addressables installation if remote content is required, and replacement of placeholder privacy links.
-- Build settings must be corrected or explicitly approved before closed testing because they currently include `Assets/Scenes/GameScene.unity` instead of the clean `CoreRacer_Main.unity`.
+- Build settings currently target the clean `CoreRacer_Main.unity`; keep this checked during release preparation rather than relying on the stale legacy-scene assumption.
+- Live inspection for this slice found active static tunnel geometry, not a runtime tunnel-section generator. Obstacles and pickups do generate during the run; tunnel-section generation must not be claimed until a product decision and implementation/verification slice exists.
+- The Game Over actions work through their live button callbacks, but the current Game Over screen has overlapping visual layout and still needs human-facing UI correction.
 
 ## Validation Notes
 
@@ -58,3 +61,5 @@ Use the docs set as the durable operating system for the project. Foundation doc
   - Confirm implemented vs partial vs planned status labels remain accurate
 - Asset or inspector dependencies:
   - Treat scene references, prefabs, ScriptableObjects, and UI wiring as part of the feature change surface for all future implementation work
+  - Core-run PlayMode smoke test: `CoreRunPlayModeSmokeTests.VisiblePlay_StartsCoreGameplay`
+  - Latest automated result: 29/29 EditMode tests passed and 1/1 focused PlayMode test passed

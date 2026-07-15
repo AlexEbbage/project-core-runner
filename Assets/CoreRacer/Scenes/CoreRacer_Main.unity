@@ -15371,7 +15371,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1336978889}
         m_TargetAssemblyTypeName: CoreRacer.UI.MainMenu.BottomNavBarController, CoreRacer.Runtime
-        m_MethodName: ShowPlay
+        m_MethodName: StartCoreRun
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -22603,6 +22603,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   router: {fileID: 1548377716}
+  levelSelect: {fileID: 100224056}
 --- !u!114 &1336978890
 MonoBehaviour:
   m_ObjectHideFlags: 0

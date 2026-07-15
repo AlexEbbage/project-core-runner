@@ -6,6 +6,7 @@ namespace CoreRacer.UI.MainMenu
     public sealed class BottomNavBarController : MonoBehaviour
     {
         [SerializeField] private MainMenuPageRouter router;
+        [SerializeField] private LevelSelectPageController levelSelect;
 
         private void Awake()
         {
@@ -14,6 +15,16 @@ namespace CoreRacer.UI.MainMenu
         }
 
         public void ShowPlay() => ShowBottomNavigationPage(MainMenuPage.Play);
+        public void StartCoreRun()
+        {
+            if (levelSelect == null)
+            {
+                Debug.LogError("Visible Play failed: BottomNavBarController.levelSelect is not assigned.", this);
+                return;
+            }
+
+            levelSelect.TryPlaySelected();
+        }
         public void ShowHangar() => ShowBottomNavigationPage(MainMenuPage.Hangar);
         public void ShowLab() => ShowBottomNavigationPage(MainMenuPage.Lab);
         public void ShowShop() => ShowBottomNavigationPage(MainMenuPage.Shop);
