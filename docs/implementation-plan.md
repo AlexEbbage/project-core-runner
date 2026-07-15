@@ -2,7 +2,7 @@
 
 ## Delivery Strategy
 
-Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. The current delivery slice is core-run playability: restore the visible Play route, provide a development-only Quick Play route, and prove the run lifecycle in the live `CoreRacer_Main` scene before any broader feature work resumes.
+Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. The current delivery slice is core-run playability: the visible Play/Quick Play route, generated recycling tunnel, behind-player roll camera, and complete run lifecycle must be proven in the live `CoreRacer_Main` scene before broader feature work resumes.
 
 ## Phases
 
@@ -24,7 +24,7 @@ Use the docs set as the durable operating system for the project. Foundation doc
 ## Current Recommended Order
 
 1. Human playability signoff for Play, control, crash, Retry, and Home
-2. Decide whether dynamic tunnel-section generation is required or whether the current static tunnel mesh is intentional
+2. Human comfort/readability signoff for the behind-player roll camera and generated tunnel material
 3. Resume progression and booster review only after the core loop is signed off
 
 ## Current Asset Wiring Status
@@ -34,6 +34,7 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - `CoreRacer_Main.unity` now has the Phase 6 FTUE tutorial overlay, scene director, deterministic first coin/powerup assistance, support reset action, and save-backed tutorial progress wiring.
 - `CoreRacer_Main.unity` now has Phase 7 safe SDK adapter wiring for verified Unity IAP, Firebase Analytics, and Mobile Notifications APIs; LevelPlay, Crashlytics, and Addressables remain disabled/manual setup blockers.
 - `CoreRacer_Main.unity` now routes the visible bottom Play button directly through validated level selection into run startup. The development editor command is `Tools > Core Racer > Playability > Start Core Run`.
+- `CoreRacer_Main.unity` now owns a `RuntimeTunnel` generator configured by the selected route. The gameplay camera follows the player's orbital position and roll so the craft stays upright in frame while the tunnel appears to rotate.
 - Phase 8 final validation and handoff is captured in `docs/rewrite/final-handoff.md`; closed testing remains blocked by placeholder privacy links. Live inspection on 2026-07-15 confirmed `Assets/CoreRacer/Scenes/CoreRacer_Main.unity` is the only enabled Build Settings scene.
 - Manual art follow-up is tracked in `docs/rewrite/manual-art-wiring-needed.md`.
 
@@ -46,7 +47,7 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - DOTween is now the approved UI motion layer, so UI polish work should use the reusable motion helper rather than introducing a second transition stack.
 - SDK release blockers remain for LevelPlay C# API installation/verification, Firebase Crashlytics installation, Addressables installation if remote content is required, and replacement of placeholder privacy links.
 - Build settings currently target the clean `CoreRacer_Main.unity`; keep this checked during release preparation rather than relying on the stale legacy-scene assumption.
-- Live inspection for this slice found active static tunnel geometry, not a runtime tunnel-section generator. Obstacles and pickups do generate during the run; tunnel-section generation must not be claimed until a product decision and implementation/verification slice exists.
+- The runtime tunnel now generates 48 longitudinal mesh sections for the selected polygon side count and recenters in 40-unit steps while keeping 20 units behind the player. The preserved FBX tunnel is hidden only during Play Mode.
 - The Game Over Retry, Double Rewards, and Menu actions now use distinct authored RectTransform positions. Live pointer execution and PlayMode coverage confirm Retry, Menu, and subsequent Play transitions without regenerating the UI.
 
 ## Validation Notes
@@ -61,4 +62,4 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - Asset or inspector dependencies:
   - Treat scene references, prefabs, ScriptableObjects, and UI wiring as part of the feature change surface for all future implementation work
   - Core-run PlayMode smoke test: `CoreRunPlayModeSmokeTests.VisiblePlay_StartsCoreGameplay`
-  - Latest automated result: 29/29 EditMode tests passed and 3/3 focused PlayMode tests passed; coverage includes scene uniqueness, visible listener wiring, duplicate start rejection, movement/camera follow, run session creation, non-overlapping Game Over actions, real Retry/Menu callbacks, Home, and Play after Home
+  - Latest automated result: 29/29 EditMode tests passed and 3/3 focused PlayMode tests passed; coverage includes scene uniqueness, visible listener wiring, duplicate start rejection, generated tunnel configuration/recycling, behind-player camera position and roll, movement, run session creation, non-overlapping Game Over actions, real Retry/Menu callbacks, Home, and Play after Home

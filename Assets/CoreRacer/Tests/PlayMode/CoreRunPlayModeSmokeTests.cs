@@ -1,5 +1,6 @@
 using System.Collections;
 using CoreRacer.Bootstrap;
+using CoreRacer.Gameplay.Environment;
 using CoreRacer.Gameplay.Player;
 using CoreRacer.Gameplay.Powerups;
 using CoreRacer.Gameplay.Run;
@@ -41,10 +42,12 @@ namespace CoreRacer.Tests.PlayMode
             var run = Object.FindObjectOfType<RunController>(true);
             var references = Object.FindObjectOfType<RunSceneReferences>(true);
             var cameraFollow = Object.FindObjectOfType<PlayerCameraFollow>(true);
+            var tunnel = Object.FindObjectOfType<TunnelWallGeneratorV2>(true);
             Assert.NotNull(play, "The visible Play controller is missing.");
             Assert.NotNull(run, "The run controller is missing.");
             Assert.NotNull(references, "The run references are missing.");
             Assert.NotNull(cameraFollow, "The player camera follow component is missing.");
+            Assert.NotNull(tunnel, "The procedural tunnel generator is missing.");
 
             play.StartCoreRun();
             yield return null;
@@ -56,6 +59,11 @@ namespace CoreRacer.Tests.PlayMode
             Assert.IsFalse(references.MainMenu.gameObject.activeInHierarchy);
             Assert.IsTrue(references.Hud.gameObject.activeInHierarchy);
             Assert.IsTrue(cameraFollow.gameObject.activeInHierarchy);
+            Assert.IsTrue(cameraFollow.FollowsTargetRoll, "The gameplay camera must roll with the player so the tunnel appears to rotate instead of the ship.");
+            Assert.AreEqual(6, tunnel.Sides, "The default roadmap route must configure a six-sided tunnel.");
+            Assert.AreEqual(48, tunnel.SectionCount, "The core run must generate the authored tunnel section count.");
+            Assert.NotNull(tunnel.GeneratedMesh, "Starting a run must produce a procedural tunnel mesh.");
+            Assert.Greater(tunnel.GeneratedMesh.vertexCount, 0);
 
             var firstRunId = run.CurrentRunId;
             Assert.IsFalse(run.TryStartRun(), "A duplicate Play request must be rejected while running.");
@@ -63,10 +71,19 @@ namespace CoreRacer.Tests.PlayMode
 
             var startZ = references.Player.transform.position.z;
             var cameraStartZ = cameraFollow.transform.position.z;
+            references.Player.Motor.Move(1f, 0.25f);
             yield return null;
             yield return null;
             Assert.Greater(references.Player.transform.position.z, startZ, "The player must move forward during a run.");
             Assert.Greater(cameraFollow.transform.position.z, cameraStartZ, "The follow camera must advance with the player.");
+            Assert.Less(Mathf.Abs(cameraFollow.transform.position.x - references.Player.transform.position.x), 0.01f, "The camera must remain directly behind the player's orbital X position.");
+            Assert.Less(Mathf.Abs(cameraFollow.transform.position.y - references.Player.transform.position.y), 0.01f, "The camera must remain directly behind the player's orbital Y position.");
+            Assert.Less(Mathf.Abs(Mathf.DeltaAngle(cameraFollow.transform.eulerAngles.z, references.Player.transform.eulerAngles.z)), 0.1f, "The camera roll must match the player roll.");
+
+            var firstTunnelStart = tunnel.StartZ;
+            tunnel.AdvanceTo(firstTunnelStart + tunnel.TrailingDistance + tunnel.RecenterDistance + 1f);
+            Assert.Greater(tunnel.StartZ, firstTunnelStart, "The generated tunnel must recycle forward as the run advances.");
+            Assert.Greater(tunnel.EndZ, references.Player.transform.position.z, "Generated tunnel sections must remain ahead of the player.");
 
             references.CurrencyTracker.AddCoinPickup();
             Assert.Greater(references.CurrencyTracker.Coins, 0, "Collected coins must be reflected in run state.");

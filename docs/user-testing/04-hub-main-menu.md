@@ -31,9 +31,10 @@ Verify the `CoreRacer_Main` hub lands on `Level Select`, routes clearly to the f
 - [ ] Confirm the level selection area updates the preview text correctly, shows lock-aware cards, and keeps the selected route after returning to the menu.
 - [ ] Confirm the menu returns cleanly after ending a run and going back.
 - [ ] Confirm left/right input steers the visible player and forward distance increases.
+- [ ] Confirm the camera remains behind the player during steering and the craft stays upright/readable while the tunnel appears to rotate around it.
 - [ ] Confirm obstacles and pickups appear, score and distance increase, and a collision reaches Game Over.
 - [ ] Confirm Retry starts a clean second run and Home returns to the menu.
-- [ ] Record that the current scene uses a static tunnel mesh; do not pass dynamic tunnel-section generation unless a generator is added and observed live.
+- [ ] Confirm the selected route generates the expected polygon tunnel and that tunnel sections remain around/ahead of the player during a sustained run.
 - [ ] Confirm Retry, Double Rewards, and Menu are visually distinct, readable, and do not overlap on Game Over.
 - [ ] Confirm any notification or badge state that exists is readable and not misleading.
 

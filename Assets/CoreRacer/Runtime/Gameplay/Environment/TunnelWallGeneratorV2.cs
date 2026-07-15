@@ -10,9 +10,58 @@ namespace CoreRacer.Gameplay.Environment
         [SerializeField] private float length = 240f;
         [SerializeField] private int lengthSegments = 48;
         [SerializeField] private bool invertNormals = true;
+        [SerializeField] private Transform target;
+        [SerializeField] private GameObject legacyVisual;
+        [SerializeField] private float trailingDistance = 20f;
+        [SerializeField] private float recenterDistance = 40f;
 
-        private void Awake() => Rebuild();
-        private void OnValidate() { if (Application.isPlaying) Rebuild(); }
+        private Mesh _generatedMesh;
+
+        public int Sides => sides;
+        public int SectionCount => lengthSegments;
+        public float TrailingDistance => trailingDistance;
+        public float RecenterDistance => recenterDistance;
+        public float StartZ => transform.position.z;
+        public float EndZ => StartZ + length;
+        public Mesh GeneratedMesh => _generatedMesh;
+
+        private void Awake()
+        {
+            if (legacyVisual != null)
+                legacyVisual.SetActive(false);
+
+            Rebuild();
+            AlignToTarget();
+        }
+
+        private void LateUpdate()
+        {
+            if (target != null)
+                AdvanceTo(target.position.z);
+        }
+
+        private void OnDestroy()
+        {
+            if (_generatedMesh != null)
+                DestroyGeneratedMesh(_generatedMesh);
+        }
+
+        public void SetTarget(Transform value)
+        {
+            target = value;
+            AlignToTarget();
+        }
+
+        public void ConfigureSides(int tunnelSides)
+        {
+            var configuredSides = Mathf.Max(3, tunnelSides);
+            if (sides != configuredSides || _generatedMesh == null)
+            {
+                sides = configuredSides;
+                Rebuild();
+            }
+            AlignToTarget();
+        }
 
         public void Configure(int tunnelSides, float tunnelRadius, float tunnelLength)
         {
@@ -20,6 +69,19 @@ namespace CoreRacer.Gameplay.Environment
             radius = Mathf.Max(0.5f, tunnelRadius);
             length = Mathf.Max(8f, tunnelLength);
             Rebuild();
+            AlignToTarget();
+        }
+
+        public void AdvanceTo(float targetZ)
+        {
+            recenterDistance = Mathf.Max(1f, recenterDistance);
+            trailingDistance = Mathf.Max(0f, trailingDistance);
+            var travelled = targetZ - (StartZ + trailingDistance);
+            if (travelled <= recenterDistance)
+                return;
+
+            var steps = Mathf.FloorToInt(travelled / recenterDistance);
+            transform.position += Vector3.forward * (steps * recenterDistance);
         }
 
         [ContextMenu("Rebuild Tunnel")]
@@ -71,7 +133,29 @@ namespace CoreRacer.Gameplay.Environment
             mesh.triangles = tris;
             mesh.RecalculateNormals();
             mesh.RecalculateBounds();
-            GetComponent<MeshFilter>().sharedMesh = mesh;
+            var previous = _generatedMesh;
+            _generatedMesh = mesh;
+            GetComponent<MeshFilter>().sharedMesh = _generatedMesh;
+            if (previous != null)
+                DestroyGeneratedMesh(previous);
+        }
+
+        private void AlignToTarget()
+        {
+            if (target == null)
+                return;
+
+            var position = transform.position;
+            position.z = target.position.z - Mathf.Max(0f, trailingDistance);
+            transform.position = position;
+        }
+
+        private static void DestroyGeneratedMesh(Mesh mesh)
+        {
+            if (Application.isPlaying)
+                Destroy(mesh);
+            else
+                DestroyImmediate(mesh);
         }
     }
 }

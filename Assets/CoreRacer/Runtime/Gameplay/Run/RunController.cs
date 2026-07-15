@@ -23,6 +23,7 @@ namespace CoreRacer.Gameplay.Run
         [SerializeField] private SpeedScalingConfigV2 speedScalingConfig;
         [SerializeField] private CameraFovController cameraFovController;
         [SerializeField] private RunZoneManagerV2 zoneManager;
+        [SerializeField] private TunnelWallGeneratorV2 tunnelWallGenerator;
         [SerializeField] private ShipDatabase shipDatabase;
         [SerializeField] private string defaultLevelId = "hex_sector_01";
 
@@ -51,6 +52,8 @@ namespace CoreRacer.Gameplay.Run
                 cameraFovController = FindObjectOfType<CameraFovController>();
             if (zoneManager == null)
                 zoneManager = FindObjectOfType<RunZoneManagerV2>();
+            if (tunnelWallGenerator == null)
+                tunnelWallGenerator = FindObjectOfType<TunnelWallGeneratorV2>();
 
             ResolveServices();
 
@@ -420,6 +423,11 @@ namespace CoreRacer.Gameplay.Run
             references?.PickupWorld?.ConfigureForRun(sides);
             if (references?.Player != null && references.Player.Motor != null)
                 references.Player.Motor.ForwardSpeed = speed;
+            if (tunnelWallGenerator != null)
+            {
+                tunnelWallGenerator.SetTarget(references != null && references.Player != null ? references.Player.transform : null);
+                tunnelWallGenerator.ConfigureSides(sides);
+            }
 
             if (zoneManager != null)
             {
@@ -494,6 +502,7 @@ namespace CoreRacer.Gameplay.Run
             var valid = validation.IsValid;
             valid &= RequireCoreReference(references.Player != null && references.Player.Motor != null, "Player and Player.Motor");
             valid &= RequireCoreReference(zoneManager != null, "RunZoneManagerV2");
+            valid &= RequireCoreReference(tunnelWallGenerator != null, "TunnelWallGeneratorV2");
             valid &= RequireCoreReference(references.ObstacleWorld != null, "ObstacleWorld");
             valid &= RequireCoreReference(references.PickupWorld != null, "PickupWorld");
             valid &= RequireCoreReference(references.Hud != null, "Hud");

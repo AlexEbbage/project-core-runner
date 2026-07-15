@@ -129,6 +129,28 @@ Implications:
 - Motion should stay inside the authored hierarchy and preserve inspector wiring.
 - Future polish work should reuse the adopted motion layer rather than introducing another UI animation system.
 
+### DR-009: Use a recycling procedural tunnel with a roll-follow gameplay camera
+
+Status: Accepted
+
+Context:
+The authored FBX tunnel is only about 10 world units deep and cannot support an endless forward run. A world-locked camera also makes the craft visibly orbit around the screen, which obscures the relationship between left/right input and tunnel lanes.
+
+Decision:
+Use `TunnelWallGeneratorV2` as the runtime tunnel owner, configured from the selected route's side count and recentered ahead of the player. Keep the authored FBX hierarchy as a preserved edit-time source visual. During gameplay, keep the camera behind the player and match the player's roll so the craft remains stable in frame and the tunnel appears to rotate.
+
+Implications:
+
+- Route side count now affects the visible runtime tunnel as well as obstacle and pickup generation.
+- Camera comfort and generated-tunnel material readability require human tuning, especially on mobile portrait screens.
+- Environment work should extend the procedural/recycling owner instead of restoring the short FBX mesh as the runtime tunnel.
+
+Validation:
+
+- Live input produced a 45-degree player/camera roll with zero measured roll or orbital-position delta.
+- The six-sided, 48-section mesh remained ahead of the player after recycling beyond Z=1600.
+- Focused PlayMode tests cover camera alignment, generated mesh configuration, and forward recycling.
+
 ## Template
 
 ```text
