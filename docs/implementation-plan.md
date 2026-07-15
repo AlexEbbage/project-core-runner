@@ -66,4 +66,4 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - Asset or inspector dependencies:
   - Treat scene references, prefabs, ScriptableObjects, and UI wiring as part of the feature change surface for all future implementation work
   - Core-run PlayMode smoke test: `CoreRunPlayModeSmokeTests.VisiblePlay_StartsCoreGameplay`
-  - Latest automated result: 32/32 EditMode tests passed and 5/5 focused PlayMode tests passed; coverage now also includes base wallet/XP settlement, Continue, one-shot Double Rewards, Retry, Home, and profile restoration
+- Latest automated result: 32/32 EditMode tests and 5/5 focused PlayMode tests passed before the current XP rollover regression case was added; the new case covers multi-threshold level advancement and remainder preservation and should be included in the next Unity test run.

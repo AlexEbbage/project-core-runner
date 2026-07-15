@@ -137,6 +137,23 @@ namespace CoreRacer.Tests.EditMode
             }
         }
 
+        [Test]
+        public void ExperienceGrant_RollsAcrossLevelsAndKeepsRemainder()
+        {
+            var profile = CreateProfile();
+
+            profile.AddExperience(1250);
+
+            Assert.AreEqual(3, profile.State.Level);
+            Assert.AreEqual(0, profile.State.Experience);
+            Assert.AreEqual(1000, profile.ExperienceForNextLevel(profile.State.Level));
+
+            profile.AddExperience(1001);
+
+            Assert.AreEqual(4, profile.State.Level);
+            Assert.AreEqual(1, profile.State.Experience);
+        }
+
         private static PlayerProfileService CreateProfile()
         {
             var storage = new MemorySaveStorage();
