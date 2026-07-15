@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System;
 using CoreRacer.Common.Pooling;
 using CoreRacer.Bootstrap;
 using CoreRacer.FTUE;
@@ -28,6 +29,8 @@ namespace CoreRacer.Gameplay.Pickups
         private bool _tutorialPowerupQueued;
         private TutorialService _tutorial;
         private bool _running;
+
+        public event Action<PickupType, PowerupType, Vector3> PickupCollected;
 
         private void Awake()
         {
@@ -140,6 +143,7 @@ namespace CoreRacer.Gameplay.Pickups
         {
             pickup.Collected -= HandleCollected;
             _active.Remove(pickup);
+            PickupCollected?.Invoke(pickup.Type, pickup.PowerupType, pickup.transform.position);
 
             if (pickup.Type == PickupType.Coin)
             {

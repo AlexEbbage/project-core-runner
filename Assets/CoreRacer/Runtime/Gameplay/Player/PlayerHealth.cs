@@ -16,6 +16,7 @@ namespace CoreRacer.Gameplay.Player
         public bool IsAlive => _health > 0f;
         public bool IsInvulnerable => UnityEngine.Time.time < _invulnerableUntil;
         public event Action<float, float> HealthChanged;
+        public event Action<float> DamageTaken;
         public event Action Died;
 
         private void Awake() => ResetHealth();
@@ -45,6 +46,7 @@ namespace CoreRacer.Gameplay.Player
                 return;
 
             _health = Mathf.Max(0f, _health - amount);
+            DamageTaken?.Invoke(amount);
             HealthChanged?.Invoke(_health, MaxHealth);
             if (_health <= 0f)
                 Died?.Invoke();

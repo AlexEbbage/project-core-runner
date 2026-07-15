@@ -12,6 +12,7 @@ namespace CoreRacer.Gameplay.Vfx
 
         private ParticleSystem.EmissionModule _emission;
         private ParticleSystem.MainModule _main;
+        public float Intensity { get; private set; }
 
         private void Awake()
         {
@@ -25,6 +26,7 @@ namespace CoreRacer.Gameplay.Vfx
         {
             if (particles == null) return;
             var t = Mathf.Clamp01(normalizedIntensity);
+            Intensity = t;
             _emission.rateOverTime = Mathf.Lerp(minRate, maxRate, t);
             _main.startSpeed = Mathf.Lerp(minSpeed, maxSpeed, t);
         }

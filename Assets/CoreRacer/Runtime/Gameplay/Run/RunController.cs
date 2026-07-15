@@ -5,6 +5,7 @@ using CoreRacer.Config.Run;
 using CoreRacer.FTUE;
 using CoreRacer.Gameplay.Camera;
 using CoreRacer.Gameplay.Environment;
+using CoreRacer.Gameplay.Vfx;
 using CoreRacer.Meta.Boosters;
 using CoreRacer.Meta.Levels;
 using CoreRacer.Meta.Profile;
@@ -27,6 +28,8 @@ namespace CoreRacer.Gameplay.Run
         [SerializeField] private TunnelWallGeneratorV2 tunnelWallGenerator;
         [SerializeField] private ShipDatabase shipDatabase;
         [SerializeField] private BoosterCatalog boosterCatalog;
+        [SerializeField] private VfxManager vfxManager;
+        [SerializeField] private SpeedParticlesControllerV2 speedParticles;
         [SerializeField] private string defaultLevelId = "hex_sector_01";
 
         private string _selectedLevelId;
@@ -59,6 +62,12 @@ namespace CoreRacer.Gameplay.Run
                 zoneManager = FindObjectOfType<RunZoneManagerV2>();
             if (tunnelWallGenerator == null)
                 tunnelWallGenerator = FindObjectOfType<TunnelWallGeneratorV2>();
+            if (vfxManager == null)
+                vfxManager = FindObjectOfType<VfxManager>();
+            if (speedParticles == null)
+                speedParticles = FindObjectOfType<SpeedParticlesControllerV2>();
+            if (speedParticles == null && references != null && references.Player != null)
+                speedParticles = CreateRuntimeSpeedParticles(references.Player.transform);
 
             ResolveServices();
             _activeBoosterModifiers = BoosterRunModifiers.Default;
@@ -75,7 +84,17 @@ namespace CoreRacer.Gameplay.Run
             _lifecycle.RunStarted += OnRunStarted;
             _lifecycle.RunEnded += OnRunEnded;
             if (references != null && references.PlayerHealth != null)
+            {
                 references.PlayerHealth.Died += HandlePlayerDeath;
+                references.PlayerHealth.DamageTaken += HandleDamageTaken;
+            }
+            if (references != null && references.PickupWorld != null)
+                references.PickupWorld.PickupCollected += HandlePickupCollected;
+            if (references != null && references.Powerups != null)
+            {
+                references.Powerups.PowerupActivated += HandlePowerupActivated;
+                references.Powerups.PowerupExpired += HandlePowerupExpired;
+            }
         }
 
         private void Start()
@@ -92,7 +111,17 @@ namespace CoreRacer.Gameplay.Run
             }
 
             if (references != null && references.PlayerHealth != null)
+            {
                 references.PlayerHealth.Died -= HandlePlayerDeath;
+                references.PlayerHealth.DamageTaken -= HandleDamageTaken;
+            }
+            if (references != null && references.PickupWorld != null)
+                references.PickupWorld.PickupCollected -= HandlePickupCollected;
+            if (references != null && references.Powerups != null)
+            {
+                references.Powerups.PowerupActivated -= HandlePowerupActivated;
+                references.Powerups.PowerupExpired -= HandlePowerupExpired;
+            }
         }
 
         private void Update()
@@ -111,7 +140,9 @@ namespace CoreRacer.Gameplay.Run
             if (cameraFovController != null)
             {
                 var range = Mathf.Max(0.01f, speedScalingConfig.MaxForwardSpeed - startingSpeed);
-                cameraFovController.SetSpeedIntensity((speed - startingSpeed) / range);
+                var intensity = (speed - startingSpeed) / range;
+                cameraFovController.SetSpeedIntensity(intensity);
+                speedParticles?.SetIntensity(intensity);
             }
         }
 
@@ -338,8 +369,11 @@ namespace CoreRacer.Gameplay.Run
             references?.GameOver?.Hide();
             references?.PauseMenu?.Hide();
             references?.Player?.BeginRun();
+            references?.Player?.GetComponentInChildren<PlayerVisual>(true)?.RestoreVisible();
             references?.ObstacleWorld?.BeginRun();
             references?.PickupWorld?.BeginRun();
+            var playerPosition = references != null && references.Player != null ? references.Player.transform.position : transform.position;
+            vfxManager?.Play(VfxEventId.ContinueRespawnWarp, playerPosition);
         }
 
         private void OnRunStarted()
@@ -353,6 +387,7 @@ namespace CoreRacer.Gameplay.Run
             references?.PauseMenu?.Hide();
             references?.GameOver?.Hide();
             references?.Player?.BeginRun();
+            references?.Player?.GetComponentInChildren<PlayerVisual>(true)?.RestoreVisible();
             references?.PlayerHealth?.ResetHealth();
             references?.ScoreTracker?.BeginRun();
             references?.CurrencyTracker?.BeginRun();
@@ -392,7 +427,41 @@ namespace CoreRacer.Gameplay.Run
             _lifecycle.Session.RewardsGranted = true;
             _analytics?.RunEnded(_lastResult);
             references?.GameOver?.Show(_lastResult);
+            var playerPosition = references != null && references.Player != null ? references.Player.transform.position : transform.position;
+            vfxManager?.Play(VfxEventId.CrashSparks, playerPosition);
+            references?.Player?.GetComponentInChildren<PlayerVisual>(true)?.PlayDissolve();
             Debug.Log($"[CoreRacer.Run] Run ended (runId={CurrentRunId}, reason={reason})", this);
+        }
+
+        private void HandleDamageTaken(float amount)
+        {
+            if (amount <= 0f)
+                return;
+            var playerPosition = references != null && references.Player != null ? references.Player.transform.position : transform.position;
+            vfxManager?.Play(VfxEventId.CrashSparks, playerPosition);
+        }
+
+        private void HandlePickupCollected(CoreRacer.Gameplay.Pickups.PickupType pickupType, CoreRacer.Gameplay.Powerups.PowerupType powerupType, Vector3 position)
+        {
+            vfxManager?.Play(pickupType == CoreRacer.Gameplay.Pickups.PickupType.Coin ? VfxEventId.PickupBurst : VfxEventId.PowerupPulse, position);
+        }
+
+        private void HandlePowerupActivated(CoreRacer.Gameplay.Powerups.PowerupType type, float duration)
+        {
+            if (type == CoreRacer.Gameplay.Powerups.PowerupType.Shield)
+            {
+                var playerPosition = references != null && references.Player != null ? references.Player.transform.position : transform.position;
+                vfxManager?.Play(VfxEventId.ShieldShell, playerPosition);
+            }
+        }
+
+        private void HandlePowerupExpired(CoreRacer.Gameplay.Powerups.PowerupType type)
+        {
+            if (type == CoreRacer.Gameplay.Powerups.PowerupType.Shield)
+            {
+                var playerPosition = references != null && references.Player != null ? references.Player.transform.position : transform.position;
+                vfxManager?.Play(VfxEventId.ShieldBreak, playerPosition);
+            }
         }
 
         private void GrantDoubleRewards()
@@ -499,6 +568,26 @@ namespace CoreRacer.Gameplay.Run
             if (_rewardedAds == null) GameServices.TryGet(out _rewardedAds);
             if (_analytics == null) GameServices.TryGet(out _analytics);
             if (_tutorial == null) GameServices.TryGet(out _tutorial);
+        }
+
+        private static SpeedParticlesControllerV2 CreateRuntimeSpeedParticles(Transform parent)
+        {
+            var root = new GameObject("SpeedParticlesRuntime");
+            root.transform.SetParent(parent, false);
+            root.transform.localPosition = new Vector3(0f, 0f, -1.2f);
+            var particles = root.AddComponent<ParticleSystem>();
+            var main = particles.main;
+            main.loop = true;
+            main.startLifetime = 0.45f;
+            main.startSize = 0.04f;
+            main.startColor = new Color(0.35f, 0.85f, 1f, 0.7f);
+            var shape = particles.shape;
+            shape.shapeType = ParticleSystemShapeType.Cone;
+            shape.angle = 8f;
+            shape.radius = 0.2f;
+            particles.emission.rateOverTime = 15f;
+            particles.Play();
+            return root.AddComponent<SpeedParticlesControllerV2>();
         }
 
         private bool ValidateCoreRunStart()

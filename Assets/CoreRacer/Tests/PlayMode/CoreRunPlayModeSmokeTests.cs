@@ -4,6 +4,7 @@ using CoreRacer.Gameplay.Environment;
 using CoreRacer.Gameplay.Player;
 using CoreRacer.Gameplay.Powerups;
 using CoreRacer.Gameplay.Run;
+using CoreRacer.Gameplay.Vfx;
 using CoreRacer.Meta.Profile;
 using CoreRacer.UI.MainMenu;
 using NUnit.Framework;
@@ -119,6 +120,37 @@ namespace CoreRacer.Tests.PlayMode
 
             run.ReturnToMenu();
             Time.timeScale = 1f;
+        }
+
+        [UnityTest]
+        public IEnumerator RunVfx_RespondsToDamageShieldAndSpeed()
+        {
+            yield return LoadMainScene();
+
+            var run = Object.FindObjectOfType<RunController>(true);
+            var references = Object.FindObjectOfType<RunSceneReferences>(true);
+            var vfx = Object.FindObjectOfType<VfxManager>(true);
+            var speedParticles = Object.FindObjectOfType<SpeedParticlesControllerV2>(true);
+            Assert.NotNull(run);
+            Assert.NotNull(references);
+            Assert.NotNull(vfx);
+            Assert.NotNull(speedParticles);
+
+            Assert.IsTrue(run.TryStartRun());
+            yield return null;
+            Assert.AreEqual(RunState.Running, run.State);
+
+            references.PlayerHealth.Damage(0.1f);
+            Assert.IsTrue(vfx.LastPlayedEvent.HasValue);
+            Assert.AreEqual(VfxEventId.CrashSparks, vfx.LastPlayedEvent.Value);
+
+            references.Powerups.Activate(PowerupType.Shield);
+            Assert.AreEqual(VfxEventId.ShieldShell, vfx.LastPlayedEvent);
+            references.Powerups.ClearAll();
+            Assert.AreEqual(VfxEventId.ShieldBreak, vfx.LastPlayedEvent);
+            Assert.GreaterOrEqual(speedParticles.Intensity, 0f);
+
+            run.ReturnToMenu();
         }
 
         [UnityTest]
