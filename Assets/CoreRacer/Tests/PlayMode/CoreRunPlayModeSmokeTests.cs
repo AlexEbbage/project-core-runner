@@ -49,6 +49,12 @@ namespace CoreRacer.Tests.PlayMode
             Assert.NotNull(cameraFollow, "The player camera follow component is missing.");
             Assert.NotNull(tunnel, "The procedural tunnel generator is missing.");
 
+            var trail = references.Player.GetComponentInChildren<TrailRenderer>(true);
+            Assert.NotNull(trail, "The player thruster trail is missing.");
+            trail.Clear();
+            trail.AddPosition(new Vector3(1000f, 1000f, 1000f));
+            trail.AddPosition(new Vector3(1001f, 1001f, 1001f));
+
             play.StartCoreRun();
             yield return null;
 
@@ -64,10 +70,23 @@ namespace CoreRacer.Tests.PlayMode
             Assert.Less(references.Player.transform.position.y, 0f, "The player must begin below the tunnel centre.");
             Assert.Less(cameraFollow.transform.position.y, 0f, "The follow camera must begin behind the player on the bottom rail.");
             Assert.Less(Mathf.Abs(Mathf.DeltaAngle(cameraFollow.transform.eulerAngles.z, 0f)), 0.1f, "The bottom-rail start must keep the camera visually upright.");
+            var gameplayCamera = cameraFollow.GetComponent<Camera>();
+            Assert.NotNull(gameplayCamera, "The follow object must own the gameplay camera.");
+            var playerViewportPosition = gameplayCamera.WorldToViewportPoint(references.Player.transform.position);
+            Assert.That(playerViewportPosition.y, Is.InRange(0.3f, 0.45f), "The player must be framed in the lower portion of the portrait viewport.");
+            Assert.AreEqual(140f, references.Player.Motor.AngularSpeedDegrees, 0.01f, "The core route must use the initial comfort steering speed.");
             Assert.AreEqual(6, tunnel.Sides, "The default roadmap route must configure a six-sided tunnel.");
             Assert.AreEqual(48, tunnel.SectionCount, "The core run must generate the authored tunnel section count.");
             Assert.NotNull(tunnel.GeneratedMesh, "Starting a run must produce a procedural tunnel mesh.");
             Assert.Greater(tunnel.GeneratedMesh.vertexCount, 0);
+            Assert.Less(tunnel.WallTint.grayscale, 0.4f, "The tunnel tint must remain dark enough for hazards and pickups to read clearly.");
+            var tunnelProperties = new MaterialPropertyBlock();
+            tunnel.GetComponent<MeshRenderer>().GetPropertyBlock(tunnelProperties);
+            Assert.Less(Vector4.Distance(tunnel.WallTint, tunnelProperties.GetColor("_Color")), 0.001f, "The readability tint must be applied to the runtime renderer without changing its shared material.");
+            var trailPositions = new Vector3[trail.positionCount];
+            trail.GetPositions(trailPositions);
+            for (var i = 0; i < trailPositions.Length; i++)
+                Assert.Less(Vector3.Distance(trailPositions[i], references.Player.transform.position), 20f, "Run start must clear stale trail positions left by the player teleport.");
 
             var firstRunId = run.CurrentRunId;
             Assert.IsFalse(run.TryStartRun(), "A duplicate Play request must be rejected while running.");
@@ -80,8 +99,9 @@ namespace CoreRacer.Tests.PlayMode
             yield return null;
             Assert.Greater(references.Player.transform.position.z, startZ, "The player must move forward during a run.");
             Assert.Greater(cameraFollow.transform.position.z, cameraStartZ, "The follow camera must advance with the player.");
-            Assert.Less(Mathf.Abs(cameraFollow.transform.position.x - references.Player.transform.position.x), 0.01f, "The camera must remain directly behind the player's orbital X position.");
-            Assert.Less(Mathf.Abs(cameraFollow.transform.position.y - references.Player.transform.position.y), 0.01f, "The camera must remain directly behind the player's orbital Y position.");
+            var movedViewportPosition = gameplayCamera.WorldToViewportPoint(references.Player.transform.position);
+            Assert.Less(Mathf.Abs(movedViewportPosition.x - 0.5f), 0.02f, "The player must remain horizontally centred while the camera rolls.");
+            Assert.That(movedViewportPosition.y, Is.InRange(0.3f, 0.45f), "The player must remain in the lower viewport while steering.");
             Assert.Less(Mathf.Abs(Mathf.DeltaAngle(cameraFollow.transform.eulerAngles.z, references.Player.transform.eulerAngles.z)), 0.1f, "The camera roll must match the player roll.");
 
             var firstTunnelStart = tunnel.StartZ;

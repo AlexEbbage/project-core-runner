@@ -13,6 +13,7 @@ namespace CoreRacer.Gameplay.Player
         private float _handlingMultiplier = 1f;
 
         public float AngleDegrees => angleDegrees;
+        public float AngularSpeedDegrees => angularSpeedDegrees;
         public float ForwardSpeed { get => forwardSpeed; set => forwardSpeed = Mathf.Max(0f, value); }
         public float EffectiveForwardSpeed => forwardSpeed * _speedMultiplier * _shipSpeedMultiplier;
 

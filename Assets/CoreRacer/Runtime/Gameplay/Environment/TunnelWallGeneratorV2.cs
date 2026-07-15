@@ -10,6 +10,7 @@ namespace CoreRacer.Gameplay.Environment
         [SerializeField] private float length = 240f;
         [SerializeField] private int lengthSegments = 48;
         [SerializeField] private bool invertNormals = true;
+        [SerializeField] private Color wallTint = new Color(0.24f, 0.32f, 0.48f, 1f);
         [SerializeField] private Transform target;
         [SerializeField] private GameObject legacyVisual;
         [SerializeField] private float trailingDistance = 20f;
@@ -24,6 +25,7 @@ namespace CoreRacer.Gameplay.Environment
         public float StartZ => transform.position.z;
         public float EndZ => StartZ + length;
         public Mesh GeneratedMesh => _generatedMesh;
+        public Color WallTint => wallTint;
 
         private void Awake()
         {
@@ -136,8 +138,18 @@ namespace CoreRacer.Gameplay.Environment
             var previous = _generatedMesh;
             _generatedMesh = mesh;
             GetComponent<MeshFilter>().sharedMesh = _generatedMesh;
+            ApplyWallTint();
             if (previous != null)
                 DestroyGeneratedMesh(previous);
+        }
+
+        private void ApplyWallTint()
+        {
+            var renderer = GetComponent<MeshRenderer>();
+            var properties = new MaterialPropertyBlock();
+            renderer.GetPropertyBlock(properties);
+            properties.SetColor("_Color", wallTint);
+            renderer.SetPropertyBlock(properties);
         }
 
         private void AlignToTarget()

@@ -37,7 +37,7 @@ These `F#` identifiers remain the stable feature IDs used by `task-registry.md` 
 
 | ID | Group | Canonical Feature | Status | Notes |
 | --- | --- | --- | --- | --- |
-| F1 | Core Gameplay | Endless Run Foundation | Implemented | Live Play Mode verification now covers visible Play entry, player input and movement, a behind-player roll-follow camera, route-configured procedural tunnel sections that recycle forward, score/distance progression, crash/Game Over, Retry, and Home. |
+| F1 | Core Gameplay | Endless Run Foundation | Implemented | Live Play Mode verification now covers visible Play entry, bottom-rail run start, lower-viewport roll-follow framing, comfort steering, stale-trail clearing, a contrast-tuned recycling tunnel, score/distance progression, crash/Game Over, Retry, and Home. |
 | F2 | Core Gameplay | Obstacle and Pickup Generation | Implemented | Procedural tunnel obstacle rings, hazard patterns, pickup placement, difficulty ramp |
 | F3 | Core Gameplay | Score, Combo, and Speed Loop | Implemented | Distance and pickup scoring, combo growth/decay, speed escalation |
 | F4 | Core Gameplay | Continue and Rewarded Continue Flow | Implemented | Crash recovery with capped continues and rewarded ad usage |

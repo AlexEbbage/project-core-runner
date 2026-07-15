@@ -32,6 +32,10 @@ Verify the `CoreRacer_Main` hub lands on `Level Select`, routes clearly to the f
 - [ ] Confirm the menu returns cleanly after ending a run and going back.
 - [ ] Confirm left/right input steers the visible player and forward distance increases.
 - [ ] Confirm the camera remains behind the player during steering and the craft stays upright/readable while the tunnel appears to rotate around it.
+- [ ] Confirm a new run starts on the bottom rail, with the ship horizontally centred in the lower portion of the portrait viewport.
+- [ ] Confirm the 140 degrees/second steering baseline feels comprehensible and comfortable on both keyboard and touch input.
+- [ ] Confirm no diagonal thruster streak appears when Play, Retry, or Play-after-Home resets the player position.
+- [ ] Confirm the slate tunnel remains visibly structured without washing out the red hazards or orange pickups.
 - [ ] Confirm obstacles and pickups appear, score and distance increase, and a collision reaches Game Over.
 - [ ] Confirm Retry starts a clean second run and Home returns to the menu.
 - [ ] Confirm the selected route generates the expected polygon tunnel and that tunnel sections remain around/ahead of the player during a sustained run.

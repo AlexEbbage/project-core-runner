@@ -14,14 +14,24 @@ namespace CoreRacer.Gameplay.Player
 
         private TutorialService _tutorial;
         private bool _tutorialInputNotified;
+        private TrailRenderer[] _trails;
 
         public PlayerOrbitalMotor Motor => motor;
+
+        private void Awake()
+        {
+            _trails = GetComponentsInChildren<TrailRenderer>(true);
+        }
 
         public void BeginRun()
         {
             running = true;
             _tutorialInputNotified = false;
-            if (motor != null) motor.ResetMotor(transform.position.z);
+            if (motor != null)
+                motor.ResetMotor(transform.position.z);
+
+            for (var i = 0; i < _trails.Length; i++)
+                _trails[i].Clear();
         }
 
         public void EndRun()

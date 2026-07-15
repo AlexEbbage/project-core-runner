@@ -15640,7 +15640,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   orbitRadius: 3
-  angularSpeedDegrees: 180
+  angularSpeedDegrees: 140
   forwardSpeed: 10
   angleDegrees: 0
 --- !u!114 &892592785
@@ -20132,7 +20132,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 892592781}
-  offset: {x: 0, y: 0, z: -10}
+  offset: {x: 0, y: 1.25, z: -10}
   followSharpness: 12
   lockRotation: 1
   followTargetRoll: 1
@@ -27843,6 +27843,7 @@ MonoBehaviour:
   length: 240
   lengthSegments: 48
   invertNormals: 1
+  wallTint: {r: 0.24, g: 0.32, b: 0.48, a: 1}
   target: {fileID: 892592781}
   legacyVisual: {fileID: 1260924646}
   trailingDistance: 20

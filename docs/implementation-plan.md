@@ -23,8 +23,8 @@ Use the docs set as the durable operating system for the project. Foundation doc
 
 ## Current Recommended Order
 
-1. Human playability signoff for Play, control, crash, Retry, and Home
-2. Human comfort/readability signoff for the behind-player roll camera and generated tunnel material
+1. Human device signoff for Play, tuned steering/camera comfort, crash, Retry, and Home
+2. Adjust only the exposed steering, framing, or tint values if the device review identifies discomfort or readability issues
 3. Resume progression and booster review only after the core loop is signed off
 
 ## Current Asset Wiring Status
@@ -35,6 +35,8 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - `CoreRacer_Main.unity` now has Phase 7 safe SDK adapter wiring for verified Unity IAP, Firebase Analytics, and Mobile Notifications APIs; LevelPlay, Crashlytics, and Addressables remain disabled/manual setup blockers.
 - `CoreRacer_Main.unity` now routes the visible bottom Play button directly through validated level selection into run startup. The development editor command is `Tools > Core Racer > Playability > Start Core Run`.
 - `CoreRacer_Main.unity` now owns a `RuntimeTunnel` generator configured by the selected route. The gameplay camera follows the player's orbital position and roll so the craft stays upright in frame while the tunnel appears to rotate.
+- Core runs now start on the bottom rail at 270 degrees. The camera-local Y offset is `1.25`, placing the player at portrait viewport Y `0.411`; steering is initially tuned to `140` degrees/second.
+- `RuntimeTunnel` uses a renderer-local slate tint (`0.24`, `0.32`, `0.48`) so the shared `WallMaterial` remains unchanged, and player trails are cleared after the run-start teleport.
 - Phase 8 final validation and handoff is captured in `docs/rewrite/final-handoff.md`; closed testing remains blocked by placeholder privacy links. Live inspection on 2026-07-15 confirmed `Assets/CoreRacer/Scenes/CoreRacer_Main.unity` is the only enabled Build Settings scene.
 - Manual art follow-up is tracked in `docs/rewrite/manual-art-wiring-needed.md`.
 
@@ -62,4 +64,4 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - Asset or inspector dependencies:
   - Treat scene references, prefabs, ScriptableObjects, and UI wiring as part of the feature change surface for all future implementation work
   - Core-run PlayMode smoke test: `CoreRunPlayModeSmokeTests.VisiblePlay_StartsCoreGameplay`
-  - Latest automated result: 29/29 EditMode tests passed and 3/3 focused PlayMode tests passed; coverage includes scene uniqueness, visible listener wiring, duplicate start rejection, generated tunnel configuration/recycling, behind-player camera position and roll, movement, run session creation, non-overlapping Game Over actions, real Retry/Menu callbacks, Home, and Play after Home
+  - Latest automated result: 29/29 EditMode tests passed and 3/3 focused PlayMode tests passed; coverage includes scene uniqueness, visible listener wiring, bottom-rail reset, lower-viewport framing during steering, comfort speed, stale trail clearing, tunnel tint/configuration/recycling, matching camera/player roll, movement, run session creation, non-overlapping Game Over actions, real Retry/Menu callbacks, Home, and Play after Home
