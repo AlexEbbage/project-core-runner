@@ -62,4 +62,4 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - Asset or inspector dependencies:
   - Treat scene references, prefabs, ScriptableObjects, and UI wiring as part of the feature change surface for all future implementation work
   - Core-run PlayMode smoke test: `CoreRunPlayModeSmokeTests.VisiblePlay_StartsCoreGameplay`
-  - Latest automated result: 29/29 EditMode tests passed and 1/1 focused PlayMode test passed
+  - Latest automated result: 29/29 EditMode tests passed and 3/3 focused PlayMode tests passed; coverage includes scene uniqueness, visible listener wiring, duplicate start rejection, movement/camera follow, run session creation, Game Over, Retry, Home, and Play after Home

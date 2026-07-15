@@ -17,9 +17,10 @@ namespace CoreRacer.UI.MainMenu
         public void ShowPlay() => ShowBottomNavigationPage(MainMenuPage.Play);
         public void StartCoreRun()
         {
+            Debug.Log("[CoreRacer.UI] Play clicked", this);
             if (levelSelect == null)
             {
-                Debug.LogError("Visible Play failed: BottomNavBarController.levelSelect is not assigned.", this);
+                Debug.LogError("[CoreRacer.UI] Play failed: BottomNavBarController.levelSelect is not assigned.", this);
                 return;
             }
 

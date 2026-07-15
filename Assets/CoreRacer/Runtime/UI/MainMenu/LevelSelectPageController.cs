@@ -151,26 +151,26 @@ namespace CoreRacer.UI.MainMenu
             ResolveDependencies();
             if (roadmap == null || roadmap.Levels == null || roadmap.Levels.Count == 0)
             {
-                Debug.LogError("Play failed: the level roadmap is missing or empty.", this);
+                Debug.LogError("[CoreRacer.UI] Play failed: the level roadmap is missing or empty.", this);
                 return false;
             }
 
             if (_selectedIndex < 0 || _selectedIndex >= roadmap.Levels.Count)
             {
-                Debug.LogError($"Play failed: selected level index {_selectedIndex} is outside the roadmap.", this);
-                return false;
+                Debug.LogWarning($"[CoreRacer.UI] Selected level index {_selectedIndex} is invalid; using the first roadmap level.", this);
+                _selectedIndex = 0;
             }
 
             var level = roadmap.Levels[_selectedIndex];
             if (!IsUnlocked(level))
             {
-                Debug.LogWarning($"Play failed: level '{level?.Id ?? "<missing>"}' is locked or invalid.", this);
+                Debug.LogWarning($"[CoreRacer.UI] Play failed: level '{level?.Id ?? "<missing>"}' is locked or invalid.", this);
                 return false;
             }
 
             if (runController == null)
             {
-                Debug.LogError("Play failed: LevelSelectPageController.runController is not assigned.", this);
+                Debug.LogError("[CoreRacer.UI] Play failed: LevelSelectPageController.runController is not assigned.", this);
                 return false;
             }
 

@@ -32,6 +32,8 @@ The exact fix is to route the existing visible Play button to `BottomNavBarContr
 - Natural collision reached `ContinueOffered`, health `0`, `Time.timeScale=0`, and displayed Game Over. Declining continued to terminal `GameOver` with `Time.timeScale=1`.
 - The live Retry button callback started a second clean run: state `Running`, health `2`, score `0`, distance `0`, menu hidden, Game Over hidden.
 - The live Home button callback returned to `MainMenu` with `Time.timeScale=1`, menu visible, HUD and Game Over hidden.
+- Fresh EventSystem pointer execution after the structured-log follow-up returned `LIVE_CLICK|handled=True|state=Running|runId=7421bdb86a694d8aa399962b60f49d40|timeScale=1|player=True|menu=False|hud=True`. The previously observed delegate exception did not recur.
+- A fresh live content sample found 50 active pickup views and 24 active obstacle rings. Invoking the real pickup trigger handler advanced coins from 46 to 47 and collected powerups from 21 to 22; distance was 1132.3, score was 1775, and camera follow was active.
 
 ### Important tunnel finding
 
@@ -99,21 +101,38 @@ Applying the archive more than once is safe: files replace the same paths, the s
 9. Stop Play Mode. Use `Tools > Core Racer > Playability > Start Core Run`; confirm Unity enters Play Mode and starts the known first roadmap run.
 10. Capture the Console on failures and capture the menu, active run, Game Over, retried run, and returned menu.
 
-## PlayMode Test Added
+## PlayMode Tests Added
 
-`CoreRunPlayModeSmokeTests.VisiblePlay_StartsCoreGameplay` loads `CoreRacer_Main`, invokes the same visible-Play controller route, and asserts:
+`CoreRunPlayModeSmokeTests.MainScene_HasOneEventSystemBootstrapperAndValidVisiblePlayListener` verifies:
+
+- exactly one active EventSystem;
+- exactly one active GameBootstrapper;
+- the visible button is active/interactable;
+- its persistent listener resolves to `StartCoreRun`.
+
+`CoreRunPlayModeSmokeTests.VisiblePlay_StartsCoreGameplay` invokes the visible-Play controller route and verifies:
 
 - lifecycle state is `Running`;
+- a non-empty run session id is created;
 - `Time.timeScale` is `1`;
 - player is active;
 - menu is inactive;
 - HUD is active;
-- returning to the menu succeeds.
+- duplicate start is rejected without changing the run id;
+- forward movement and camera follow advance;
+- coin state and a powerup activation path respond.
+
+`CoreRunPlayModeSmokeTests.RunLifecycle_GameOverRetryHomeAndPlayAgainAreCleanAndIdempotent` verifies:
+
+- run end reaches Game Over and remains idempotent;
+- Retry creates a distinct, reset run session;
+- Home restores the menu;
+- Play starts another distinct run after Home.
 
 ## Validation Results
 
-- Focused PlayMode test job `8038125a3d4f452887959a185cf30c30`: 1 passed, 0 failed.
-- Full EditMode job `333d38b9447b447fae2c01495e9a05b7`: 29 passed, 0 failed.
+- Expanded PlayMode job `cae1ba85dbae4098a3230bccddaac537`: 3 passed, 0 failed.
+- Full EditMode job `574375586fc248df87dff099661b0bbc`: 29 passed, 0 failed.
 - Live pointer, editor-command, player input/movement, spawn population, natural collision, Game Over, Retry, and Home checks passed as described above.
 - Core run reference validation reported 0 errors and 0 warnings in the sampled live run.
 
@@ -123,8 +142,13 @@ Observed unrelated/pre-existing console warnings include missing-script warnings
 
 Capture these logs when manually validating:
 
-- `Core run started. Level='...', Ship='...'.`
-- Any `Visible Play failed:`, `Play failed:`, `Quick Play failed:`, `Core run failed:`, or `Core run reference error:` message.
+- `[CoreRacer.UI] Play clicked`
+- `[CoreRacer.Run] Start requested (state=...)`
+- `[CoreRacer.Run] Selected level: ...`
+- `[CoreRacer.Run] Gameplay root activated`
+- `[CoreRacer.Run] Run started successfully (runId=..., level=..., ship=...)`
+- `[CoreRacer.Run] Run ended (runId=..., reason=...)`
+- Any `[CoreRacer.UI] Play failed:`, `Quick Play failed:`, `[CoreRacer.Run] Start failed:`, or `[CoreRacer.Run] Reference error:` message.
 - The first exception/error and its full stack trace if a lifecycle step fails.
 - Test Runner summary for EditMode and PlayMode.
 

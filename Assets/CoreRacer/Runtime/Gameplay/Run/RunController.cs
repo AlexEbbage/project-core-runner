@@ -41,6 +41,7 @@ namespace CoreRacer.Gameplay.Run
 
         public RunState State => _stateMachine != null ? _stateMachine.State : RunState.None;
         public RunResult LastResult => _lastResult;
+        public string CurrentRunId => _lifecycle != null && _lifecycle.Session != null ? _lifecycle.Session.RunId : string.Empty;
 
         private void Awake()
         {
@@ -112,6 +113,13 @@ namespace CoreRacer.Gameplay.Run
 
         public bool TryStartRun()
         {
+            Debug.Log($"[CoreRacer.Run] Start requested (state={State})", this);
+            if (State != RunState.MainMenu && State != RunState.Starting)
+            {
+                Debug.LogWarning($"[CoreRacer.Run] Start rejected: a run cannot start from state {State}.", this);
+                return false;
+            }
+
             ResolveServices();
             ResolveSelectedLevel();
             if (!ValidateCoreRunStart())
@@ -129,17 +137,18 @@ namespace CoreRacer.Gameplay.Run
             }
 
             var levelId = _selectedLevel != null ? _selectedLevel.Id : (string.IsNullOrWhiteSpace(_selectedLevelId) ? defaultLevelId : _selectedLevelId);
+            Debug.Log($"[CoreRacer.Run] Selected level: {levelId}", this);
             ApplySelectedRunDefinition();
             Time.timeScale = 1f;
             if (!_lifecycle.StartNewRun(levelId, shipId))
             {
-                Debug.LogError($"Core run could not start from state {State}. Return to the menu before starting another run.", this);
+                Debug.LogError($"[CoreRacer.Run] Start failed from state {State}. Return to the menu before starting another run.", this);
                 return false;
             }
 
             _analytics?.RunStarted(levelId, shipId);
             _tutorial?.Notify(TutorialStepKind.WaitForRunStarted, "play");
-            Debug.Log($"Core run started. Level='{levelId}', Ship='{shipId}'.", this);
+            Debug.Log($"[CoreRacer.Run] Run started successfully (runId={CurrentRunId}, level={levelId}, ship={shipId})", this);
             return true;
         }
 
@@ -338,12 +347,16 @@ namespace CoreRacer.Gameplay.Run
             references?.ObstacleWorld?.BeginRun();
             references?.PickupWorld?.BeginRun();
             references?.Hud?.Show();
+            Debug.Log("[CoreRacer.Run] Gameplay root activated", this);
         }
 
         private void OnRunEnded(RunEndReason reason)
         {
             if (_lifecycle.Session.RewardsGranted)
+            {
+                Debug.LogWarning($"[CoreRacer.Run] Duplicate end ignored (runId={CurrentRunId}, reason={reason})", this);
                 return;
+            }
 
             StopRuntimeSystems();
             references?.Hud?.Hide();
@@ -364,6 +377,7 @@ namespace CoreRacer.Gameplay.Run
             _lifecycle.Session.RewardsGranted = true;
             _analytics?.RunEnded(_lastResult);
             references?.GameOver?.Show(_lastResult);
+            Debug.Log($"[CoreRacer.Run] Run ended (runId={CurrentRunId}, reason={reason})", this);
         }
 
         private void GrantDoubleRewards()
@@ -384,6 +398,13 @@ namespace CoreRacer.Gameplay.Run
 
             var id = string.IsNullOrWhiteSpace(_selectedLevelId) ? defaultLevelId : _selectedLevelId;
             _selectedLevel = levelRoadmap != null ? levelRoadmap.Get(id) : null;
+            if (_selectedLevel == null && levelRoadmap != null && levelRoadmap.Levels != null && levelRoadmap.Levels.Count > 0)
+            {
+                _selectedLevel = levelRoadmap.Levels[0];
+                _selectedLevelId = _selectedLevel != null ? _selectedLevel.Id : string.Empty;
+                if (_selectedLevel != null)
+                    Debug.LogWarning($"[CoreRacer.Run] Selected level '{id}' was unavailable; using default '{_selectedLevelId}'.", this);
+            }
         }
 
         private void ApplySelectedRunDefinition()
@@ -454,21 +475,21 @@ namespace CoreRacer.Gameplay.Run
         {
             if (_lifecycle == null)
             {
-                Debug.LogError("Core run failed: the run lifecycle is not initialized.", this);
+                Debug.LogError("[CoreRacer.Run] Start failed: the run lifecycle is not initialized.", this);
                 return false;
             }
 
             if (references == null)
             {
-                Debug.LogError("Core run failed: RunController.references is not assigned.", this);
+                Debug.LogError("[CoreRacer.Run] Start failed: RunController.references is not assigned.", this);
                 return false;
             }
 
             var validation = references.ValidateReferences();
             for (var i = 0; i < validation.Errors.Count; i++)
-                Debug.LogError("Core run reference error: " + validation.Errors[i], references);
+                Debug.LogError("[CoreRacer.Run] Reference error: " + validation.Errors[i], references);
             for (var i = 0; i < validation.Warnings.Count; i++)
-                Debug.LogWarning("Core run reference warning: " + validation.Warnings[i], references);
+                Debug.LogWarning("[CoreRacer.Run] Reference warning: " + validation.Warnings[i], references);
 
             var valid = validation.IsValid;
             valid &= RequireCoreReference(references.Player != null && references.Player.Motor != null, "Player and Player.Motor");
@@ -481,7 +502,7 @@ namespace CoreRacer.Gameplay.Run
 
             if (_selectedLevel == null)
             {
-                Debug.LogError($"Core run failed: selected level '{_selectedLevelId}' was not found in the roadmap.", this);
+                Debug.LogError($"[CoreRacer.Run] Start failed: selected level '{_selectedLevelId}' was not found in the roadmap.", this);
                 valid = false;
             }
 
@@ -493,7 +514,7 @@ namespace CoreRacer.Gameplay.Run
             if (present)
                 return true;
 
-            Debug.LogError($"Core run failed: required reference '{referenceName}' is missing.", this);
+            Debug.LogError($"[CoreRacer.Run] Start failed: required reference '{referenceName}' is missing.", this);
             return false;
         }
 
