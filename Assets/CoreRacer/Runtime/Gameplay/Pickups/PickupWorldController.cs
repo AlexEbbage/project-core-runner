@@ -100,7 +100,7 @@ namespace CoreRacer.Gameplay.Pickups
                 return;
             }
 
-            if (Random.value < config.PowerupChance && _powerupPool != null)
+            if (UnityEngine.Random.value < config.PowerupChance && _powerupPool != null)
             {
                 SpawnPowerup(z);
                 return;

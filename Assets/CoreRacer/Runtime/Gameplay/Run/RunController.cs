@@ -5,6 +5,7 @@ using CoreRacer.Config.Run;
 using CoreRacer.FTUE;
 using CoreRacer.Gameplay.Camera;
 using CoreRacer.Gameplay.Environment;
+using CoreRacer.Gameplay.Player;
 using CoreRacer.Gameplay.Vfx;
 using CoreRacer.Meta.Boosters;
 using CoreRacer.Meta.Levels;
@@ -585,7 +586,8 @@ namespace CoreRacer.Gameplay.Run
             shape.shapeType = ParticleSystemShapeType.Cone;
             shape.angle = 8f;
             shape.radius = 0.2f;
-            particles.emission.rateOverTime = 15f;
+            var emission = particles.emission;
+            emission.rateOverTime = 15f;
             particles.Play();
             return root.AddComponent<SpeedParticlesControllerV2>();
         }
