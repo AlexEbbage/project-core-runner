@@ -364,6 +364,49 @@ namespace CoreRacer.Tests.PlayMode
             Time.timeScale = 1f;
         }
 
+        [UnityTest]
+        public IEnumerator ProgressionLevelUp_UnlocksLateRouteAndPersistsSelection()
+        {
+            yield return LoadMainScene();
+
+            var levelSelect = Object.FindObjectOfType<LevelSelectPageController>(true);
+            Assert.NotNull(levelSelect);
+            Assert.IsTrue(GameServices.TryGet<PlayerProfileService>(out var profile));
+
+            var originalLevel = profile.State.Level;
+            var originalExperience = profile.State.Experience;
+            var originalSelectedIndex = profile.State.SelectedLevelIndex;
+            try
+            {
+                profile.Mutate(state =>
+                {
+                    state.Level = 1;
+                    state.Experience = 0;
+                    state.SelectedLevelIndex = 0;
+                });
+                levelSelect.Refresh();
+
+                Assert.IsFalse(levelSelect.TrySelectLevel("deca_sector_05"), "The late route must remain locked at level 1.");
+
+                profile.AddExperience(8750);
+                levelSelect.Refresh();
+
+                Assert.AreEqual(8, profile.State.Level);
+                Assert.IsTrue(levelSelect.TrySelectLevel("deca_sector_05"), "Leveling to the authored threshold must unlock the late route.");
+                Assert.AreEqual("deca_sector_05", levelSelect.SelectedLevelId);
+                Assert.AreEqual(4, profile.State.SelectedLevelIndex);
+            }
+            finally
+            {
+                profile.Mutate(state =>
+                {
+                    state.Level = originalLevel;
+                    state.Experience = originalExperience;
+                    state.SelectedLevelIndex = originalSelectedIndex;
+                });
+            }
+        }
+
         private static IEnumerator LoadMainScene()
         {
             Time.timeScale = 1f;

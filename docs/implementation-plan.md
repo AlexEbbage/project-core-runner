@@ -23,8 +23,8 @@ Use the docs set as the durable operating system for the project. Foundation doc
 
 ## Current Recommended Order
 
-1. Human portrait-device review of Level Select, boosters, Game Over, and reward clarity, with only focused layout/copy adjustments if needed
-2. Resume the next approved progression surface after the human review gate
+1. Complete the cohesive progression/meta phase: XP and unlocks feeding Level Select, Lab, Hangar, Tasks, Achievements, and Daily Rewards, with one integrated PlayMode proof pass
+2. Perform the human portrait-device review of that phase and apply only focused clarity fixes
 3. Keep production ad SDK verification separate from editor/dev fallback validation
 
 ## Current Asset Wiring Status
