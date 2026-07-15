@@ -25,8 +25,7 @@ Use the docs set as the durable operating system for the project. Foundation doc
 
 1. Human playability signoff for Play, control, crash, Retry, and Home
 2. Decide whether dynamic tunnel-section generation is required or whether the current static tunnel mesh is intentional
-3. Fix the overlapping Game Over layout without regenerating the authored UI
-4. Resume progression and booster review only after the core loop is signed off
+3. Resume progression and booster review only after the core loop is signed off
 
 ## Current Asset Wiring Status
 
@@ -48,7 +47,7 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - SDK release blockers remain for LevelPlay C# API installation/verification, Firebase Crashlytics installation, Addressables installation if remote content is required, and replacement of placeholder privacy links.
 - Build settings currently target the clean `CoreRacer_Main.unity`; keep this checked during release preparation rather than relying on the stale legacy-scene assumption.
 - Live inspection for this slice found active static tunnel geometry, not a runtime tunnel-section generator. Obstacles and pickups do generate during the run; tunnel-section generation must not be claimed until a product decision and implementation/verification slice exists.
-- The Game Over actions work through their live button callbacks, but the current Game Over screen has overlapping visual layout and still needs human-facing UI correction.
+- The Game Over Retry, Double Rewards, and Menu actions now use distinct authored RectTransform positions. Live pointer execution and PlayMode coverage confirm Retry, Menu, and subsequent Play transitions without regenerating the UI.
 
 ## Validation Notes
 
@@ -62,4 +61,4 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - Asset or inspector dependencies:
   - Treat scene references, prefabs, ScriptableObjects, and UI wiring as part of the feature change surface for all future implementation work
   - Core-run PlayMode smoke test: `CoreRunPlayModeSmokeTests.VisiblePlay_StartsCoreGameplay`
-  - Latest automated result: 29/29 EditMode tests passed and 3/3 focused PlayMode tests passed; coverage includes scene uniqueness, visible listener wiring, duplicate start rejection, movement/camera follow, run session creation, Game Over, Retry, Home, and Play after Home
+  - Latest automated result: 29/29 EditMode tests passed and 3/3 focused PlayMode tests passed; coverage includes scene uniqueness, visible listener wiring, duplicate start rejection, movement/camera follow, run session creation, non-overlapping Game Over actions, real Retry/Menu callbacks, Home, and Play after Home

@@ -34,14 +34,15 @@ The exact fix is to route the existing visible Play button to `BottomNavBarContr
 - The live Home button callback returned to `MainMenu` with `Time.timeScale=1`, menu visible, HUD and Game Over hidden.
 - Fresh EventSystem pointer execution after the structured-log follow-up returned `LIVE_CLICK|handled=True|state=Running|runId=7421bdb86a694d8aa399962b60f49d40|timeScale=1|player=True|menu=False|hud=True`. The previously observed delegate exception did not recur.
 - A fresh live content sample found 50 active pickup views and 24 active obstacle rings. Invoking the real pickup trigger handler advanced coins from 46 to 47 and collected powerups from 21 to 22; distance was 1132.3, score was 1775, and camera follow was active.
+- The Game Over closeout dispatched pointer clicks to the actual Retry, Menu, and visible Play GameObjects. Retry entered `Running` with a distinct run id, Menu entered `MainMenu`, Play entered `Running` with another distinct run id, and `Time.timeScale` remained `1`.
 
 ### Important tunnel finding
 
 The live `TunnelRoot` contains an active `tunnel_v3` mesh (`Tunnel`, 72 vertices) and an inactive `tunnel_v2` mesh. No runtime tunnel-section generator MonoBehaviour was found. Therefore dynamic tunnel-section generation is **not verified and is not claimed by this patch**. The run uses active static tunnel geometry while obstacle and pickup content generates. Product intent for dynamic tunnel sections needs a separate decision/slice.
 
-### Remaining visual issue
+### Game Over layout closeout
 
-The Game Over lifecycle and buttons work, but the captured screen has overlapping visual elements. This patch intentionally does not redesign or regenerate that UI. Human-facing Game Over layout correction is the recommended follow-up after core-loop signoff.
+The three authored Game Over action buttons shared the same anchored position and size, so Retry, Double Rewards, and Menu rendered directly on top of one another. No layout group owned their placement. The existing RectTransforms now use a minimal three-column layout: Retry `x=-250`, Double Rewards `x=0`, Menu `x=250`, all with size `220 x 72`. No UI hierarchy was regenerated and all existing listeners were preserved.
 
 ## Changed Existing Files
 
@@ -71,6 +72,9 @@ The Game Over lifecycle and buttons work, but the captured screen has overlappin
 - `_PatchReports/Screenshots/CoreRacer_GameOver_BeforePatch.png`
 - `_PatchReports/Screenshots/CoreRacer_Run_AfterPatch.png`
 - `_PatchReports/Screenshots/CoreRacer_GameOver_AfterPatch.png`
+- `_PatchReports/Screenshots/CoreRacer_GameOver_Closeout_Before.png`
+- `_PatchReports/Screenshots/CoreRacer_GameOver_Closeout_Preview.png`
+- `_PatchReports/Screenshots/CoreRacer_GameOver_Closeout_After.png`
 
 ## Deletions
 
@@ -125,14 +129,17 @@ Applying the archive more than once is safe: files replace the same paths, the s
 `CoreRunPlayModeSmokeTests.RunLifecycle_GameOverRetryHomeAndPlayAgainAreCleanAndIdempotent` verifies:
 
 - run end reaches Game Over and remains idempotent;
-- Retry creates a distinct, reset run session;
-- Home restores the menu;
+- the three Game Over actions have non-overlapping world-space rectangles;
+- the actual Retry button callback creates a distinct, reset run session;
+- the actual Menu button callback restores the menu;
 - Play starts another distinct run after Home.
 
 ## Validation Results
 
 - Expanded PlayMode job `cae1ba85dbae4098a3230bccddaac537`: 3 passed, 0 failed.
 - Full EditMode job `574375586fc248df87dff099661b0bbc`: 29 passed, 0 failed.
+- Game Over closeout PlayMode job `30b524780d514528aa97001e37ecfeb6`: 3 passed, 0 failed.
+- Game Over closeout EditMode job `17bee36e40614c56a4a97674c09e337b`: 29 passed, 0 failed.
 - Live pointer, editor-command, player input/movement, spawn population, natural collision, Game Over, Retry, and Home checks passed as described above.
 - Core run reference validation reported 0 errors and 0 warnings in the sampled live run.
 
@@ -159,6 +166,9 @@ Included screenshots:
 - `_PatchReports/Screenshots/CoreRacer_GameOver_BeforePatch.png`
 - `_PatchReports/Screenshots/CoreRacer_Run_AfterPatch.png`
 - `_PatchReports/Screenshots/CoreRacer_GameOver_AfterPatch.png`
+- `_PatchReports/Screenshots/CoreRacer_GameOver_Closeout_Before.png`
+- `_PatchReports/Screenshots/CoreRacer_GameOver_Closeout_Preview.png`
+- `_PatchReports/Screenshots/CoreRacer_GameOver_Closeout_After.png`
 
 ## Assumptions and Risks
 
@@ -166,8 +176,8 @@ Included screenshots:
 - Quick Play is compiled only for the Unity Editor or development builds.
 - Serialized scene fields are preserved; no prefab edits were required.
 - Static tunnel geometry currently supplies the run environment; dynamic tunnel section generation remains unresolved.
-- Game Over layout needs a focused authored-UI polish slice even though its callbacks work.
+- The Game Over action correction is intentionally limited to RectTransform placement and does not constitute a visual redesign.
 
 ## Next Implementation Slice
 
-After a human signs off the full Play/control/crash/Retry/Home loop, take a narrowly scoped playability-closeout slice: decide the required tunnel behavior and correct the authored Game Over layout. Do not start shop, IAP, adverts, visual redesign, or additional progression before that signoff.
+After a human signs off the full Play/control/crash/Retry/Home loop, decide whether the current static tunnel mesh is intentional or whether runtime tunnel-section generation is required. If generation is required, implement and verify it as its own narrow gameplay slice. Do not start shop, IAP, adverts, visual redesign, or additional progression before core-loop signoff.

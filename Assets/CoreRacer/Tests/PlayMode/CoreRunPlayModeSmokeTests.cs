@@ -100,11 +100,21 @@ namespace CoreRacer.Tests.PlayMode
             Assert.AreEqual(RunState.GameOver, run.State);
             Assert.IsTrue(references.GameOver.gameObject.activeInHierarchy, "Ending a run must show Game Over.");
 
+            var retryButton = FindButton(references.GameOver.transform, "RetryButton");
+            var doubleRewardsButton = FindButton(references.GameOver.transform, "DoubleRewardsButton");
+            var menuButton = FindButton(references.GameOver.transform, "MenuButton");
+            Assert.NotNull(retryButton);
+            Assert.NotNull(doubleRewardsButton);
+            Assert.NotNull(menuButton);
+            Assert.IsFalse(GetWorldRect(retryButton.transform as RectTransform).Overlaps(GetWorldRect(doubleRewardsButton.transform as RectTransform)), "Retry and Double Rewards must not overlap.");
+            Assert.IsFalse(GetWorldRect(doubleRewardsButton.transform as RectTransform).Overlaps(GetWorldRect(menuButton.transform as RectTransform)), "Double Rewards and Menu must not overlap.");
+            Assert.IsFalse(GetWorldRect(retryButton.transform as RectTransform).Overlaps(GetWorldRect(menuButton.transform as RectTransform)), "Retry and Menu must not overlap.");
+
             EndCurrentRun(run);
             Assert.AreEqual(RunState.GameOver, run.State, "Ending an already-ended run must be idempotent.");
             Assert.AreEqual(firstRunId, run.CurrentRunId);
 
-            run.RetryRun();
+            retryButton.onClick.Invoke();
             yield return null;
             var secondRunId = run.CurrentRunId;
             Assert.AreEqual(RunState.Running, run.State);
@@ -115,7 +125,10 @@ namespace CoreRacer.Tests.PlayMode
             Assert.Less(references.StatsTracker.Duration, 1f, "Retry must reset the run duration.");
             Assert.IsFalse(references.GameOver.gameObject.activeInHierarchy);
 
-            run.ReturnToMenu();
+            EndCurrentRun(run);
+            yield return null;
+            Assert.AreEqual(RunState.GameOver, run.State);
+            menuButton.onClick.Invoke();
             yield return null;
             Assert.AreEqual(RunState.MainMenu, run.State);
             Assert.IsTrue(references.MainMenu.gameObject.activeInHierarchy);
@@ -145,6 +158,22 @@ namespace CoreRacer.Tests.PlayMode
             run.HandlePlayerDeath();
             if (run.State == RunState.ContinueOffered || run.State == RunState.Crashed)
                 run.DeclineContinue();
+        }
+
+        private static Button FindButton(Transform root, string name)
+        {
+            var buttons = root.GetComponentsInChildren<Button>(true);
+            for (var i = 0; i < buttons.Length; i++)
+                if (buttons[i].name == name)
+                    return buttons[i];
+            return null;
+        }
+
+        private static Rect GetWorldRect(RectTransform transform)
+        {
+            var corners = new Vector3[4];
+            transform.GetWorldCorners(corners);
+            return Rect.MinMaxRect(corners[0].x, corners[0].y, corners[2].x, corners[2].y);
         }
     }
 }

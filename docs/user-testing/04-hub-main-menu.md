@@ -34,7 +34,7 @@ Verify the `CoreRacer_Main` hub lands on `Level Select`, routes clearly to the f
 - [ ] Confirm obstacles and pickups appear, score and distance increase, and a collision reaches Game Over.
 - [ ] Confirm Retry starts a clean second run and Home returns to the menu.
 - [ ] Record that the current scene uses a static tunnel mesh; do not pass dynamic tunnel-section generation unless a generator is added and observed live.
-- [ ] Capture the Game Over screen and record any overlapping controls or text as a failure requiring layout follow-up.
+- [ ] Confirm Retry, Double Rewards, and Menu are visually distinct, readable, and do not overlap on Game Over.
 - [ ] Confirm any notification or badge state that exists is readable and not misleading.
 
 ## Expected Result
