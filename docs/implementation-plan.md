@@ -23,8 +23,8 @@ Use the docs set as the durable operating system for the project. Foundation doc
 
 ## Current Recommended Order
 
-1. Complete the cohesive progression/meta phase: XP and unlocks feeding Level Select, Lab, Hangar, Tasks, Achievements, and Daily Rewards, with one integrated PlayMode proof pass
-2. Perform the human portrait-device review of that phase and apply only focused clarity fixes
+1. Complete the cohesive progression/meta phase: XP and unlocks feeding Environment Select, Lab, Hangar, Tasks, Achievements, and Daily Rewards, with one integrated PlayMode proof pass
+2. Add environment-specific obstacle/VFX presentation over the fixed six-sided tunnel, then perform the human portrait-device review and apply only focused clarity fixes
 3. Keep production ad SDK verification separate from editor/dev fallback validation
 
 ## Current Asset Wiring Status
@@ -35,7 +35,7 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - `CoreRacer_Main.unity` now has Phase 7 safe SDK adapter wiring for verified Unity IAP, Firebase Analytics, and Mobile Notifications APIs; LevelPlay, Crashlytics, and Addressables remain disabled/manual setup blockers.
 - `CoreRacer_Main.unity` now routes the visible bottom Play button directly through validated level selection into run startup. The development editor command is `Tools > Core Racer > Playability > Start Core Run`.
 - `CoreRacer_Main.unity` now owns a `RuntimeTunnel` generator configured by the selected route. The gameplay camera follows the player's orbital position and roll so the craft stays upright in frame while the tunnel appears to rotate.
-- `CoreRacer_Main.unity` now exposes five persisted polygon routes and an authored pre-run booster loadout. The selected route configures tunnel sides; one booster per family applies only for the active run.
+- `CoreRacer_Main.unity` now exposes five persisted environment variants—Fire, Lightning, Radiation, Ice, and Firestorm—over one stable six-sided MVP tunnel type. Selection changes environment palette/atmosphere data, not tunnel geometry; one booster per family applies only for the active run.
 - In Editor and Development Builds, `GameBootstrapper` adds a `DummyRewardedAdService` only when no rewarded provider is assigned, allowing Continue and Double Rewards to be proven without changing production provider wiring.
 - Core runs now start on the bottom rail at 270 degrees. The camera-local Y offset is `1.25`, placing the player at portrait viewport Y `0.411`; steering is initially tuned to `140` degrees/second.
 - `RuntimeTunnel` uses a renderer-local slate tint (`0.24`, `0.32`, `0.48`) so the shared `WallMaterial` remains unchanged, and player trails are cleared after the run-start teleport.
@@ -51,7 +51,7 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - DOTween is now the approved UI motion layer, so UI polish work should use the reusable motion helper rather than introducing a second transition stack.
 - SDK release blockers remain for LevelPlay C# API installation/verification, Firebase Crashlytics installation, Addressables installation if remote content is required, and replacement of placeholder privacy links.
 - Build settings currently target the clean `CoreRacer_Main.unity`; keep this checked during release preparation rather than relying on the stale legacy-scene assumption.
-- The runtime tunnel now generates 48 longitudinal mesh sections for the selected polygon side count and recenters in 40-unit steps while keeping 20 units behind the player. The preserved FBX tunnel is hidden only during Play Mode.
+- The runtime tunnel now generates 48 longitudinal mesh sections for the fixed six-sided MVP type and recenters in 40-unit steps while keeping 20 units behind the player. The preserved FBX tunnel is hidden only during Play Mode.
 - The Game Over Retry, Double Rewards, and Menu actions now use distinct authored RectTransform positions. Live pointer execution and PlayMode coverage confirm Retry, Menu, and subsequent Play transitions without regenerating the UI.
 
 ## Validation Notes

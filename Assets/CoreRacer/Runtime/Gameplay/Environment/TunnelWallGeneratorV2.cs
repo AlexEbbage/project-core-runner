@@ -74,6 +74,12 @@ namespace CoreRacer.Gameplay.Environment
             AlignToTarget();
         }
 
+        public void SetWallTint(Color tint)
+        {
+            wallTint = tint;
+            ApplyWallTint();
+        }
+
         public void AdvanceTo(float targetZ)
         {
             recenterDistance = Mathf.Max(1f, recenterDistance);

@@ -12,6 +12,9 @@ namespace CoreRacer.Gameplay.Environment
         public Color AmbientColor = Color.cyan;
         public Color FogColor = Color.black;
         public float FogDensity = 0.01f;
+        public Color WallTint = new Color(0.24f, 0.32f, 0.48f, 1f);
+        public Color HazardColor = Color.red;
+        public Color AccentColor = Color.cyan;
     }
 
     [CreateAssetMenu(menuName = "Core Racer/Environment/Run Zone Catalog")]

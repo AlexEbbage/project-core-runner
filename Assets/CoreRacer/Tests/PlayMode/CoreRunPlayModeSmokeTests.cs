@@ -300,11 +300,13 @@ namespace CoreRacer.Tests.PlayMode
             var run = Object.FindObjectOfType<RunController>(true);
             var references = Object.FindObjectOfType<RunSceneReferences>(true);
             var tunnel = Object.FindObjectOfType<TunnelWallGeneratorV2>(true);
+            var zones = Object.FindObjectOfType<RunZoneManagerV2>(true);
             Assert.NotNull(levelSelect, "The authored level-select controller is missing.");
             Assert.NotNull(boosterLoadout, "The authored pre-run booster loadout is missing.");
             Assert.NotNull(run);
             Assert.NotNull(references);
             Assert.NotNull(tunnel);
+            Assert.NotNull(zones);
             Assert.IsTrue(GameServices.TryGet<PlayerProfileService>(out var profile));
 
             var originalLevel = profile.State.Level;
@@ -323,9 +325,9 @@ namespace CoreRacer.Tests.PlayMode
 
             levelSelect.Refresh();
             boosterLoadout.Refresh();
-            Assert.AreEqual(5, levelSelect.RouteCount, "The active V2 roadmap must expose all five polygon routes.");
+            Assert.AreEqual(5, levelSelect.RouteCount, "The active roadmap must expose all five authored environments.");
             Assert.AreEqual(3, boosterLoadout.VisibleOptionCount, "The pre-run surface must expose the three authored booster families.");
-            Assert.IsTrue(levelSelect.TrySelectLevel("deca_sector_05"), "The unlocked DECAGON route must be selectable.");
+            Assert.IsTrue(levelSelect.TrySelectLevel("deca_sector_05"), "The unlocked FIRESTORM environment must be selectable.");
             Assert.AreEqual(4, profile.State.SelectedLevelIndex);
             Assert.AreEqual("deca_sector_05", levelSelect.SelectedLevelId);
 
@@ -333,7 +335,8 @@ namespace CoreRacer.Tests.PlayMode
             yield return null;
 
             Assert.AreEqual(RunState.Running, run.State);
-            Assert.AreEqual(10, tunnel.Sides, "The selected DECAGON route must configure ten tunnel sides.");
+            Assert.AreEqual(6, tunnel.Sides, "Every MVP environment must preserve the single six-sided tunnel type.");
+            Assert.AreEqual("firestorm", zones.CurrentZoneId, "The selected environment must be applied to the run.");
             Assert.AreEqual(2f, run.ActiveBoosterModifiers.ScoreMultiplier);
             Assert.AreEqual(2f, run.ActiveBoosterModifiers.CoinMultiplier);
             Assert.AreEqual(1f, run.ActiveBoosterModifiers.StartShieldSeconds);

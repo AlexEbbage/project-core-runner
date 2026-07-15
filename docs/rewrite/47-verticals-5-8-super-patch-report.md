@@ -51,7 +51,7 @@ Verticals 1-4 were not present as runtime patch bundles. Existing gameplay/confi
 
 ### Gameplay/data integration
 
-- Selected level applies tunnel sides, starting speed, difficulty multiplier and zone
+- Selected environment applies the fixed MVP tunnel type, starting speed, difficulty multiplier and zone palette
 - Speed curve and camera FOV intensity used during runs
 - Powerup collection progression recorded
 - Magnet implemented and reset correctly

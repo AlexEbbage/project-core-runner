@@ -38,7 +38,7 @@ Verify the `CoreRacer_Main` hub lands on `Level Select`, routes clearly to the f
 - [ ] Confirm the slate tunnel remains visibly structured without washing out the red hazards or orange pickups.
 - [ ] Confirm obstacles and pickups appear, score and distance increase, and a collision reaches Game Over.
 - [ ] Confirm Retry starts a clean second run and Home returns to the menu.
-- [ ] Confirm the selected route generates the expected polygon tunnel and that tunnel sections remain around/ahead of the player during a sustained run.
+- [ ] Confirm the selected environment preserves the six-sided MVP tunnel and that tunnel sections remain around/ahead of the player during a sustained run.
 - [ ] Confirm Retry, Double Rewards, and Menu are visually distinct, readable, and do not overlap on Game Over.
 - [ ] Confirm any notification or badge state that exists is readable and not misleading.
 

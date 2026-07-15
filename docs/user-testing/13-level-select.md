@@ -13,13 +13,14 @@ Verify the player can read available levels/zones, understand locks, persist the
 
 - EditMode: 32/32 passed on 2026-07-15.
 - PlayMode: 4/4 passed, including route persistence and selected-run configuration.
-- Unity MCP live result: all five configured routes were available; selecting `deca_sector_05` persisted index 4 and started a ten-sided tunnel run.
+- Unity MCP live result: all five configured environments were available; selecting `deca_sector_05` persisted index 4 and started the fixed six-sided tunnel with the Firestorm zone applied.
 - Closeout status: implementation and runtime behavior are proven; human portrait-device clarity remains the signoff gate.
 
 ## Checklist
 
 - [x] Confirm the level select surface can be opened.
-- [x] Confirm all five polygon routes exist in authored order: `HEXAGON`, `HEPTAGON`, `OCTAGON`, `NONAGON`, `DECAGON`.
+- [x] Confirm all five themed environments exist in authored order: `FIRE`, `LIGHTNING`, `RADIATION`, `ICE`, `FIRESTORM`.
+- [ ] Confirm every environment preserves the same six-sided MVP tunnel geometry while changing palette/atmosphere presentation.
 - [ ] Confirm available levels or zones are readable and selectable.
 - [ ] Confirm locked levels clearly show the required level or lock reason.
 - [x] Change selection and confirm the selected route updates correctly.

@@ -234,7 +234,8 @@ namespace CoreRacer.UI.MainMenu
             if (level == null)
                 return string.Empty;
 
-            var details = string.Format(Localize("ui.level_select_description"), level.TunnelSides);
+            var environment = string.IsNullOrWhiteSpace(level.EnvironmentName) ? level.DisplayName : level.EnvironmentName;
+            var details = $"{environment}\n{level.Description}";
             if (!string.IsNullOrWhiteSpace(level.ChallengeOne)) details += "\n• " + level.ChallengeOne;
             if (!string.IsNullOrWhiteSpace(level.ChallengeTwo)) details += "\n• " + level.ChallengeTwo;
             if (!string.IsNullOrWhiteSpace(level.ChallengeThree)) details += "\n• " + level.ChallengeThree;

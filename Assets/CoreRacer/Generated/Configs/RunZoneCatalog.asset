@@ -13,9 +13,48 @@ MonoBehaviour:
   m_Name: RunZoneCatalog
   m_EditorClassIdentifier: CoreRacer.Runtime:CoreRacer.Gameplay.Environment:RunZoneCatalog
   Zones:
-  - Id: neon_hex
-    DisplayName: Neon Hex
+  - Id: fire
+    DisplayName: Fire
     TunnelMaterial: {fileID: 2100000, guid: 55b4909a9790e6c40bdee7ae4d8d6a35, type: 2}
-    AmbientColor: {r: 0, g: 1, b: 1, a: 1}
-    FogColor: {r: 0, g: 0, b: 0, a: 1}
+    AmbientColor: {r: 1, g: 0.12, b: 0.02, a: 1}
+    FogColor: {r: 0.12, g: 0.01, b: 0, a: 1}
+    FogDensity: 0.012
+    WallTint: {r: 0.45, g: 0.08, b: 0.03, a: 1}
+    HazardColor: {r: 1, g: 0.2, b: 0.02, a: 1}
+    AccentColor: {r: 1, g: 0.6, b: 0.05, a: 1}
+  - Id: lightning
+    DisplayName: Lightning
+    TunnelMaterial: {fileID: 2100000, guid: 55b4909a9790e6c40bdee7ae4d8d6a35, type: 2}
+    AmbientColor: {r: 0.1, g: 0.2, b: 1, a: 1}
+    FogColor: {r: 0.01, g: 0.02, b: 0.12, a: 1}
     FogDensity: 0.01
+    WallTint: {r: 0.08, g: 0.14, b: 0.5, a: 1}
+    HazardColor: {r: 0.3, g: 0.8, b: 1, a: 1}
+    AccentColor: {r: 0.7, g: 0.9, b: 1, a: 1}
+  - Id: radiation
+    DisplayName: Radiation
+    TunnelMaterial: {fileID: 2100000, guid: 55b4909a9790e6c40bdee7ae4d8d6a35, type: 2}
+    AmbientColor: {r: 0.15, g: 1, b: 0.05, a: 1}
+    FogColor: {r: 0.01, g: 0.1, b: 0.01, a: 1}
+    FogDensity: 0.018
+    WallTint: {r: 0.08, g: 0.35, b: 0.05, a: 1}
+    HazardColor: {r: 0.5, g: 1, b: 0.05, a: 1}
+    AccentColor: {r: 0.7, g: 1, b: 0.2, a: 1}
+  - Id: ice
+    DisplayName: Ice
+    TunnelMaterial: {fileID: 2100000, guid: 55b4909a9790e6c40bdee7ae4d8d6a35, type: 2}
+    AmbientColor: {r: 0.1, g: 0.65, b: 1, a: 1}
+    FogColor: {r: 0.02, g: 0.1, b: 0.18, a: 1}
+    FogDensity: 0.014
+    WallTint: {r: 0.2, g: 0.55, b: 0.8, a: 1}
+    HazardColor: {r: 0.55, g: 0.9, b: 1, a: 1}
+    AccentColor: {r: 0.8, g: 0.95, b: 1, a: 1}
+  - Id: firestorm
+    DisplayName: Firestorm
+    TunnelMaterial: {fileID: 2100000, guid: 55b4909a9790e6c40bdee7ae4d8d6a35, type: 2}
+    AmbientColor: {r: 1, g: 0.03, b: 0, a: 1}
+    FogColor: {r: 0.18, g: 0.005, b: 0, a: 1}
+    FogDensity: 0.02
+    WallTint: {r: 0.55, g: 0.03, b: 0.01, a: 1}
+    HazardColor: {r: 1, g: 0.05, b: 0, a: 1}
+    AccentColor: {r: 1, g: 0.35, b: 0.02, a: 1}

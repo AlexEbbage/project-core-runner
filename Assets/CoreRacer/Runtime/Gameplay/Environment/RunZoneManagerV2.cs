@@ -6,6 +6,9 @@ namespace CoreRacer.Gameplay.Environment
     {
         [SerializeField] private RunZoneCatalog catalog;
         [SerializeField] private MeshRenderer tunnelRenderer;
+        [SerializeField] private TunnelWallGeneratorV2 tunnelGenerator;
+
+        public string CurrentZoneId { get; private set; }
 
         public void ApplyDefaultZone()
         {
@@ -21,6 +24,14 @@ namespace CoreRacer.Gameplay.Environment
         {
             if (zone == null)
                 return;
+
+            CurrentZoneId = zone.Id;
+
+            if (tunnelGenerator == null)
+                tunnelGenerator = FindObjectOfType<TunnelWallGeneratorV2>();
+
+            if (tunnelGenerator != null)
+                tunnelGenerator.SetWallTint(zone.WallTint);
 
             if (tunnelRenderer != null && zone.TunnelMaterial != null)
                 tunnelRenderer.sharedMaterial = zone.TunnelMaterial;

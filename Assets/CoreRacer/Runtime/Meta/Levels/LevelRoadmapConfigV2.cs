@@ -15,6 +15,7 @@ namespace CoreRacer.Meta.Levels
         public float StartingSpeed = 16f;
         public float DifficultyMultiplier = 1f;
         public string ZoneId = "neon_hex";
+        public string EnvironmentName = "Neon Hex";
         public CurrencyAmount FirstClearReward = new CurrencyAmount(CurrencyType.Premium, 5);
         public string ChallengeOne;
         public string ChallengeTwo;
