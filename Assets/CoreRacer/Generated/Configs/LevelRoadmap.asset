@@ -14,32 +14,72 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Levels:
   - Id: hex_sector_01
-    DisplayName: Hex Sector
-    Description: Classic six-sided tunnel run.
+    DisplayName: HEXAGON
+    Description: The original tunnel route. Fast to read, fast to replay.
     RequiredPlayerLevel: 1
     TunnelSides: 6
     StartingSpeed: 16
     DifficultyMultiplier: 1
+    ZoneId: neon_hex
     FirstClearReward:
       Currency: 1
       Amount: 5
+    ChallengeOne: Reach 2,500 score
+    ChallengeTwo: Travel 400m
+    ChallengeThree: Collect 15 coins
   - Id: hept_sector_02
-    DisplayName: Hept Sector
-    Description: Classic six-sided tunnel run.
-    RequiredPlayerLevel: 3
+    DisplayName: HEPTAGON
+    Description: A wider seven-side route with a little more visual drift.
+    RequiredPlayerLevel: 2
     TunnelSides: 7
     StartingSpeed: 17
     DifficultyMultiplier: 1.1
+    ZoneId: neon_hex
     FirstClearReward:
       Currency: 1
       Amount: 5
+    ChallengeOne: Reach 5,000 score
+    ChallengeTwo: Travel 700m
+    ChallengeThree: Collect 25 coins
   - Id: oct_sector_03
-    DisplayName: Oct Sector
-    Description: Classic six-sided tunnel run.
-    RequiredPlayerLevel: 6
+    DisplayName: OCTAGON
+    Description: Eight walls, longer sight-lines, and a more aspirational chase.
+    RequiredPlayerLevel: 4
     TunnelSides: 8
     StartingSpeed: 18
     DifficultyMultiplier: 1.2
+    ZoneId: neon_hex
     FirstClearReward:
       Currency: 1
       Amount: 5
+    ChallengeOne: Reach 8,000 score
+    ChallengeTwo: Travel 1,000m
+    ChallengeThree: Collect 40 coins
+  - Id: non_sector_04
+    DisplayName: NONAGON
+    Description: A nine-side polygon run built for higher-level score pushes.
+    RequiredPlayerLevel: 6
+    TunnelSides: 9
+    StartingSpeed: 19
+    DifficultyMultiplier: 1.3
+    ZoneId: neon_hex
+    FirstClearReward:
+      Currency: 1
+      Amount: 5
+    ChallengeOne: Reach 12,000 score
+    ChallengeTwo: Travel 1,400m
+    ChallengeThree: Collect 55 coins
+  - Id: deca_sector_05
+    DisplayName: DECAGON
+    Description: The late-road route, tuned for long-distance attempts.
+    RequiredPlayerLevel: 8
+    TunnelSides: 10
+    StartingSpeed: 20
+    DifficultyMultiplier: 1.4
+    ZoneId: neon_hex
+    FirstClearReward:
+      Currency: 1
+      Amount: 5
+    ChallengeOne: Reach 17,000 score
+    ChallengeTwo: Travel 1,800m
+    ChallengeThree: Collect 75 coins

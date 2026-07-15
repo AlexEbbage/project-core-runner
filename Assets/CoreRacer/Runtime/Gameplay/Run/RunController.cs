@@ -5,6 +5,7 @@ using CoreRacer.Config.Run;
 using CoreRacer.FTUE;
 using CoreRacer.Gameplay.Camera;
 using CoreRacer.Gameplay.Environment;
+using CoreRacer.Meta.Boosters;
 using CoreRacer.Meta.Levels;
 using CoreRacer.Meta.Profile;
 using CoreRacer.Meta.Ships;
@@ -25,6 +26,7 @@ namespace CoreRacer.Gameplay.Run
         [SerializeField] private RunZoneManagerV2 zoneManager;
         [SerializeField] private TunnelWallGeneratorV2 tunnelWallGenerator;
         [SerializeField] private ShipDatabase shipDatabase;
+        [SerializeField] private BoosterCatalog boosterCatalog;
         [SerializeField] private string defaultLevelId = "hex_sector_01";
 
         private string _selectedLevelId;
@@ -39,10 +41,13 @@ namespace CoreRacer.Gameplay.Run
         private RunResult _lastResult;
         private bool _continueRequestInFlight;
         private bool _doubleRewardRequestInFlight;
+        private BoosterRunModifiers _activeBoosterModifiers;
 
         public RunState State => _stateMachine != null ? _stateMachine.State : RunState.None;
         public RunResult LastResult => _lastResult;
         public string CurrentRunId => _lifecycle != null && _lifecycle.Session != null ? _lifecycle.Session.RunId : string.Empty;
+        public BoosterCatalog BoosterCatalog => boosterCatalog;
+        public BoosterRunModifiers ActiveBoosterModifiers => _activeBoosterModifiers;
 
         private void Awake()
         {
@@ -56,6 +61,7 @@ namespace CoreRacer.Gameplay.Run
                 tunnelWallGenerator = FindObjectOfType<TunnelWallGeneratorV2>();
 
             ResolveServices();
+            _activeBoosterModifiers = BoosterRunModifiers.Default;
 
             var clock = GameServices.TryGet<IGameClock>(out var serviceClock) ? serviceClock : new UnityGameClock();
             GameServices.TryGet<PlayerProfileService>(out var profile);
@@ -137,7 +143,10 @@ namespace CoreRacer.Gameplay.Run
                     _rewards = new RunRewardService(profile, config.Rewards);
                 ApplyShipProgression(profile);
                 references?.PlayerCosmetics?.Apply(profile.State);
+                _activeBoosterModifiers = BoosterLoadoutResolver.Resolve(boosterCatalog, profile.State.EquippedBoosterIds);
             }
+            else
+                _activeBoosterModifiers = BoosterRunModifiers.Default;
 
             var levelId = _selectedLevel != null ? _selectedLevel.Id : (string.IsNullOrWhiteSpace(_selectedLevelId) ? defaultLevelId : _selectedLevelId);
             Debug.Log($"[CoreRacer.Run] Selected level: {levelId}", this);
@@ -202,6 +211,7 @@ namespace CoreRacer.Gameplay.Run
             _continueRequestInFlight = false;
             _doubleRewardRequestInFlight = false;
             StopRuntimeSystems();
+            ClearRunBoosters();
             _lifecycle?.ReturnToMenu();
             ShowMainMenu();
         }
@@ -347,6 +357,7 @@ namespace CoreRacer.Gameplay.Run
             references?.ScoreTracker?.BeginRun();
             references?.CurrencyTracker?.BeginRun();
             references?.StatsTracker?.BeginRun();
+            ApplyRunBoosters();
             references?.ObstacleWorld?.BeginRun();
             references?.PickupWorld?.BeginRun();
             references?.Hud?.Show();
@@ -362,6 +373,7 @@ namespace CoreRacer.Gameplay.Run
             }
 
             StopRuntimeSystems();
+            ClearRunBoosters();
             references?.Hud?.Hide();
             references?.PauseMenu?.Hide();
 
@@ -467,6 +479,16 @@ namespace CoreRacer.Gameplay.Run
             magnet?.SetUpgradeRadiusMultiplier(1f + radiusLevel * 0.1f);
         }
 
+        private void ApplyRunBoosters()
+        {
+            references?.ScoreTracker?.SetRunScoreMultiplier(_activeBoosterModifiers.ScoreMultiplier);
+            references?.CurrencyTracker?.SetRunCoinMultiplier(_activeBoosterModifiers.CoinMultiplier);
+            if (_activeBoosterModifiers.StartShieldSeconds > 0f)
+                references?.PlayerHealth?.Revive(_activeBoosterModifiers.StartShieldSeconds);
+
+            Debug.Log($"[CoreRacer.Boosters] Applied run loadout: score x{_activeBoosterModifiers.ScoreMultiplier:0.##}, coins x{_activeBoosterModifiers.CoinMultiplier:0.##}, shield {_activeBoosterModifiers.StartShieldSeconds:0.##}s.", this);
+        }
+
         private static float StatToMultiplier(float stat)
         {
             return Mathf.Clamp(1f + (stat - 50f) * 0.005f, 0.75f, 1.25f);
@@ -535,6 +557,13 @@ namespace CoreRacer.Gameplay.Run
             references?.StatsTracker?.EndRun();
             references?.ObstacleWorld?.EndRun();
             references?.PickupWorld?.EndRun();
+        }
+
+        private void ClearRunBoosters()
+        {
+            references?.ScoreTracker?.SetRunScoreMultiplier(1f);
+            references?.CurrencyTracker?.SetRunCoinMultiplier(1f);
+            _activeBoosterModifiers = BoosterRunModifiers.Default;
         }
 
         private void ShowMainMenu()

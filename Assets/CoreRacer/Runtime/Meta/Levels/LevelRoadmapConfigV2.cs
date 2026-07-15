@@ -16,6 +16,9 @@ namespace CoreRacer.Meta.Levels
         public float DifficultyMultiplier = 1f;
         public string ZoneId = "neon_hex";
         public CurrencyAmount FirstClearReward = new CurrencyAmount(CurrencyType.Premium, 5);
+        public string ChallengeOne;
+        public string ChallengeTwo;
+        public string ChallengeThree;
     }
 
     [CreateAssetMenu(menuName = "Core Racer/Progression/Level Roadmap V2")]

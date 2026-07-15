@@ -14,11 +14,14 @@ namespace CoreRacer.Gameplay.Run
         private float _score;
         private float _combo;
         private float _scorePowerupMultiplier = 1f;
+        private float _runScoreMultiplier = 1f;
         private float _shipComboMultiplier = 1f;
 
         public int CurrentScore => Mathf.FloorToInt(_score);
         public float Combo => _combo;
         public float CurrentMultiplier => 1f + _combo * ComboToMultiplierFactor * _shipComboMultiplier;
+        public float RunScoreMultiplier => _runScoreMultiplier;
+        public float EffectiveScoreMultiplier => _scorePowerupMultiplier * _runScoreMultiplier;
         public float ComboToMultiplierFactor => balance != null ? balance.ComboToMultiplierFactor : 0.1f;
         public event Action<int> ScoreChanged;
         public event Action<float> ComboChanged;
@@ -28,6 +31,8 @@ namespace CoreRacer.Gameplay.Run
             _running = true;
             _score = 0;
             _combo = 0;
+            _scorePowerupMultiplier = 1f;
+            _runScoreMultiplier = 1f;
             _lastZ = player != null ? player.position.z : 0f;
             ScoreChanged?.Invoke(CurrentScore);
             ComboChanged?.Invoke(_combo);
@@ -40,6 +45,11 @@ namespace CoreRacer.Gameplay.Run
             _scorePowerupMultiplier = Mathf.Max(1f, multiplier);
         }
 
+        public void SetRunScoreMultiplier(float multiplier)
+        {
+            _runScoreMultiplier = Mathf.Max(1f, multiplier);
+        }
+
         public void SetShipComboMultiplier(float multiplier)
         {
             _shipComboMultiplier = Mathf.Clamp(multiplier, 0.5f, 3f);
@@ -47,7 +57,7 @@ namespace CoreRacer.Gameplay.Run
 
         public void AddPickupScore(int baseScore)
         {
-            var add = baseScore * CurrentMultiplier * _scorePowerupMultiplier;
+            var add = baseScore * CurrentMultiplier * EffectiveScoreMultiplier;
             _score += add;
             _combo = Mathf.Min(MaxCombo, _combo + ComboPerPickup);
             ScoreChanged?.Invoke(CurrentScore);
@@ -62,7 +72,7 @@ namespace CoreRacer.Gameplay.Run
             var z = player.position.z;
             var distance = Mathf.Max(0f, z - _lastZ);
             _lastZ = z;
-            _score += distance * DistanceMultiplier * _scorePowerupMultiplier;
+            _score += distance * DistanceMultiplier * EffectiveScoreMultiplier;
             _combo = Mathf.Max(0f, _combo - ComboDecay * UnityEngine.Time.deltaTime);
             ScoreChanged?.Invoke(CurrentScore);
             ComboChanged?.Invoke(_combo);

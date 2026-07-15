@@ -13,7 +13,7 @@ namespace CoreRacer.Meta.Profile
             if (state == null)
                 state = PlayerProfileDefaults.CreateNew();
 
-            state.Version = Math.Max(2, state.Version);
+            state.Version = Math.Max(3, state.Version);
             state.Level = Math.Max(1, state.Level);
             state.Experience = Math.Max(0, state.Experience);
             state.BestScore = Math.Max(0, state.BestScore);
@@ -35,6 +35,7 @@ namespace CoreRacer.Meta.Profile
             state.ClaimedAchievements = state.ClaimedAchievements ?? new List<SerializableBoolById>();
             state.TaskProgress = state.TaskProgress ?? new List<SerializableIntById>();
             state.ClaimedTasks = state.ClaimedTasks ?? new List<SerializableBoolById>();
+            state.EquippedBoosterIds = state.EquippedBoosterIds ?? new List<string>();
 
             if (string.IsNullOrWhiteSpace(state.SelectedShipId)) state.SelectedShipId = "starter_runner";
             if (string.IsNullOrWhiteSpace(state.SelectedSkinId)) state.SelectedSkinId = "classic_white";

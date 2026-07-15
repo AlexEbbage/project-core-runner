@@ -16,6 +16,7 @@ MonoBehaviour:
   - Id: start_shield
     DisplayName: Start Shield
     Icon: {fileID: 0}
+    Family: 0
     EffectType: 0
     Value: 1
     Price:
@@ -24,6 +25,7 @@ MonoBehaviour:
   - Id: coin_boost
     DisplayName: Coin Boost
     Icon: {fileID: 0}
+    Family: 1
     EffectType: 1
     Value: 2
     Price:
@@ -32,6 +34,7 @@ MonoBehaviour:
   - Id: score_boost
     DisplayName: Score Boost
     Icon: {fileID: 0}
+    Family: 2
     EffectType: 2
     Value: 2
     Price:

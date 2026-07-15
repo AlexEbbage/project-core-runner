@@ -4,6 +4,13 @@ using UnityEngine;
 
 namespace CoreRacer.Meta.Boosters
 {
+    public enum BoosterFamily
+    {
+        Survival,
+        Economy,
+        Score
+    }
+
     public enum BoosterEffectType
     {
         StartShield,
@@ -19,6 +26,7 @@ namespace CoreRacer.Meta.Boosters
         public string Id;
         public string DisplayName;
         public Sprite Icon;
+        public BoosterFamily Family;
         public BoosterEffectType EffectType;
         public float Value = 1f;
         public CurrencyAmount Price;

@@ -4,6 +4,7 @@ using CoreRacer.Gameplay.Environment;
 using CoreRacer.Gameplay.Player;
 using CoreRacer.Gameplay.Powerups;
 using CoreRacer.Gameplay.Run;
+using CoreRacer.Meta.Profile;
 using CoreRacer.UI.MainMenu;
 using NUnit.Framework;
 using UnityEngine;
@@ -181,6 +182,80 @@ namespace CoreRacer.Tests.PlayMode
             Assert.AreNotEqual(secondRunId, run.CurrentRunId);
 
             run.ReturnToMenu();
+            Time.timeScale = 1f;
+        }
+
+        [UnityTest]
+        public IEnumerator RoadmapAndBoosters_PersistSelectionAndApplyOnlyToTheRun()
+        {
+            yield return LoadMainScene();
+
+            var levelSelect = Object.FindObjectOfType<LevelSelectPageController>(true);
+            var boosterLoadout = Object.FindObjectOfType<BoosterLoadoutController>(true);
+            var run = Object.FindObjectOfType<RunController>(true);
+            var references = Object.FindObjectOfType<RunSceneReferences>(true);
+            var tunnel = Object.FindObjectOfType<TunnelWallGeneratorV2>(true);
+            Assert.NotNull(levelSelect, "The authored level-select controller is missing.");
+            Assert.NotNull(boosterLoadout, "The authored pre-run booster loadout is missing.");
+            Assert.NotNull(run);
+            Assert.NotNull(references);
+            Assert.NotNull(tunnel);
+            Assert.IsTrue(GameServices.TryGet<PlayerProfileService>(out var profile));
+
+            var originalLevel = profile.State.Level;
+            var originalSelectedIndex = profile.State.SelectedLevelIndex;
+            var originalBoosters = new System.Collections.Generic.List<string>(profile.State.EquippedBoosterIds);
+
+            profile.Mutate(state =>
+            {
+                state.Level = 8;
+                state.SelectedLevelIndex = 0;
+                state.EquippedBoosterIds.Clear();
+                state.EquippedBoosterIds.Add("start_shield");
+                state.EquippedBoosterIds.Add("coin_boost");
+                state.EquippedBoosterIds.Add("score_boost");
+            });
+
+            levelSelect.Refresh();
+            boosterLoadout.Refresh();
+            Assert.AreEqual(5, levelSelect.RouteCount, "The active V2 roadmap must expose all five polygon routes.");
+            Assert.AreEqual(3, boosterLoadout.VisibleOptionCount, "The pre-run surface must expose the three authored booster families.");
+            Assert.IsTrue(levelSelect.TrySelectLevel("deca_sector_05"), "The unlocked DECAGON route must be selectable.");
+            Assert.AreEqual(4, profile.State.SelectedLevelIndex);
+            Assert.AreEqual("deca_sector_05", levelSelect.SelectedLevelId);
+
+            Assert.IsTrue(levelSelect.TryPlaySelected());
+            yield return null;
+
+            Assert.AreEqual(RunState.Running, run.State);
+            Assert.AreEqual(10, tunnel.Sides, "The selected DECAGON route must configure ten tunnel sides.");
+            Assert.AreEqual(2f, run.ActiveBoosterModifiers.ScoreMultiplier);
+            Assert.AreEqual(2f, run.ActiveBoosterModifiers.CoinMultiplier);
+            Assert.AreEqual(1f, run.ActiveBoosterModifiers.StartShieldSeconds);
+            Assert.AreEqual(2f, references.ScoreTracker.RunScoreMultiplier);
+            Assert.AreEqual(2f, references.CurrencyTracker.RunCoinMultiplier);
+            Assert.IsTrue(references.PlayerHealth.IsInvulnerable, "Start Shield must protect the player when the run begins.");
+
+            var scoreBeforePickup = references.ScoreTracker.CurrentScore;
+            references.ScoreTracker.AddPickupScore(10);
+            references.CurrencyTracker.AddCoinPickup();
+            Assert.GreaterOrEqual(references.ScoreTracker.CurrentScore - scoreBeforePickup, 20);
+            Assert.GreaterOrEqual(references.CurrencyTracker.Coins, 2);
+
+            run.ReturnToMenu();
+            levelSelect.Refresh();
+            Assert.AreEqual(RunState.MainMenu, run.State);
+            Assert.AreEqual(1f, references.ScoreTracker.RunScoreMultiplier, "Score booster state must clear after the run.");
+            Assert.AreEqual(1f, references.CurrencyTracker.RunCoinMultiplier, "Coin booster state must clear after the run.");
+            Assert.AreEqual("deca_sector_05", levelSelect.SelectedLevelId, "The selected route must remain persisted on return to the hub.");
+
+            profile.Mutate(state =>
+            {
+                state.Level = originalLevel;
+                state.SelectedLevelIndex = originalSelectedIndex;
+                state.EquippedBoosterIds.Clear();
+                state.EquippedBoosterIds.AddRange(originalBoosters);
+            });
             Time.timeScale = 1f;
         }
 

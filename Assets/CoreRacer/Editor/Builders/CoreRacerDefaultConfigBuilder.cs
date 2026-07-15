@@ -126,9 +126,11 @@ namespace CoreRacer.Editor.Builders
         {
             var roadmap = CreateAsset<LevelRoadmapConfigV2>("LevelRoadmap.asset");
             if (roadmap.Levels.Count > 0) return;
-            roadmap.Levels.Add(new LevelDefinition { Id = "hex_sector_01", DisplayName = "Hex Sector", RequiredPlayerLevel = 1, TunnelSides = 6, StartingSpeed = 16f, DifficultyMultiplier = 1f });
-            roadmap.Levels.Add(new LevelDefinition { Id = "hept_sector_02", DisplayName = "Hept Sector", RequiredPlayerLevel = 3, TunnelSides = 7, StartingSpeed = 17f, DifficultyMultiplier = 1.1f });
-            roadmap.Levels.Add(new LevelDefinition { Id = "oct_sector_03", DisplayName = "Oct Sector", RequiredPlayerLevel = 6, TunnelSides = 8, StartingSpeed = 18f, DifficultyMultiplier = 1.2f });
+            roadmap.Levels.Add(new LevelDefinition { Id = "hex_sector_01", DisplayName = "HEXAGON", Description = "The original tunnel route. Fast to read, fast to replay.", RequiredPlayerLevel = 1, TunnelSides = 6, StartingSpeed = 16f, DifficultyMultiplier = 1f, ChallengeOne = "Reach 2,500 score", ChallengeTwo = "Travel 400m", ChallengeThree = "Collect 15 coins" });
+            roadmap.Levels.Add(new LevelDefinition { Id = "hept_sector_02", DisplayName = "HEPTAGON", Description = "A wider seven-side route with a little more visual drift.", RequiredPlayerLevel = 2, TunnelSides = 7, StartingSpeed = 17f, DifficultyMultiplier = 1.1f, ChallengeOne = "Reach 5,000 score", ChallengeTwo = "Travel 700m", ChallengeThree = "Collect 25 coins" });
+            roadmap.Levels.Add(new LevelDefinition { Id = "oct_sector_03", DisplayName = "OCTAGON", Description = "Eight walls, longer sight-lines, and a more aspirational chase.", RequiredPlayerLevel = 4, TunnelSides = 8, StartingSpeed = 18f, DifficultyMultiplier = 1.2f, ChallengeOne = "Reach 8,000 score", ChallengeTwo = "Travel 1,000m", ChallengeThree = "Collect 40 coins" });
+            roadmap.Levels.Add(new LevelDefinition { Id = "non_sector_04", DisplayName = "NONAGON", Description = "A nine-side polygon run built for higher-level score pushes.", RequiredPlayerLevel = 6, TunnelSides = 9, StartingSpeed = 19f, DifficultyMultiplier = 1.3f, ChallengeOne = "Reach 12,000 score", ChallengeTwo = "Travel 1,400m", ChallengeThree = "Collect 55 coins" });
+            roadmap.Levels.Add(new LevelDefinition { Id = "deca_sector_05", DisplayName = "DECAGON", Description = "The late-road route, tuned for long-distance attempts.", RequiredPlayerLevel = 8, TunnelSides = 10, StartingSpeed = 20f, DifficultyMultiplier = 1.4f, ChallengeOne = "Reach 17,000 score", ChallengeTwo = "Travel 1,800m", ChallengeThree = "Collect 75 coins" });
             EditorUtility.SetDirty(roadmap);
         }
 
@@ -136,9 +138,9 @@ namespace CoreRacer.Editor.Builders
         {
             var boosters = CreateAsset<BoosterCatalog>("BoosterCatalog.asset");
             if (boosters.Boosters.Count > 0) return;
-            boosters.Boosters.Add(new BoosterDefinition { Id = "start_shield", DisplayName = "Start Shield", EffectType = BoosterEffectType.StartShield, Value = 1f, Price = new CurrencyAmount(CurrencyType.Soft, 150) });
-            boosters.Boosters.Add(new BoosterDefinition { Id = "coin_boost", DisplayName = "Coin Boost", EffectType = BoosterEffectType.CoinMultiplier, Value = 2f, Price = new CurrencyAmount(CurrencyType.Soft, 250) });
-            boosters.Boosters.Add(new BoosterDefinition { Id = "score_boost", DisplayName = "Score Boost", EffectType = BoosterEffectType.ScoreMultiplier, Value = 2f, Price = new CurrencyAmount(CurrencyType.Soft, 250) });
+            boosters.Boosters.Add(new BoosterDefinition { Id = "start_shield", DisplayName = "Start Shield", Family = BoosterFamily.Survival, EffectType = BoosterEffectType.StartShield, Value = 1f, Price = new CurrencyAmount(CurrencyType.Soft, 150) });
+            boosters.Boosters.Add(new BoosterDefinition { Id = "coin_boost", DisplayName = "Coin Boost", Family = BoosterFamily.Economy, EffectType = BoosterEffectType.CoinMultiplier, Value = 2f, Price = new CurrencyAmount(CurrencyType.Soft, 250) });
+            boosters.Boosters.Add(new BoosterDefinition { Id = "score_boost", DisplayName = "Score Boost", Family = BoosterFamily.Score, EffectType = BoosterEffectType.ScoreMultiplier, Value = 2f, Price = new CurrencyAmount(CurrencyType.Soft, 250) });
             EditorUtility.SetDirty(boosters);
         }
 

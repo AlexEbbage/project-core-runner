@@ -27,6 +27,12 @@ namespace CoreRacer.UI.MainMenu
         private LocalizationServiceV2 _localization;
         private int _selectedIndex;
 
+        public int SelectedIndex => _selectedIndex;
+        public int RouteCount => roadmap != null && roadmap.Levels != null ? roadmap.Levels.Count : 0;
+        public string SelectedLevelId => roadmap != null && roadmap.Levels != null && _selectedIndex >= 0 && _selectedIndex < roadmap.Levels.Count
+            ? roadmap.Levels[_selectedIndex]?.Id ?? string.Empty
+            : string.Empty;
+
         private void Awake()
         {
             ResolveDependencies();
@@ -82,7 +88,7 @@ namespace CoreRacer.UI.MainMenu
                 _cards[i].Bind(
                     level.Id,
                     level.DisplayName,
-                    string.Format(Localize("ui.level_select_description"), level.TunnelSides),
+                    BuildRouteDetails(level),
                     status,
                     isSelected ? Localize("ui.level_select_selected") : (unlocked ? Localize("ui.level_select_select") : Localize("ui.level_select_locked_short")),
                     unlocked,
@@ -116,8 +122,13 @@ namespace CoreRacer.UI.MainMenu
 
         private void HandleSelected(string levelId)
         {
+            TrySelectLevel(levelId);
+        }
+
+        public bool TrySelectLevel(string levelId)
+        {
             if (roadmap == null || roadmap.Levels == null)
-                return;
+                return false;
 
             for (int i = 0; i < roadmap.Levels.Count; i++)
             {
@@ -126,7 +137,7 @@ namespace CoreRacer.UI.MainMenu
                     continue;
 
                 if (!IsUnlocked(level))
-                    return;
+                    return false;
 
                 _selectedIndex = i;
                 if (_profile != null)
@@ -137,8 +148,10 @@ namespace CoreRacer.UI.MainMenu
 
                 SyncRunController(level);
                 Refresh();
-                return;
+                return true;
             }
+
+            return false;
         }
 
         public void PlaySelected()
@@ -214,6 +227,18 @@ namespace CoreRacer.UI.MainMenu
             if (level == null)
                 return false;
             return _profile == null || _profile.State.Level >= Mathf.Max(1, level.RequiredPlayerLevel);
+        }
+
+        private string BuildRouteDetails(LevelDefinition level)
+        {
+            if (level == null)
+                return string.Empty;
+
+            var details = string.Format(Localize("ui.level_select_description"), level.TunnelSides);
+            if (!string.IsNullOrWhiteSpace(level.ChallengeOne)) details += "\n• " + level.ChallengeOne;
+            if (!string.IsNullOrWhiteSpace(level.ChallengeTwo)) details += "\n• " + level.ChallengeTwo;
+            if (!string.IsNullOrWhiteSpace(level.ChallengeThree)) details += "\n• " + level.ChallengeThree;
+            return details;
         }
 
         private string Localize(string key)

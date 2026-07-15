@@ -9,7 +9,7 @@ namespace CoreRacer.Meta.Profile
     [Serializable]
     public sealed class PlayerProfileState
     {
-        public int Version = 2;
+        public int Version = 3;
         public int Level = 1;
         public int Experience;
         public int BestScore;
@@ -26,6 +26,7 @@ namespace CoreRacer.Meta.Profile
         public string SelectedTrailId = "pulse_wake";
         public string SelectedCoreFxId = "starter_glow";
         public int SelectedLevelIndex;
+        public List<string> EquippedBoosterIds = new List<string>();
 
         public List<SerializableIntById> ShipUpgradeLevels = new List<SerializableIntById>();
         public List<SerializableIntById> PowerupUpgradeLevels = new List<SerializableIntById>();
