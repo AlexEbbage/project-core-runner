@@ -2,7 +2,7 @@
 
 ## Delivery Strategy
 
-Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. Core-run playability and the first clean-scene Level Select/booster slice are now live-verified. The next delivery slice is run reward settlement: base rewards, one-shot double rewards, continue, Retry/Home, and profile wallet/XP persistence.
+Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. Core-run playability, Level Select/boosters, and run reward settlement are now live-verified. The next slice is human portrait-device review followed by the next approved progression surface.
 
 ## Phases
 
@@ -23,9 +23,9 @@ Use the docs set as the durable operating system for the project. Foundation doc
 
 ## Current Recommended Order
 
-1. Run reward and Game Over settlement live closeout: base rewards, one-shot double rewards, continue, Retry/Home, and wallet/XP persistence
-2. Human portrait-device review of Level Select and booster clarity, with only focused layout/copy adjustments if needed
-3. Resume the next approved progression surface after reward settlement is proven
+1. Human portrait-device review of Level Select, boosters, Game Over, and reward clarity, with only focused layout/copy adjustments if needed
+2. Resume the next approved progression surface after the human review gate
+3. Keep production ad SDK verification separate from editor/dev fallback validation
 
 ## Current Asset Wiring Status
 
@@ -36,6 +36,7 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - `CoreRacer_Main.unity` now routes the visible bottom Play button directly through validated level selection into run startup. The development editor command is `Tools > Core Racer > Playability > Start Core Run`.
 - `CoreRacer_Main.unity` now owns a `RuntimeTunnel` generator configured by the selected route. The gameplay camera follows the player's orbital position and roll so the craft stays upright in frame while the tunnel appears to rotate.
 - `CoreRacer_Main.unity` now exposes five persisted polygon routes and an authored pre-run booster loadout. The selected route configures tunnel sides; one booster per family applies only for the active run.
+- In Editor and Development Builds, `GameBootstrapper` adds a `DummyRewardedAdService` only when no rewarded provider is assigned, allowing Continue and Double Rewards to be proven without changing production provider wiring.
 - Core runs now start on the bottom rail at 270 degrees. The camera-local Y offset is `1.25`, placing the player at portrait viewport Y `0.411`; steering is initially tuned to `140` degrees/second.
 - `RuntimeTunnel` uses a renderer-local slate tint (`0.24`, `0.32`, `0.48`) so the shared `WallMaterial` remains unchanged, and player trails are cleared after the run-start teleport.
 - Phase 8 final validation and handoff is captured in `docs/rewrite/final-handoff.md`; closed testing remains blocked by placeholder privacy links. Live inspection on 2026-07-15 confirmed `Assets/CoreRacer/Scenes/CoreRacer_Main.unity` is the only enabled Build Settings scene.
@@ -65,4 +66,4 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - Asset or inspector dependencies:
   - Treat scene references, prefabs, ScriptableObjects, and UI wiring as part of the feature change surface for all future implementation work
   - Core-run PlayMode smoke test: `CoreRunPlayModeSmokeTests.VisiblePlay_StartsCoreGameplay`
-  - Latest automated result: 32/32 EditMode tests passed and 4/4 focused PlayMode tests passed; coverage includes the prior core lifecycle plus five-route selection, persisted loadout state, DECAGON tunnel configuration, run-scoped shield/score/coin effects, and modifier reset on Home
+  - Latest automated result: 32/32 EditMode tests passed and 5/5 focused PlayMode tests passed; coverage now also includes base wallet/XP settlement, Continue, one-shot Double Rewards, Retry, Home, and profile restoration

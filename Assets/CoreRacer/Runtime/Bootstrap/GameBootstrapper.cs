@@ -139,6 +139,17 @@ namespace CoreRacer.Bootstrap
             var balanceOverrides = new BalanceOverrideService(remoteConfig);
 
             var rewarded = rewardedAdServiceBehaviour as IRewardedAdService;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (rewarded == null)
+            {
+                var dummyRewarded = GetComponent<DummyRewardedAdService>();
+                if (dummyRewarded == null)
+                    dummyRewarded = gameObject.AddComponent<DummyRewardedAdService>();
+
+                rewarded = dummyRewarded;
+                logger.Info(LogCategory.Bootstrap, "Development rewarded-ad fallback enabled for Continue and Double Rewards.", this);
+            }
+#endif
             var interstitial = interstitialAdServiceBehaviour as IInterstitialAdService;
             var rewardedController = new RewardedAdController(rewarded, adPolicy, gameAnalytics, adIapAnalytics);
             var interstitialController = new InterstitialAdController(interstitial, adPolicy, gameAnalytics, adIapAnalytics);

@@ -186,6 +186,108 @@ namespace CoreRacer.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator RunRewards_ContinueDoubleRewardRetryAndProfileSettlementAreClean()
+        {
+            yield return LoadMainScene();
+
+            var play = Object.FindObjectOfType<BottomNavBarController>(true);
+            var run = Object.FindObjectOfType<RunController>(true);
+            var references = Object.FindObjectOfType<RunSceneReferences>(true);
+            Assert.NotNull(play);
+            Assert.NotNull(run);
+            Assert.NotNull(references);
+            Assert.IsTrue(GameServices.TryGet<PlayerProfileService>(out var profile));
+
+            var originalLevel = profile.State.Level;
+            var originalExperience = profile.State.Experience;
+            var originalSoft = profile.State.Wallet.Soft;
+            var originalPremium = profile.State.Wallet.Premium;
+            var originalTotalRuns = profile.State.TotalRuns;
+            var originalTotalCoins = profile.State.TotalCoinsCollected;
+            var originalTotalPowerups = profile.State.TotalPowerupsCollected;
+            var originalBestScore = profile.State.BestScore;
+            var originalBestDistance = profile.State.BestDistance;
+            var originalSelectedIndex = profile.State.SelectedLevelIndex;
+            var originalBoosters = new System.Collections.Generic.List<string>(profile.State.EquippedBoosterIds);
+
+            try
+            {
+                play.StartCoreRun();
+                yield return null;
+                Assert.AreEqual(RunState.Running, run.State);
+
+                references.ScoreTracker.AddPickupScore(100);
+                references.CurrencyTracker.AddCoinPickup(10);
+                run.HandlePlayerDeath();
+                Assert.AreEqual(RunState.ContinueOffered, run.State, "A first death should offer a continue.");
+                Assert.IsTrue(run.ContinueRun(), "The development rewarded provider should complete Continue.");
+                yield return null;
+                Assert.AreEqual(RunState.Running, run.State);
+                Assert.AreEqual(1f, Time.timeScale);
+
+                references.ScoreTracker.AddPickupScore(100);
+                references.CurrencyTracker.AddCoinPickup(10);
+                run.HandlePlayerDeath();
+                Assert.AreEqual(RunState.ContinueOffered, run.State);
+                run.DeclineContinue();
+                yield return null;
+                Assert.AreEqual(RunState.GameOver, run.State);
+
+                var settled = run.LastResult;
+                Assert.Greater(settled.Coins, 0);
+                Assert.Greater(settled.Experience, 0);
+                Assert.AreEqual(originalSoft + settled.Coins, profile.State.Wallet.Soft);
+                Assert.AreEqual(originalPremium + settled.PremiumCurrency, profile.State.Wallet.Premium);
+                Assert.AreEqual(originalTotalRuns + 1, profile.State.TotalRuns);
+                Assert.AreEqual(originalTotalCoins + settled.Coins, profile.State.TotalCoinsCollected);
+                Assert.AreEqual(originalTotalPowerups, profile.State.TotalPowerupsCollected);
+                Assert.IsTrue(profile.State.Level != originalLevel || profile.State.Experience != originalExperience, "Base run XP must persist to the profile.");
+
+                var afterBaseLevel = profile.State.Level;
+                var afterBaseExperience = profile.State.Experience;
+                Assert.IsTrue(run.DoubleRunRewards(), "The development rewarded provider should complete Double Rewards.");
+                yield return null;
+                Assert.AreEqual(originalSoft + settled.Coins * 2, profile.State.Wallet.Soft);
+                Assert.AreEqual(originalPremium + settled.PremiumCurrency * 2, profile.State.Wallet.Premium);
+                Assert.IsTrue(profile.State.Level != afterBaseLevel || profile.State.Experience != afterBaseExperience, "Double Rewards must persist its XP bonus.");
+                Assert.IsFalse(run.DoubleRunRewards(), "Double Rewards must be one-shot per run.");
+
+                var retryButton = FindButton(references.GameOver.transform, "RetryButton");
+                Assert.NotNull(retryButton);
+                retryButton.onClick.Invoke();
+                yield return null;
+                Assert.AreEqual(RunState.Running, run.State);
+                Assert.AreEqual(originalTotalRuns + 1, profile.State.TotalRuns, "Retry must not settle a second run before it ends.");
+                Assert.AreEqual(originalSoft + settled.Coins * 2, profile.State.Wallet.Soft);
+
+                run.ReturnToMenu();
+                yield return null;
+                Assert.AreEqual(RunState.MainMenu, run.State);
+                Assert.AreEqual(1f, Time.timeScale);
+            }
+            finally
+            {
+                run.ReturnToMenu();
+                profile.Mutate(state =>
+                {
+                    state.Level = originalLevel;
+                    state.Experience = originalExperience;
+                    state.Wallet.Soft = originalSoft;
+                    state.Wallet.Premium = originalPremium;
+                    state.TotalRuns = originalTotalRuns;
+                    state.TotalCoinsCollected = originalTotalCoins;
+                    state.TotalPowerupsCollected = originalTotalPowerups;
+                    state.BestScore = originalBestScore;
+                    state.BestDistance = originalBestDistance;
+                    state.SelectedLevelIndex = originalSelectedIndex;
+                    state.EquippedBoosterIds.Clear();
+                    state.EquippedBoosterIds.AddRange(originalBoosters);
+                });
+                Time.timeScale = 1f;
+            }
+        }
+
+        [UnityTest]
         public IEnumerator RoadmapAndBoosters_PersistSelectionAndApplyOnlyToTheRun()
         {
             yield return LoadMainScene();
