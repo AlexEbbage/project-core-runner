@@ -220,7 +220,10 @@ namespace CoreRacer.Tests.PlayMode
                 references.CurrencyTracker.AddCoinPickup(10);
                 run.HandlePlayerDeath();
                 Assert.AreEqual(RunState.ContinueOffered, run.State, "A first death should offer a continue.");
-                Assert.IsTrue(run.ContinueRun(), "The development rewarded provider should complete Continue.");
+                var continueButton = FindButton(references.GameOver.transform, "ContinueButton");
+                Assert.NotNull(continueButton);
+                Assert.AreEqual(0, continueButton.onClick.GetPersistentEventCount(), "Continue must be routed by the runtime Game Over controller, not a stale serialized listener.");
+                continueButton.onClick.Invoke();
                 yield return null;
                 Assert.AreEqual(RunState.Running, run.State);
                 Assert.AreEqual(1f, Time.timeScale);

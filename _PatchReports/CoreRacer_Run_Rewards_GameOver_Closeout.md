@@ -2,7 +2,7 @@
 
 ## Outcome
 
-The clean-scene run lifecycle now proves reward settlement end to end. A death offers Continue in Editor/Development Builds through a development-only dummy rewarded provider when no production provider is assigned. Final death settles base rewards once, Double Rewards grants a one-shot bonus, Retry starts a clean run, and Home returns to Main Menu without leaving paused time or stale run state.
+The clean-scene run lifecycle now proves reward settlement end to end. A death offers Continue in Editor/Development Builds through a development-only dummy rewarded provider when no production provider is assigned. Final death settles base rewards once, Double Rewards grants a one-shot bonus, Retry starts a clean run, and Home returns to Main Menu without leaving paused time or stale run state. The saved Game Over Continue button no longer contains a stale persistent `RunController.ContinueRun()` UnityEvent (that method returns `bool`); the runtime controller owns the void-compatible UI route.
 
 ## Live Unity MCP Evidence
 
@@ -51,6 +51,7 @@ None.
 - Unity EditMode: 32/32 passed.
 - Unity PlayMode: 5/5 passed.
 - Unity MCP live run: Continue, base settlement, Double Rewards, Retry, Home, wallet/XP deltas, and button retirement verified.
+- PlayMode smoke test invokes the actual Continue button and asserts zero stale persistent listeners before routing through `GameOverController`.
 - `git diff --check`: required before commit.
 
 ## Installation
