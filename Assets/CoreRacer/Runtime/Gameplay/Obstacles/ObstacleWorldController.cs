@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CoreRacer.Bootstrap;
 using CoreRacer.FTUE;
@@ -17,6 +18,7 @@ namespace CoreRacer.Gameplay.Obstacles
         private TutorialService _tutorial;
         private bool _running;
 
+        public event Action<ObstacleRingView> ObstaclePassed;
         public float CurrentDifficulty => _difficulty != null ? _difficulty.CurrentDifficulty : 0f;
         public IReadOnlyList<ObstacleRingView> ActiveRings => _spawner != null ? _spawner.Active : System.Array.Empty<ObstacleRingView>();
 
@@ -77,6 +79,7 @@ namespace CoreRacer.Gameplay.Obstacles
                 if (ring == null || ring.Z >= playerZ || !_passedRings.Add(ring))
                     continue;
 
+                ObstaclePassed?.Invoke(ring);
                 if (_tutorial == null) GameServices.TryGet(out _tutorial);
                 _tutorial?.Notify(TutorialStepKind.WaitForObstacleAvoided, "obstacle");
             }

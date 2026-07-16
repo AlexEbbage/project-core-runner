@@ -1,6 +1,7 @@
 # User Testing
 
 - [Core obstacle patterns](17-core-obstacle-patterns.md)
+- [Gameplay audio feedback](18-gameplay-audio-feedback.md)
 
 This folder contains one manual testing checklist per tracked experience feature.
 
@@ -32,3 +33,5 @@ Files:
 - [14-analytics-coverage.md](./14-analytics-coverage.md)
 - [15-ui-polish-motion.md](./15-ui-polish-motion.md)
 - [16-progression-shell-closeout.md](./16-progression-shell-closeout.md)
+- [17-core-obstacle-patterns.md](./17-core-obstacle-patterns.md)
+- [18-gameplay-audio-feedback.md](./18-gameplay-audio-feedback.md)

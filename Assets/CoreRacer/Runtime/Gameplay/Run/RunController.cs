@@ -13,6 +13,7 @@ using CoreRacer.Meta.Profile;
 using CoreRacer.Meta.Ships;
 using CoreRacer.Monetisation.Ads;
 using CoreRacer.Services.Analytics;
+using CoreRacer.Services.Audio;
 using UnityEngine;
 
 namespace CoreRacer.Gameplay.Run
@@ -44,10 +45,12 @@ namespace CoreRacer.Gameplay.Run
         private RewardedAdController _rewardedAds;
         private GameAnalytics _analytics;
         private TutorialService _tutorial;
+        private AudioService _audio;
         private RunResult _lastResult;
         private bool _continueRequestInFlight;
         private bool _doubleRewardRequestInFlight;
         private BoosterRunModifiers _activeBoosterModifiers;
+        private int _lastSpeedAudioTier;
 
         public RunState State => _stateMachine != null ? _stateMachine.State : RunState.None;
         public RunResult LastResult => _lastResult;
@@ -95,6 +98,8 @@ namespace CoreRacer.Gameplay.Run
             }
             if (references != null && references.PickupWorld != null)
                 references.PickupWorld.PickupCollected += HandlePickupCollected;
+            if (references != null && references.ObstacleWorld != null)
+                references.ObstacleWorld.ObstaclePassed += HandleObstaclePassed;
             if (references != null && references.Powerups != null)
             {
                 references.Powerups.PowerupActivated += HandlePowerupActivated;
@@ -105,6 +110,7 @@ namespace CoreRacer.Gameplay.Run
         private void Start()
         {
             ShowMainMenu();
+            _audio?.PlayEvent(AudioEventId.MenuMusic);
         }
 
         private void OnDestroy()
@@ -122,6 +128,8 @@ namespace CoreRacer.Gameplay.Run
             }
             if (references != null && references.PickupWorld != null)
                 references.PickupWorld.PickupCollected -= HandlePickupCollected;
+            if (references != null && references.ObstacleWorld != null)
+                references.ObstacleWorld.ObstaclePassed -= HandleObstaclePassed;
             if (references != null && references.Powerups != null)
             {
                 references.Powerups.PowerupActivated -= HandlePowerupActivated;
@@ -148,6 +156,12 @@ namespace CoreRacer.Gameplay.Run
                 var intensity = (speed - startingSpeed) / range;
                 cameraFovController.SetSpeedIntensity(intensity);
                 speedParticles?.SetIntensity(intensity);
+                var speedTier = intensity >= 0.7f ? 2 : (intensity >= 0.35f ? 1 : 0);
+                if (speedTier > _lastSpeedAudioTier)
+                {
+                    _lastSpeedAudioTier = speedTier;
+                    _audio?.PlayEvent(AudioEventId.SpeedTierReached);
+                }
             }
         }
 
@@ -253,6 +267,7 @@ namespace CoreRacer.Gameplay.Run
             ClearRunBoosters();
             _lifecycle?.ReturnToMenu();
             ShowMainMenu();
+            _audio?.PlayEvent(AudioEventId.MenuMusic);
         }
 
         public void RetryRun()
@@ -270,6 +285,7 @@ namespace CoreRacer.Gameplay.Run
                 return;
 
             _lifecycle.Crash();
+            _audio?.PlayEvent(AudioEventId.PlayerDeath);
             _tutorial?.Notify(TutorialStepKind.WaitForCrash, "continue");
             StopRuntimeSystems();
             cameraFollow?.SetFollowing(false);
@@ -395,6 +411,7 @@ namespace CoreRacer.Gameplay.Run
             _continueRequestInFlight = false;
             _doubleRewardRequestInFlight = false;
             _lastResult = default;
+            _lastSpeedAudioTier = 0;
             UnityEngine.Time.timeScale = 1f;
             cameraFollow?.SetFollowing(true);
             ApplySelectedRunDefinition();
@@ -412,6 +429,8 @@ namespace CoreRacer.Gameplay.Run
             references?.ObstacleWorld?.BeginRun();
             references?.PickupWorld?.BeginRun();
             references?.Hud?.Show();
+            _audio?.PlayEvent(AudioEventId.RunStart);
+            _audio?.PlayEvent(AudioEventId.RunMusic);
             Debug.Log("[CoreRacer.Run] Gameplay root activated", this);
         }
 
@@ -447,6 +466,8 @@ namespace CoreRacer.Gameplay.Run
             vfxManager?.Play(VfxEventId.CrashSparks, playerPosition, Quaternion.identity, 3.5f);
             vfxManager?.Play(VfxEventId.ContinueRespawnWarp, playerPosition, Quaternion.identity, 2.5f);
             references?.Player?.GetComponentInChildren<PlayerVisual>(true)?.PlayDissolve();
+            _audio?.StopMusic();
+            _audio?.PlayEvent(AudioEventId.RunEnd);
             Debug.Log($"[CoreRacer.Run] Run ended (runId={CurrentRunId}, reason={reason})", this);
         }
 
@@ -456,11 +477,18 @@ namespace CoreRacer.Gameplay.Run
                 return;
             var playerPosition = references != null && references.Player != null ? references.Player.transform.position : transform.position;
             vfxManager?.Play(VfxEventId.CrashSparks, playerPosition);
+            _audio?.PlayEvent(AudioEventId.PlayerHit);
         }
 
         private void HandlePickupCollected(CoreRacer.Gameplay.Pickups.PickupType pickupType, CoreRacer.Gameplay.Powerups.PowerupType powerupType, Vector3 position)
         {
             vfxManager?.Play(pickupType == CoreRacer.Gameplay.Pickups.PickupType.Coin ? VfxEventId.PickupBurst : VfxEventId.PowerupPulse, position);
+            _audio?.PlayEvent(pickupType == CoreRacer.Gameplay.Pickups.PickupType.Coin ? AudioEventId.PickupCoin : AudioEventId.PickupPowerup);
+        }
+
+        private void HandleObstaclePassed(CoreRacer.Gameplay.Obstacles.ObstacleRingView ring)
+        {
+            _audio?.PlayEvent(AudioEventId.ObstaclePassed);
         }
 
         private void HandlePowerupActivated(CoreRacer.Gameplay.Powerups.PowerupType type, float duration)
@@ -469,6 +497,7 @@ namespace CoreRacer.Gameplay.Run
             {
                 var playerPosition = references != null && references.Player != null ? references.Player.transform.position : transform.position;
                 vfxManager?.Play(VfxEventId.ShieldShell, playerPosition);
+                _audio?.PlayEvent(AudioEventId.ShieldActivated);
             }
         }
 
@@ -478,6 +507,7 @@ namespace CoreRacer.Gameplay.Run
             {
                 var playerPosition = references != null && references.Player != null ? references.Player.transform.position : transform.position;
                 vfxManager?.Play(VfxEventId.ShieldBreak, playerPosition);
+                _audio?.PlayEvent(AudioEventId.ShieldBroken);
             }
         }
 
@@ -585,6 +615,7 @@ namespace CoreRacer.Gameplay.Run
             if (_rewardedAds == null) GameServices.TryGet(out _rewardedAds);
             if (_analytics == null) GameServices.TryGet(out _analytics);
             if (_tutorial == null) GameServices.TryGet(out _tutorial);
+            if (_audio == null) GameServices.TryGet(out _audio);
         }
 
         private static SpeedParticlesControllerV2 CreateRuntimeSpeedParticles(Transform parent)

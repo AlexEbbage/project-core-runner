@@ -6,6 +6,7 @@ using CoreRacer.Gameplay.Powerups;
 using CoreRacer.Gameplay.Run;
 using CoreRacer.Gameplay.Vfx;
 using CoreRacer.Meta.Profile;
+using CoreRacer.Services.Audio;
 using CoreRacer.UI.MainMenu;
 using NUnit.Framework;
 using UnityEngine;
@@ -18,6 +19,47 @@ namespace CoreRacer.Tests.PlayMode
 {
     public sealed class CoreRunPlayModeSmokeTests
     {
+        [UnityTest]
+        public IEnumerator CoreAudio_RoutesMenuRunObstacleShieldAndDamageEvents()
+        {
+            yield return LoadMainScene();
+
+            var host = Object.FindObjectOfType<AudioRuntimeHost>(true);
+            var play = Object.FindObjectOfType<BottomNavBarController>(true);
+            var run = Object.FindObjectOfType<RunController>(true);
+            var references = Object.FindObjectOfType<RunSceneReferences>(true);
+            Assert.NotNull(host, "The bootstrap audio host is missing.");
+            Assert.IsTrue(host.IsBound, "The bootstrap audio host did not bind its music and SFX sources.");
+            Assert.IsTrue(GameServices.TryGet<AudioService>(out var audio));
+            Assert.AreEqual(AudioEventId.MenuMusic, audio.LastPlayedEventId);
+            Assert.AreEqual("MenuTrack", host.MusicSource.clip.name);
+
+            play.StartCoreRun();
+            yield return null;
+
+            Assert.AreEqual(AudioEventId.RunMusic, audio.LastPlayedEventId);
+            Assert.AreEqual("Zone1Music", host.MusicSource.clip.name);
+            var firstRing = references.ObstacleWorld.ActiveRings[0];
+            var deltaTime = (firstRing.Z + 1f - references.Player.transform.position.z) /
+                            Mathf.Max(0.01f, references.Player.Motor.EffectiveForwardSpeed);
+            references.Player.Motor.Move(0f, deltaTime);
+            yield return null;
+            Assert.AreEqual(AudioEventId.ObstaclePassed, audio.LastPlayedEventId);
+
+            references.PlayerHealth.Damage(0.1f);
+            Assert.AreEqual(AudioEventId.PlayerHit, audio.LastPlayedEventId);
+
+            references.Powerups.Activate(PowerupType.Shield);
+            Assert.AreEqual(AudioEventId.ShieldActivated, audio.LastPlayedEventId);
+            references.Powerups.ClearAll();
+            Assert.AreEqual(AudioEventId.ShieldBroken, audio.LastPlayedEventId);
+
+            run.ReturnToMenu();
+            yield return null;
+            Assert.AreEqual(AudioEventId.MenuMusic, audio.LastPlayedEventId);
+            Assert.AreEqual("MenuTrack", host.MusicSource.clip.name);
+        }
+
         [UnityTest]
         public IEnumerator MainScene_HasOneEventSystemBootstrapperAndValidVisiblePlayListener()
         {

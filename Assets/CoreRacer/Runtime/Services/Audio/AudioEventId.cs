@@ -10,6 +10,12 @@ namespace CoreRacer.Services.Audio
         PlayerHit,
         PlayerDeath,
         RewardClaimed,
-        UpgradePurchased
+        UpgradePurchased,
+        ObstaclePassed,
+        ShieldActivated,
+        ShieldBroken,
+        SpeedTierReached,
+        MenuMusic,
+        RunMusic
     }
 }

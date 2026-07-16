@@ -15,46 +15,91 @@ MonoBehaviour:
   Events:
   - Id: 0
     Clip: {fileID: 8300000, guid: ac064f6f58feac84eba0b6b5af9dd26f, type: 3}
-    Volume: 1
+    Volume: 0.65
     Pitch: 1
     Loop: 0
+    UseMusicSource: 0
   - Id: 1
     Clip: {fileID: 8300000, guid: 4be8b5d9483df2e448c1c31741110e83, type: 3}
-    Volume: 1
+    Volume: 0.75
     Pitch: 1
     Loop: 0
+    UseMusicSource: 0
   - Id: 2
     Clip: {fileID: 8300000, guid: 5cb974fe91672b345925f32c6d6d9fbc, type: 3}
-    Volume: 1
-    Pitch: 1
+    Volume: 0.6
+    Pitch: 0.85
     Loop: 0
+    UseMusicSource: 0
   - Id: 3
     Clip: {fileID: 8300000, guid: 669bc3204dd0d5340b3132c9add95530, type: 3}
-    Volume: 1
-    Pitch: 1
+    Volume: 0.55
+    Pitch: 1.15
     Loop: 0
+    UseMusicSource: 0
   - Id: 4
     Clip: {fileID: 8300000, guid: 669bc3204dd0d5340b3132c9add95530, type: 3}
-    Volume: 1
-    Pitch: 1
+    Volume: 0.8
+    Pitch: 0.85
     Loop: 0
+    UseMusicSource: 0
   - Id: 5
     Clip: {fileID: 8300000, guid: 9d0ed529cfc642d45928429adf022854, type: 3}
-    Volume: 1
-    Pitch: 1
+    Volume: 0.7
+    Pitch: 1.1
     Loop: 0
+    UseMusicSource: 0
   - Id: 6
     Clip: {fileID: 8300000, guid: 9d0ed529cfc642d45928429adf022854, type: 3}
     Volume: 1
-    Pitch: 1
+    Pitch: 0.78
     Loop: 0
+    UseMusicSource: 0
   - Id: 7
     Clip: {fileID: 8300000, guid: ac064f6f58feac84eba0b6b5af9dd26f, type: 3}
-    Volume: 1
-    Pitch: 1
+    Volume: 0.7
+    Pitch: 1.1
     Loop: 0
+    UseMusicSource: 0
   - Id: 8
     Clip: {fileID: 8300000, guid: ac064f6f58feac84eba0b6b5af9dd26f, type: 3}
-    Volume: 1
-    Pitch: 1
+    Volume: 0.8
+    Pitch: 0.9
     Loop: 0
+    UseMusicSource: 0
+  - Id: 9
+    Clip: {fileID: 8300000, guid: ac064f6f58feac84eba0b6b5af9dd26f, type: 3}
+    Volume: 0.12
+    Pitch: 1.55
+    Loop: 0
+    UseMusicSource: 0
+  - Id: 10
+    Clip: {fileID: 8300000, guid: 4be8b5d9483df2e448c1c31741110e83, type: 3}
+    Volume: 0.5
+    Pitch: 1.25
+    Loop: 0
+    UseMusicSource: 0
+  - Id: 11
+    Clip: {fileID: 8300000, guid: 9d0ed529cfc642d45928429adf022854, type: 3}
+    Volume: 0.65
+    Pitch: 1.35
+    Loop: 0
+    UseMusicSource: 0
+  - Id: 12
+    Clip: {fileID: 8300000, guid: 11593c3fd9b61b94a92ee387f4c4cc64, type: 3}
+    Volume: 0.45
+    Pitch: 1.2
+    Loop: 0
+    UseMusicSource: 0
+  - Id: 13
+    Clip: {fileID: 8300000, guid: 6e12d51161c858b4ab075c4ca7461afa, type: 3}
+    Volume: 0.55
+    Pitch: 1
+    Loop: 1
+    UseMusicSource: 1
+  - Id: 14
+    Clip: {fileID: 8300000, guid: 1fc19b7c8df56374cae066e75e2b16e7, type: 3}
+    Volume: 0.6
+    Pitch: 1
+    Loop: 1
+    UseMusicSource: 1

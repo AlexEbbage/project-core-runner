@@ -176,19 +176,7 @@ namespace CoreRacer.Editor.Builders
         private static AudioEventLibrary CreateAudioLibrary()
         {
             var library = LoadOrCreate<AudioEventLibrary>(AudioEventLibraryPath);
-            library.Events = new List<AudioEventDefinition>
-            {
-                Audio(AudioEventId.UiClick, "Assets/Audio/SFX/UiClickSfx.mp3"),
-                Audio(AudioEventId.RunStart, "Assets/Audio/SFX/WarpSfx.mp3"),
-                Audio(AudioEventId.RunEnd, "Assets/Audio/SFX/countdown_go.mp3"),
-                Audio(AudioEventId.PickupCoin, "Assets/Audio/SFX/pickupSfx1.mp3"),
-                Audio(AudioEventId.PickupPowerup, "Assets/Audio/SFX/pickupSfx1.mp3"),
-                Audio(AudioEventId.PlayerHit, "Assets/Audio/SFX/HitSfx.mp3"),
-                Audio(AudioEventId.PlayerDeath, "Assets/Audio/SFX/HitSfx.mp3"),
-                Audio(AudioEventId.RewardClaimed, "Assets/Audio/SFX/UiClickSfx.mp3"),
-                Audio(AudioEventId.UpgradePurchased, "Assets/Audio/SFX/UiClickSfx.mp3")
-            };
-            EditorUtility.SetDirty(library);
+            CoreRacerAudioFeedbackBuilder.Populate(library);
             return library;
         }
 
@@ -311,18 +299,6 @@ namespace CoreRacer.Editor.Builders
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
-        }
-
-        private static AudioEventDefinition Audio(AudioEventId id, string clipPath)
-        {
-            return new AudioEventDefinition
-            {
-                Id = id,
-                Clip = Load<AudioClip>(clipPath),
-                Volume = 1f,
-                Pitch = 1f,
-                Loop = false
-            };
         }
 
         private static VfxDefinition Vfx(VfxEventId id, string legacyPrefabPath)

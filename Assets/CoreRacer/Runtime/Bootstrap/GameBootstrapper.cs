@@ -112,7 +112,11 @@ namespace CoreRacer.Bootstrap
             var premium = new PremiumEntitlementService(storage);
             var adPolicy = new AdPolicyService(premium);
             var settings = new SettingsService(storage, serializer);
-            var audio = new AudioService(settings);
+            var audio = new AudioService(settings, audioEventLibrary);
+            var audioHost = GetComponent<AudioRuntimeHost>();
+            if (audioHost == null)
+                audioHost = gameObject.AddComponent<AudioRuntimeHost>();
+            audioHost.Initialize(audio);
             var haptics = new HapticsService(settings.State.HapticsEnabled);
             var localization = new LocalizationServiceV2(stringTable);
             var remoteConfig = new LocalRemoteConfigService(remoteConfigDefaults);
