@@ -37,6 +37,12 @@ namespace CoreRacer.Gameplay.Vfx
             _hasEnvironmentTint = true;
         }
 
+        public void ClearEnvironmentTint()
+        {
+            _environmentTint = Color.white;
+            _hasEnvironmentTint = false;
+        }
+
         public VfxPooledInstance Play(VfxEventId id, Vector3 position, Quaternion rotation = default)
         {
             return Play(id, position, rotation, 1.5f);

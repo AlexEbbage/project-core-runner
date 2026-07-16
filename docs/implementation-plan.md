@@ -25,7 +25,7 @@ Use the docs set as the durable operating system for the project. Foundation doc
 
 1. Complete the cohesive progression/meta phase: XP and unlocks feeding Environment Select, Lab, Hangar, Tasks, Achievements, and Daily Rewards, with one integrated PlayMode proof pass
 2. Complete the VFX feedback phase over the fixed six-sided tunnel: pickup bursts, collision sparks, shield shell/break, dissolve, continue warp, speed particles, crash slow motion, and camera-stop framing
-3. Add environment-specific obstacle/VFX styling, then perform the human portrait-device review and apply only focused clarity fixes
+3. Validate and tune the restored wedge/fan/door obstacle groups, then proceed to audio/gameplay feedback and focused portrait clarity fixes; elemental environment presentation is deferred
 4. Keep production ad SDK verification separate from editor/dev fallback validation
 
 ## Current Asset Wiring Status
@@ -36,10 +36,11 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - `CoreRacer_Main.unity` now has Phase 7 safe SDK adapter wiring for verified Unity IAP, Firebase Analytics, and Mobile Notifications APIs; LevelPlay, Crashlytics, and Addressables remain disabled/manual setup blockers.
 - `CoreRacer_Main.unity` now routes the visible bottom Play button directly through validated level selection into run startup. The development editor command is `Tools > Core Racer > Playability > Start Core Run`.
 - `CoreRacer_Main.unity` now owns a `RuntimeTunnel` generator configured by the selected route. The gameplay camera follows the player's orbital position and roll so the craft stays upright in frame while the tunnel appears to rotate.
-- `CoreRacer_Main.unity` now exposes five persisted environment variants—Fire, Lightning, Radiation, Ice, and Firestorm—over one stable six-sided MVP tunnel type. Selection changes environment palette/atmosphere data, not tunnel geometry; one booster per family applies only for the active run.
+- `CoreRacer_Main.unity` retains five persisted route cards over one stable six-sided MVP tunnel type, but all routes intentionally use one neutral two-tone tunnel presentation for MVP; one booster per family applies only for the active run.
 - In Editor and Development Builds, `GameBootstrapper` adds a `DummyRewardedAdService` only when no rewarded provider is assigned, allowing Continue and Double Rewards to be proven without changing production provider wiring.
 - Core runs now start on the bottom rail at 270 degrees. The camera-local Y offset is `1.25`, placing the player at portrait viewport Y `0.411`; steering is initially tuned to `140` degrees/second.
-- `RuntimeTunnel` uses a renderer-local slate tint (`0.24`, `0.32`, `0.48`) so the shared `WallMaterial` remains unchanged, and player trails are cleared after the run-start teleport.
+- `RuntimeTunnel` uses two renderer-local white/grey shades on alternating longitudinal sections so the shared `WallMaterial` remains unchanged, and player trails are cleared after the run-start teleport.
+- Obstacle generation now uses clean copies of the authored Blender wedge, fan, and door prefabs. Pattern groups snap to the six tunnel sides and unlock by elapsed difficulty plus the selected route multiplier.
 - Phase 8 final validation and handoff is captured in `docs/rewrite/final-handoff.md`; closed testing remains blocked by placeholder privacy links. Live inspection on 2026-07-15 confirmed `Assets/CoreRacer/Scenes/CoreRacer_Main.unity` is the only enabled Build Settings scene.
 - Manual art follow-up is tracked in `docs/rewrite/manual-art-wiring-needed.md`.
 

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5aa5b7334700f7549a3491da88e147b2, type: 3}
+  m_Name: ObstaclePattern_wedge_easy
+  m_EditorClassIdentifier:
+  Id: wedge_easy
+  DisplayName: Wedge Gate
+  Type: 0
+  MinimumSides: 6
+  MaximumSides: 6
+  MinimumDifficulty: 0
+  MaximumDifficulty: 2.2
+  Weight: 6
+  MinRotationDegrees: 0
+  MaxRotationDegrees: 300
+  MinIterations: 2
+  MaxIterations: 3
+  ObstaclePrefab: {fileID: 5351176107964242451, guid: d8a9403ad4a894841bd2d0b251a04233, type: 3}
+  SpacingMultiplier: 1
+  MinRotationSpeedDegrees: 0
+  MaxRotationSpeedDegrees: 0
+  Segments: []

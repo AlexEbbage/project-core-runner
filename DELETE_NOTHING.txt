@@ -1,2 +1,3 @@
 Delete nothing for CoreRacer_SuperPatch_1_2_Live_UI_Quick_Play.
 Delete nothing for the Level Select and Booster closeout slice.
+Delete nothing for CoreRacer_MVP_Obstacle_Pattern_Rework.

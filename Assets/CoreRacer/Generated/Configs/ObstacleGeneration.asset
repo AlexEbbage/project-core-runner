@@ -14,12 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   RingPrefab: {fileID: 1252323892173402868, guid: 79d074a5195650b4881647e3995234e0, type: 3}
   PrewarmCount: 32
-  SpawnStartZ: 20
+  SpawnStartZ: 30
   SpawnAheadDistance: 160
   RecycleBehindDistance: 25
-  RingSpacing: 8
+  RingSpacing: 10
   TunnelSides: 6
   BaseDifficulty: 0
   DifficultyPerSecond: 0.05
   Patterns:
-  - {fileID: 11400000, guid: 7a8bc2fca59709b4a8f0ad5f808db032, type: 2}
+  - {fileID: 11400000, guid: ec5ab600728e28f4f8a3a7d43aecbf4c, type: 2}
+  - {fileID: 11400000, guid: e0708ad8c803b5e4a9f4b2d70acf0071, type: 2}
+  - {fileID: 11400000, guid: d653d8594fd03144189990f1724b983e, type: 2}
+  - {fileID: 11400000, guid: 52a57a34f833ab54495378a7ea8d80d8, type: 2}
+  - {fileID: 11400000, guid: d28637e5e992bce4eb5fe3f39254d304, type: 2}

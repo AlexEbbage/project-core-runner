@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace CoreRacer.Gameplay.Environment
@@ -11,6 +12,7 @@ namespace CoreRacer.Gameplay.Environment
         [SerializeField] private int lengthSegments = 48;
         [SerializeField] private bool invertNormals = true;
         [SerializeField] private Color wallTint = new Color(0.24f, 0.32f, 0.48f, 1f);
+        [SerializeField] private Color alternateWallTint = new Color(0.68f, 0.7f, 0.74f, 1f);
         [SerializeField] private Transform target;
         [SerializeField] private GameObject legacyVisual;
         [SerializeField] private float trailingDistance = 20f;
@@ -26,6 +28,7 @@ namespace CoreRacer.Gameplay.Environment
         public float EndZ => StartZ + length;
         public Mesh GeneratedMesh => _generatedMesh;
         public Color WallTint => wallTint;
+        public Color AlternateWallTint => alternateWallTint;
 
         private void Awake()
         {
@@ -77,6 +80,7 @@ namespace CoreRacer.Gameplay.Environment
         public void SetWallTint(Color tint)
         {
             wallTint = tint;
+            alternateWallTint = new Color(tint.r * 0.82f, tint.g * 0.82f, tint.b * 0.82f, tint.a);
             ApplyWallTint();
         }
 
@@ -100,7 +104,8 @@ namespace CoreRacer.Gameplay.Environment
             var mesh = new Mesh { name = "CoreRacer_TunnelWall" };
             var vertices = new Vector3[(lengthSegments + 1) * sides];
             var uvs = new Vector2[vertices.Length];
-            var tris = new int[lengthSegments * sides * 6];
+            var lightTriangles = new List<int>(lengthSegments * sides * 3);
+            var darkTriangles = new List<int>(lengthSegments * sides * 3);
 
             for (int z = 0; z <= lengthSegments; z++)
             {
@@ -114,9 +119,9 @@ namespace CoreRacer.Gameplay.Environment
                 }
             }
 
-            var ti = 0;
             for (int z = 0; z < lengthSegments; z++)
             {
+                var triangles = (z & 1) == 0 ? lightTriangles : darkTriangles;
                 for (int s = 0; s < sides; s++)
                 {
                     var a = z * sides + s;
@@ -125,25 +130,30 @@ namespace CoreRacer.Gameplay.Environment
                     var d = (z + 1) * sides + (s + 1) % sides;
                     if (invertNormals)
                     {
-                        tris[ti++] = a; tris[ti++] = c; tris[ti++] = b;
-                        tris[ti++] = b; tris[ti++] = c; tris[ti++] = d;
+                        triangles.Add(a); triangles.Add(c); triangles.Add(b);
+                        triangles.Add(b); triangles.Add(c); triangles.Add(d);
                     }
                     else
                     {
-                        tris[ti++] = a; tris[ti++] = b; tris[ti++] = c;
-                        tris[ti++] = b; tris[ti++] = d; tris[ti++] = c;
+                        triangles.Add(a); triangles.Add(b); triangles.Add(c);
+                        triangles.Add(b); triangles.Add(d); triangles.Add(c);
                     }
                 }
             }
 
             mesh.vertices = vertices;
             mesh.uv = uvs;
-            mesh.triangles = tris;
+            mesh.subMeshCount = 2;
+            mesh.SetTriangles(lightTriangles, 0);
+            mesh.SetTriangles(darkTriangles, 1);
             mesh.RecalculateNormals();
             mesh.RecalculateBounds();
             var previous = _generatedMesh;
             _generatedMesh = mesh;
             GetComponent<MeshFilter>().sharedMesh = _generatedMesh;
+            var renderer = GetComponent<MeshRenderer>();
+            if (renderer.sharedMaterial != null)
+                renderer.sharedMaterials = new[] { renderer.sharedMaterial, renderer.sharedMaterial };
             ApplyWallTint();
             if (previous != null)
                 DestroyGeneratedMesh(previous);
@@ -152,10 +162,17 @@ namespace CoreRacer.Gameplay.Environment
         private void ApplyWallTint()
         {
             var renderer = GetComponent<MeshRenderer>();
+            ApplyTint(renderer, 0, wallTint);
+            ApplyTint(renderer, 1, alternateWallTint);
+        }
+
+        private static void ApplyTint(Renderer renderer, int materialIndex, Color tint)
+        {
             var properties = new MaterialPropertyBlock();
-            renderer.GetPropertyBlock(properties);
-            properties.SetColor("_Color", wallTint);
-            renderer.SetPropertyBlock(properties);
+            renderer.GetPropertyBlock(properties, materialIndex);
+            properties.SetColor("_Color", tint);
+            properties.SetColor("_BaseColor", tint);
+            renderer.SetPropertyBlock(properties, materialIndex);
         }
 
         private void AlignToTarget()

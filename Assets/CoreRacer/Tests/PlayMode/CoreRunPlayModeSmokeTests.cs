@@ -81,10 +81,17 @@ namespace CoreRacer.Tests.PlayMode
             Assert.AreEqual(48, tunnel.SectionCount, "The core run must generate the authored tunnel section count.");
             Assert.NotNull(tunnel.GeneratedMesh, "Starting a run must produce a procedural tunnel mesh.");
             Assert.Greater(tunnel.GeneratedMesh.vertexCount, 0);
-            Assert.Less(tunnel.WallTint.grayscale, 0.4f, "The tunnel tint must remain dark enough for hazards and pickups to read clearly.");
+            Assert.AreEqual(2, tunnel.GeneratedMesh.subMeshCount, "The MVP tunnel must alternate two wall shades.");
+            Assert.Greater(tunnel.WallTint.grayscale, 0.7f, "The primary MVP tunnel shade must remain white-ish.");
+            Assert.Greater(tunnel.AlternateWallTint.grayscale, 0.55f, "The alternate MVP tunnel shade must remain white-ish.");
+            Assert.Greater(tunnel.WallTint.grayscale, tunnel.AlternateWallTint.grayscale, "The two MVP tunnel shades must remain visually distinct.");
             var tunnelProperties = new MaterialPropertyBlock();
-            tunnel.GetComponent<MeshRenderer>().GetPropertyBlock(tunnelProperties);
+            tunnel.GetComponent<MeshRenderer>().GetPropertyBlock(tunnelProperties, 0);
             Assert.Less(Vector4.Distance(tunnel.WallTint, tunnelProperties.GetColor("_Color")), 0.001f, "The readability tint must be applied to the runtime renderer without changing its shared material.");
+            Assert.NotNull(references.ObstacleWorld, "The obstacle world is missing.");
+            Assert.Greater(references.ObstacleWorld.ActiveRings.Count, 0, "Starting a run must generate obstacle groups ahead of the player.");
+            Assert.IsTrue(references.ObstacleWorld.ActiveRings[0].UsesAuthoredObstacle, "The first obstacle group must use the recovered authored obstacle prefab instead of cube segments.");
+            Assert.AreEqual("wedge_easy", references.ObstacleWorld.ActiveRings[0].PatternId, "The starter difficulty must begin with a readable wedge pattern.");
             var trailPositions = new Vector3[trail.positionCount];
             trail.GetPositions(trailPositions);
             for (var i = 0; i < trailPositions.Length; i++)

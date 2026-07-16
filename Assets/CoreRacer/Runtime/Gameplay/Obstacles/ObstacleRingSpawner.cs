@@ -11,6 +11,8 @@ namespace CoreRacer.Gameplay.Obstacles
         private readonly ComponentPool<ObstacleRingView> _pool;
         private readonly List<ObstacleRingView> _active = new List<ObstacleRingView>();
         private float _nextSpawnZ;
+        private ObstaclePatternDefinition _groupPattern;
+        private int _remainingInGroup;
 
         public IReadOnlyList<ObstacleRingView> Active => _active;
 
@@ -27,17 +29,29 @@ namespace CoreRacer.Gameplay.Obstacles
                 _pool.Return(_active[i]);
             _active.Clear();
             _nextSpawnZ = playerZ + _config.SpawnStartZ;
+            _groupPattern = null;
+            _remainingInGroup = 0;
         }
 
         public void EnsureAhead(float playerZ, float difficulty)
         {
             while (_nextSpawnZ < playerZ + _config.SpawnAheadDistance)
             {
-                var pattern = _selector.Select(difficulty, _config.TunnelSides);
+                if (_remainingInGroup <= 0)
+                {
+                    _groupPattern = _selector.Select(difficulty, _config.TunnelSides);
+                    _remainingInGroup = _groupPattern != null
+                        ? Random.Range(Mathf.Max(1, _groupPattern.MinIterations), Mathf.Max(1, _groupPattern.MaxIterations) + 1)
+                        : 1;
+                }
+
+                var pattern = _groupPattern;
                 var ring = _pool.Take();
                 ring.Build(pattern, _config.TunnelSides, _nextSpawnZ);
                 _active.Add(ring);
-                _nextSpawnZ += Mathf.Max(1f, _config.RingSpacing);
+                _remainingInGroup--;
+                var spacingMultiplier = pattern != null ? Mathf.Max(0.25f, pattern.SpacingMultiplier) : 1f;
+                _nextSpawnZ += Mathf.Max(1f, _config.RingSpacing * spacingMultiplier);
             }
         }
 

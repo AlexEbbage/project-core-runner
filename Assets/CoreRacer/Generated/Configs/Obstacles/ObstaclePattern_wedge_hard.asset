@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5aa5b7334700f7549a3491da88e147b2, type: 3}
+  m_Name: ObstaclePattern_wedge_hard
+  m_EditorClassIdentifier:
+  Id: wedge_hard
+  DisplayName: Narrow Wedge Gate
+  Type: 0
+  MinimumSides: 6
+  MaximumSides: 6
+  MinimumDifficulty: 3
+  MaximumDifficulty: 999
+  Weight: 2
+  MinRotationDegrees: 0
+  MaxRotationDegrees: 300
+  MinIterations: 2
+  MaxIterations: 4
+  ObstaclePrefab: {fileID: 101377589085666745, guid: 6d1169598fc3bc74bbdab3fdd8d0709e, type: 3}
+  SpacingMultiplier: 1.1
+  MinRotationSpeedDegrees: 0
+  MaxRotationSpeedDegrees: 0
+  Segments: []

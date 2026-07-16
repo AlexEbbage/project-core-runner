@@ -1,5 +1,7 @@
 # User Testing
 
+- [Core obstacle patterns](17-core-obstacle-patterns.md)
+
 This folder contains one manual testing checklist per tracked experience feature.
 
 Use these files when you want to:

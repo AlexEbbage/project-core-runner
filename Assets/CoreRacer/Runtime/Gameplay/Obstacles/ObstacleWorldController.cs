@@ -18,6 +18,7 @@ namespace CoreRacer.Gameplay.Obstacles
         private bool _running;
 
         public float CurrentDifficulty => _difficulty != null ? _difficulty.CurrentDifficulty : 0f;
+        public IReadOnlyList<ObstacleRingView> ActiveRings => _spawner != null ? _spawner.Active : System.Array.Empty<ObstacleRingView>();
 
         private void Awake()
         {

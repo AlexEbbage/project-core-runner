@@ -26,6 +26,10 @@ namespace CoreRacer.Gameplay.Obstacles
         public float MaxRotationDegrees;
         public int MinIterations = 1;
         public int MaxIterations = 1;
+        public GameObject ObstaclePrefab;
+        public float SpacingMultiplier = 1f;
+        public float MinRotationSpeedDegrees;
+        public float MaxRotationSpeedDegrees;
         public List<ObstacleSegmentRule> Segments = new List<ObstacleSegmentRule>();
 
         public bool IsValidFor(float difficulty, int sideCount)
@@ -40,6 +44,8 @@ namespace CoreRacer.Gameplay.Obstacles
             if (MinimumSides <= 2) result.Error($"Obstacle pattern {Id} minimum sides too low.");
             if (MaximumSides < MinimumSides) result.Error($"Obstacle pattern {Id} maximum sides < minimum sides.");
             if (Weight < 0f) result.Error($"Obstacle pattern {Id} has negative weight.");
+            if (MaxIterations < MinIterations) result.Error($"Obstacle pattern {Id} maximum iterations < minimum iterations.");
+            if (SpacingMultiplier <= 0f) result.Error($"Obstacle pattern {Id} spacing multiplier must be positive.");
             return result;
         }
     }

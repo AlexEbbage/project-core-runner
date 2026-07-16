@@ -151,6 +151,27 @@ Validation:
 - The six-sided, 48-section mesh remained ahead of the player after recycling beyond Z=1600.
 - Focused PlayMode tests cover camera alignment, generated mesh configuration, and forward recycling.
 
+### DR-010: Keep one neutral MVP environment and express difficulty through obstacle groups
+
+Status: Accepted
+
+Context:
+The route selector previously implied Fire, Lightning, Radiation, Ice, and Firestorm presentations, while the core obstacle loop had regressed to identical crossed cube blocks. The immediate product priority is readable, escalating runner gameplay rather than multiple environment art sets.
+
+Decision:
+Keep every MVP route on the same six-sided tunnel with alternating white/grey sections, red authored obstacles, and orange authored dissolve feedback. Preserve the route cards and difficulty multipliers, but defer elemental palettes and VFX. Restore difficulty through grouped wedge, fan, and door patterns that unlock over elapsed run difficulty.
+
+Implications:
+
+- Environment selection remains useful for progression and tuning without creating an elemental-art commitment.
+- Obstacle prefabs and pattern assets become the main gameplay difficulty surface.
+- Elemental environments can return later as a presentation/content phase without changing tunnel geometry or the obstacle selection API.
+
+Validation:
+
+- Live Unity inspection confirmed an authored wedge prefab in the active obstacle ring and a two-submesh neutral tunnel.
+- Seven focused PlayMode tests passed, including authored obstacle wiring and starter-pattern assertions.
+
 ## Template
 
 ```text
