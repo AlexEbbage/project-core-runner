@@ -13,7 +13,7 @@ Confirm that the restored obstacle loop is readable, varied, fair, and increasin
 ## Checks
 
 1. The tunnel alternates two white/grey longitudinal shades and does not switch to elemental colors.
-2. Early obstacles use red wedge geometry aligned to one of the six tunnel sides.
+2. Early obstacles use red wedge geometry aligned to the six tunnel faces, with their outer corners touching the tunnel wall rather than floating inside it.
 3. Wedges repeat in short readable groups but rotate to different tunnel-side positions between groups.
 4. Rotating fans begin appearing after the opening difficulty window.
 5. Sliding doors and narrower wedge gates appear later in the run.

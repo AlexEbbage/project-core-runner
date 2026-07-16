@@ -53,6 +53,8 @@ namespace CoreRacer.Gameplay.Obstacles
             var rotation = pattern != null ? Random.Range(pattern.MinRotationDegrees, pattern.MaxRotationDegrees) : 0f;
             var sideAngle = 360f / Mathf.Max(1, sideCount);
             rotation = Mathf.Round(rotation / sideAngle) * sideAngle;
+            if (pattern != null)
+                rotation += pattern.RotationOffsetDegrees;
             transform.rotation = Quaternion.Euler(0f, 0f, rotation);
         }
 

@@ -28,6 +28,7 @@ namespace CoreRacer.Gameplay.Obstacles
         public int MaxIterations = 1;
         public GameObject ObstaclePrefab;
         public float ObstacleScale = 1f;
+        public float RotationOffsetDegrees;
         public float SpacingMultiplier = 1f;
         public float MinRotationSpeedDegrees;
         public float MaxRotationSpeedDegrees;

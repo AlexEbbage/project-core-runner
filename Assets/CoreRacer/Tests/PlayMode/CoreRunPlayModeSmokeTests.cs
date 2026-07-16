@@ -36,6 +36,70 @@ namespace CoreRacer.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator AuthoredObstacleCollider_OverlapsOrbitAndRoutesDamage()
+        {
+            yield return LoadMainScene();
+
+            var play = Object.FindObjectOfType<BottomNavBarController>(true);
+            var run = Object.FindObjectOfType<RunController>(true);
+            var references = Object.FindObjectOfType<RunSceneReferences>(true);
+            Assert.NotNull(play);
+            Assert.NotNull(run);
+            Assert.NotNull(references);
+
+            play.StartCoreRun();
+            yield return null;
+
+            Assert.Greater(references.ObstacleWorld.ActiveRings.Count, 0);
+            var firstRing = references.ObstacleWorld.ActiveRings[0];
+            var obstacleCollider = System.Array.Find(
+                firstRing.GetComponentsInChildren<Collider>(false),
+                collider => collider.CompareTag("Obstacle"));
+            var playerCollider = references.Player.GetComponent<Collider>();
+            Assert.NotNull(obstacleCollider, "The authored obstacle has no active Obstacle-tagged collider.");
+            Assert.NotNull(playerCollider, "The player has no collider for obstacle interaction.");
+            Physics.SyncTransforms();
+
+            var contactPosition = Vector3.zero;
+            var contactRotation = Quaternion.identity;
+            var foundContact = false;
+            for (var angle = 0; angle < 360 && !foundContact; angle += 5)
+            {
+                var radians = angle * Mathf.Deg2Rad;
+                var candidatePosition = new Vector3(
+                    Mathf.Cos(radians) * 3f,
+                    Mathf.Sin(radians) * 3f,
+                    obstacleCollider.bounds.center.z);
+                var candidateRotation = Quaternion.Euler(0f, 0f, angle + 90f);
+                foundContact = Physics.ComputePenetration(
+                    playerCollider,
+                    candidatePosition,
+                    candidateRotation,
+                    obstacleCollider,
+                    obstacleCollider.transform.position,
+                    obstacleCollider.transform.rotation,
+                    out _,
+                    out _);
+                if (foundContact)
+                {
+                    contactPosition = candidatePosition;
+                    contactRotation = candidateRotation;
+                }
+            }
+
+            Assert.IsTrue(foundContact, "The fitted obstacle must intersect the player's three-unit orbit.");
+            references.Player.EndRun();
+            references.PlayerHealth.ResetHealth();
+            references.Player.transform.SetPositionAndRotation(contactPosition, contactRotation);
+            Physics.SyncTransforms();
+            references.Player.gameObject.SendMessage("OnTriggerEnter", obstacleCollider, SendMessageOptions.RequireReceiver);
+            yield return null;
+
+            Assert.IsFalse(references.PlayerHealth.IsAlive, "Entering an authored obstacle trigger must damage the player lethally.");
+            Assert.AreNotEqual(RunState.Running, run.State, "A lethal authored-obstacle collision must leave the running state.");
+        }
+
+        [UnityTest]
         public IEnumerator VisiblePlay_StartsCoreGameplay()
         {
             yield return LoadMainScene();
@@ -91,8 +155,10 @@ namespace CoreRacer.Tests.PlayMode
             Assert.NotNull(references.ObstacleWorld, "The obstacle world is missing.");
             Assert.Greater(references.ObstacleWorld.ActiveRings.Count, 0, "Starting a run must generate obstacle groups ahead of the player.");
             Assert.IsTrue(references.ObstacleWorld.ActiveRings[0].UsesAuthoredObstacle, "The first obstacle group must use the recovered authored obstacle prefab instead of cube segments.");
-            Assert.That(references.ObstacleWorld.ActiveRings[0].AuthoredObstacleScale, Is.InRange(0.3f, 0.45f),
-                "Authored obstacle meshes must be fitted inside the radius-four tunnel so the tunnel wall cannot hide them.");
+            Assert.AreEqual(4f / 7f, references.ObstacleWorld.ActiveRings[0].AuthoredObstacleScale, 0.0001f,
+                "Authored obstacle meshes must use the preserved tunnel mesh radius to touch the radius-four tunnel wall.");
+            Assert.Less(Mathf.Abs(Mathf.DeltaAngle(references.ObstacleWorld.ActiveRings[0].transform.eulerAngles.z % 60f, 30f)), 0.01f,
+                "Authored obstacles must correct the thirty-degree alignment difference between the old and procedural hex tunnels.");
             Assert.AreEqual("wedge_easy", references.ObstacleWorld.ActiveRings[0].PatternId, "The starter difficulty must begin with a readable wedge pattern.");
             var trailPositions = new Vector3[trail.positionCount];
             trail.GetPositions(trailPositions);

@@ -2,23 +2,24 @@
 
 ## Root Cause
 
-Obstacle rings and authored renderers were spawning correctly, but the recovered Blender prefabs retained dimensions intended for the older, larger tunnel. Most red geometry sat outside the current radius-four tunnel and was depth-occluded by the tunnel wall.
+Obstacle rings and authored renderers were spawning correctly, but the recovered Blender prefabs retained dimensions and cross-section alignment intended for the older tunnel mesh. The provisional `0.38` scale made them visible but placed their radial span inside the player's three-unit orbit, leaving gaps at the tunnel wall and preventing normal gameplay collisions.
 
 ## Fix
 
-- Added a validated per-pattern authored-obstacle scale.
-- Set every current MVP obstacle pattern to `0.38`, fitting wedges, fans, and doors inside the current hex tunnel.
-- Applied the scale whenever a pooled ring is rebuilt, so Retry and prefab swaps remain correct.
-- Extended EditMode and PlayMode coverage to lock the fitted-scale contract.
+- Measured the preserved `tunnel_v3.fbx` inner radius as `7` and the current procedural tunnel radius as `4`.
+- Set every MVP obstacle pattern to the exact mesh-derived scale `4 / 7` (`0.5714286`). The authored wedge span `5.25–7` therefore maps to `3–4`: player orbit to tunnel wall.
+- Measured the old tunnel vertices at 30-degree offsets versus the procedural tunnel vertices at 0-degree offsets, then applied a `-30°` pattern correction.
+- Applied scale and rotation whenever a pooled ring is rebuilt, so Retry and prefab swaps remain correct.
+- Extended EditMode and PlayMode coverage for exact scale, hex alignment, orbit penetration, and lethal damage routing.
 
 ## Live Verification
 
-Unity MCP confirmed a clean run spawned fifteen rings, with the first three wedge groups at Z 30, 40, and 50 using scale `0.38`. A live Game view capture showed the red wedge geometry visible in front of the alternating tunnel walls.
+Unity MCP confirmed active wedges at scale `0.5714286`, aligned at 30-degree modulo-60 rotations. Every inspected active wedge produced physical penetration against the player's three-unit orbit. A live trigger collision reduced health to zero and transitioned the run to `ContinueOffered`; the Game view showed the red wedge endpoints meeting the tunnel walls.
 
 ## Automated Validation
 
 - EditMode: 34 passed, 0 failed.
-- PlayMode: 7 passed, 0 failed.
+- PlayMode: 8 passed, 0 failed.
 
 ## Files
 
@@ -33,6 +34,7 @@ Unity MCP confirmed a clean run spawned fifteen rings, with the first three wedg
 - `Assets/CoreRacer/Tests/EditMode/ObstaclePatternConfigurationTests.cs`
 - `Assets/CoreRacer/Tests/PlayMode/CoreRunPlayModeSmokeTests.cs`
 - `docs/task-registry.md`
+- `docs/user-testing/17-core-obstacle-patterns.md`
 - `_PatchReports/CoreRacer_Obstacle_Visibility_Fix.md`
 
 Nothing must be deleted.
