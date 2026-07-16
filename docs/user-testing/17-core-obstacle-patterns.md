@@ -19,6 +19,7 @@ Confirm that the restored obstacle loop is readable, varied, fair, and increasin
 5. Sliding doors and narrower wedge gates appear later in the run.
 6. Every pattern leaves a readable route through the obstacle.
 7. Colliding with any visible red obstacle damages or ends the run and produces orange crash/dissolve feedback.
+   - Deliberately hit both a single wedge wall and a three-piece wall; both must register on the first pass, including at increased run speed.
 8. Retry starts with the easy wedge group again and does not retain late-run difficulty.
 
 ## Capture

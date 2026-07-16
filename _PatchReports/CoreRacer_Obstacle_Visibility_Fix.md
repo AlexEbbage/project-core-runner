@@ -42,3 +42,9 @@ Nothing must be deleted.
 ## Next Slice
 
 Player review and tuning of obstacle readability, collision fairness, pattern gaps, fan speed, and door timing before beginning the gameplay-audio phase.
+
+# Single-wall collision follow-up
+
+- Root cause: the recovered one-piece wall prefab retained `Discrete` collision detection while the player is a fast, transform-driven kinematic Rigidbody. Its thin trigger could therefore pass between physics steps; the three-piece wall happened to use continuous detection.
+- Fix: all generated authored obstacle Rigidbodies are now kinematic `ContinuousSpeculative`, and every collider is consistently saved as an `Obstacle` trigger.
+- Scope: obstacle meshes, calibrated scale, 30-degree alignment correction, spawn patterns, and the six-sided tunnel are unchanged.

@@ -73,6 +73,7 @@ namespace CoreRacer.Editor.Builders
                 {
                     body.useGravity = false;
                     body.isKinematic = true;
+                    body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
                 }
 
                 var material = AssetDatabase.LoadAssetAtPath<Material>(ObstacleMaterialPath);
@@ -80,9 +81,12 @@ namespace CoreRacer.Editor.Builders
                 {
                     if (material != null)
                         renderer.sharedMaterial = material;
-                    if (renderer.TryGetComponent<Collider>(out var collider))
-                        collider.isTrigger = true;
-                    renderer.gameObject.tag = "Obstacle";
+                }
+
+                foreach (var collider in sourceRoot.GetComponentsInChildren<Collider>(true))
+                {
+                    collider.isTrigger = true;
+                    collider.gameObject.tag = "Obstacle";
                 }
 
                 if (rotating && sourceRoot.GetComponent<ObstacleRingController>() == null)

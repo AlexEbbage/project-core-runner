@@ -25,6 +25,23 @@ namespace CoreRacer.Tests.EditMode
             Assert.That(config.Patterns.All(pattern => pattern.MinIterations > 0 && pattern.MaxIterations >= pattern.MinIterations), Is.True);
             Assert.That(config.Patterns.Any(pattern => pattern.Type == ObstacleType.Fan && pattern.MinimumDifficulty > 0f), Is.True);
             Assert.That(config.Patterns.Any(pattern => pattern.Type == ObstacleType.Doors && pattern.MinimumDifficulty > 0f), Is.True);
+
+            foreach (var pattern in config.Patterns)
+            {
+                var bodies = pattern.ObstaclePrefab.GetComponentsInChildren<Rigidbody>(true);
+                Assert.That(bodies, Is.Not.Empty, $"{pattern.Id} must provide a Rigidbody for reliable trigger interaction.");
+                Assert.That(bodies.All(body => body.isKinematic), Is.True,
+                    $"{pattern.Id} obstacle bodies must remain kinematic.");
+                Assert.That(bodies.All(body => body.collisionDetectionMode != CollisionDetectionMode.Discrete), Is.True,
+                    $"{pattern.Id} obstacle bodies must not tunnel through the transform-driven player.");
+
+                var colliders = pattern.ObstaclePrefab.GetComponentsInChildren<Collider>(true)
+                    .Where(collider => collider.GetComponent<Renderer>() != null)
+                    .ToArray();
+                Assert.That(colliders, Is.Not.Empty, $"{pattern.Id} must provide collision geometry.");
+                Assert.That(colliders.All(collider => collider.enabled && collider.isTrigger && collider.CompareTag("Obstacle")), Is.True,
+                    $"Every {pattern.Id} collider must route through PlayerCollisionHandler.");
+            }
         }
     }
 }
