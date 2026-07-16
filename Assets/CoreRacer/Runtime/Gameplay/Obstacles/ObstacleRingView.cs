@@ -14,6 +14,7 @@ namespace CoreRacer.Gameplay.Obstacles
         public float Z => transform.position.z;
         public string PatternId { get; private set; }
         public bool UsesAuthoredObstacle => _authoredObstacle != null && _authoredObstacle.activeSelf;
+        public float AuthoredObstacleScale => _authoredObstacle != null ? _authoredObstacle.transform.localScale.x : 0f;
 
         public void Build(ObstaclePatternDefinition pattern, int sideCount, float z)
         {
@@ -27,6 +28,7 @@ namespace CoreRacer.Gameplay.Obstacles
             if (pattern != null && pattern.ObstaclePrefab != null)
             {
                 EnsureAuthoredObstacle(pattern.ObstaclePrefab);
+                _authoredObstacle.transform.localScale = Vector3.one * Mathf.Max(0.01f, pattern.ObstacleScale);
                 _authoredObstacle.SetActive(true);
                 var controller = _authoredObstacle.GetComponent<ObstacleRingController>();
                 if (controller != null)
@@ -67,7 +69,6 @@ namespace CoreRacer.Gameplay.Obstacles
             _authoredObstacle.name = prefab.name;
             _authoredObstacle.transform.localPosition = Vector3.zero;
             _authoredObstacle.transform.localRotation = Quaternion.identity;
-            _authoredObstacle.transform.localScale = Vector3.one;
         }
 
         private void EnsureSegments(int sideCount)

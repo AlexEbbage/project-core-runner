@@ -27,6 +27,7 @@ namespace CoreRacer.Gameplay.Obstacles
         public int MinIterations = 1;
         public int MaxIterations = 1;
         public GameObject ObstaclePrefab;
+        public float ObstacleScale = 1f;
         public float SpacingMultiplier = 1f;
         public float MinRotationSpeedDegrees;
         public float MaxRotationSpeedDegrees;
@@ -45,6 +46,7 @@ namespace CoreRacer.Gameplay.Obstacles
             if (MaximumSides < MinimumSides) result.Error($"Obstacle pattern {Id} maximum sides < minimum sides.");
             if (Weight < 0f) result.Error($"Obstacle pattern {Id} has negative weight.");
             if (MaxIterations < MinIterations) result.Error($"Obstacle pattern {Id} maximum iterations < minimum iterations.");
+            if (ObstacleScale <= 0f) result.Error($"Obstacle pattern {Id} obstacle scale must be positive.");
             if (SpacingMultiplier <= 0f) result.Error($"Obstacle pattern {Id} spacing multiplier must be positive.");
             return result;
         }

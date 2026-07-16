@@ -13,6 +13,7 @@ namespace CoreRacer.Editor.Builders
         private const string PatternFolder = "Assets/CoreRacer/Generated/Configs/Obstacles";
         private const string ConfigPath = "Assets/CoreRacer/Generated/Configs/ObstacleGeneration.asset";
         private const string ObstacleMaterialPath = "Assets/Materials/ObstacleMaterial.mat";
+        private const float MvpObstacleScale = 0.38f;
 
         [MenuItem("Tools/Core Racer/Playability/Rebuild MVP Obstacles")]
         public static void Rebuild()
@@ -157,6 +158,7 @@ namespace CoreRacer.Editor.Builders
             pattern.MinIterations = minimumIterations;
             pattern.MaxIterations = maximumIterations;
             pattern.ObstaclePrefab = prefab;
+            pattern.ObstacleScale = MvpObstacleScale;
             pattern.SpacingMultiplier = spacingMultiplier;
             pattern.MinRotationSpeedDegrees = minimumRotationSpeed;
             pattern.MaxRotationSpeedDegrees = maximumRotationSpeed;

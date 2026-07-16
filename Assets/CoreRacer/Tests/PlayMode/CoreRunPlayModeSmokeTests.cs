@@ -91,6 +91,8 @@ namespace CoreRacer.Tests.PlayMode
             Assert.NotNull(references.ObstacleWorld, "The obstacle world is missing.");
             Assert.Greater(references.ObstacleWorld.ActiveRings.Count, 0, "Starting a run must generate obstacle groups ahead of the player.");
             Assert.IsTrue(references.ObstacleWorld.ActiveRings[0].UsesAuthoredObstacle, "The first obstacle group must use the recovered authored obstacle prefab instead of cube segments.");
+            Assert.That(references.ObstacleWorld.ActiveRings[0].AuthoredObstacleScale, Is.InRange(0.3f, 0.45f),
+                "Authored obstacle meshes must be fitted inside the radius-four tunnel so the tunnel wall cannot hide them.");
             Assert.AreEqual("wedge_easy", references.ObstacleWorld.ActiveRings[0].PatternId, "The starter difficulty must begin with a readable wedge pattern.");
             var trailPositions = new Vector3[trail.positionCount];
             trail.GetPositions(trailPositions);
