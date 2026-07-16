@@ -16,6 +16,8 @@ namespace CoreRacer.Tests.EditMode
 
             Assert.That(config, Is.Not.Null);
             Assert.That(config.TunnelSides, Is.EqualTo(6));
+            Assert.That(config.SpawnStartZ, Is.GreaterThanOrEqualTo(36f), "The first obstacle must leave a readable reaction window.");
+            Assert.That(config.RingSpacing, Is.GreaterThanOrEqualTo(12f), "Obstacle groups must not compress into sub-second lane changes at MVP speed.");
             Assert.That(config.Patterns, Has.Count.EqualTo(5));
             Assert.That(config.Patterns.All(pattern => pattern != null && pattern.ObstaclePrefab != null), Is.True);
             Assert.That(config.Patterns.All(pattern => Mathf.Abs(pattern.ObstacleScale - (4f / 7f)) < 0.0001f), Is.True,
@@ -42,6 +44,19 @@ namespace CoreRacer.Tests.EditMode
                 Assert.That(colliders.All(collider => collider.enabled && collider.isTrigger && collider.CompareTag("Obstacle")), Is.True,
                     $"Every {pattern.Id} collider must route through PlayerCollisionHandler.");
             }
+        }
+
+        [Test]
+        public void GroupRotationPlanner_KeepsConsecutiveGroupsOnDifferentHexSides()
+        {
+            var planner = new ObstacleGroupRotationPlanner();
+
+            Assert.That(planner.NextSide(6, 2), Is.EqualTo(2));
+            Assert.That(planner.NextSide(6, 2), Is.EqualTo(3), "A repeated proposal must move the next group onto another side.");
+            Assert.That(planner.NextSide(6, 5), Is.EqualTo(5));
+
+            planner.Reset();
+            Assert.That(planner.NextSide(6, 5), Is.EqualTo(5), "A new run must not inherit the previous run's lane history.");
         }
     }
 }

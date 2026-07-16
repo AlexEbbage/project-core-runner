@@ -14,13 +14,13 @@ Confirm that the restored obstacle loop is readable, varied, fair, and increasin
 
 1. The tunnel alternates two white/grey longitudinal shades and does not switch to elemental colors.
 2. Early obstacles use red wedge geometry aligned to the six tunnel faces, with their outer corners touching the tunnel wall rather than floating inside it.
-3. Wedges repeat in short readable groups but rotate to different tunnel-side positions between groups.
-4. Rotating fans begin appearing after the opening difficulty window.
-5. Sliding doors and narrower wedge gates appear later in the run.
+3. Wedges repeat in short readable groups of 2–3 rings. Every ring in one group keeps the same orientation, and the next group moves to a different tunnel side.
+4. Rotating fans begin appearing after the opening difficulty window and rotate slowly enough to read before arrival.
+5. Sliding doors and narrower wedge gates appear later in the run; doors visibly telegraph their slower open/closed cycle.
 6. Every pattern leaves a readable route through the obstacle.
 7. Colliding with any visible red obstacle damages or ends the run and produces orange crash/dissolve feedback.
    - Deliberately hit both a single wedge wall and a three-piece wall; both must register on the first pass, including at increased run speed.
-8. Retry starts with the easy wedge group again and does not retain late-run difficulty.
+8. Retry starts with the easy wedge group again and does not retain late-run difficulty, fan rotation, or door position.
 
 ## Capture
 

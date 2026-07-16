@@ -38,7 +38,7 @@ These `F#` identifiers remain the stable feature IDs used by `task-registry.md` 
 | ID | Group | Canonical Feature | Status | Notes |
 | --- | --- | --- | --- | --- |
 | F1 | Core Gameplay | Endless Run Foundation | Implemented | Live Play Mode verification now covers visible Play entry, bottom-rail run start, lower-viewport roll-follow framing, comfort steering, stale-trail clearing, a contrast-tuned recycling tunnel, score/distance progression, crash/Game Over, Retry, and Home. |
-| F2 | Core Gameplay | Obstacle and Pickup Generation | Implemented (awaiting player review) | Recovered wedge, fan, and door assets now spawn in side-aligned groups; higher-difficulty patterns unlock over run time and scale with the selected route multiplier |
+| F2 | Core Gameplay | Obstacle and Pickup Generation | Partially implemented (manual single-wall collider adjustment pending) | Recovered wedge, fan, and door assets spawn in readable side-aligned groups; each group holds one lane before moving to another hex side, with increased reaction spacing and reset-safe fan/door timing |
 | F3 | Core Gameplay | Score, Combo, and Speed Loop | Implemented | Distance and pickup scoring, combo growth/decay, speed escalation |
 | F4 | Core Gameplay | Continue and Rewarded Continue Flow | Implemented | Crash recovery with capped continues and rewarded ad usage |
 | F5 | Core Gameplay | Powerup Gameplay Loop | Partial | Runtime powerups are present and the current slice has converged the roster, HUD support, and upgrade fallback behavior, but authored content polish is still pending |

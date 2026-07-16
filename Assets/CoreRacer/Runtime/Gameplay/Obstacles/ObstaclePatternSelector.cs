@@ -49,5 +49,10 @@ namespace CoreRacer.Gameplay.Obstacles
             _last = _valid[_valid.Count - 1];
             return _last;
         }
+
+        public void Reset()
+        {
+            _last = null;
+        }
     }
 }

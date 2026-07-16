@@ -18,6 +18,13 @@ namespace CoreRacer.Gameplay.Obstacles
 
         public void Build(ObstaclePatternDefinition pattern, int sideCount, float z)
         {
+            var minimum = pattern != null ? pattern.MinRotationDegrees : 0f;
+            var maximum = pattern != null ? pattern.MaxRotationDegrees : 0f;
+            Build(pattern, sideCount, z, Random.Range(minimum, maximum));
+        }
+
+        public void Build(ObstaclePatternDefinition pattern, int sideCount, float z, float groupRotationDegrees)
+        {
             transform.position = new Vector3(0f, 0f, z);
             PatternId = pattern != null ? pattern.Id : string.Empty;
             EnsureSegments(sideCount);
@@ -29,6 +36,7 @@ namespace CoreRacer.Gameplay.Obstacles
             {
                 EnsureAuthoredObstacle(pattern.ObstaclePrefab);
                 _authoredObstacle.transform.localScale = Vector3.one * Mathf.Max(0.01f, pattern.ObstacleScale);
+                _authoredObstacle.transform.localRotation = Quaternion.identity;
                 _authoredObstacle.SetActive(true);
                 var controller = _authoredObstacle.GetComponent<ObstacleRingController>();
                 if (controller != null)
@@ -50,7 +58,7 @@ namespace CoreRacer.Gameplay.Obstacles
                 }
             }
 
-            var rotation = pattern != null ? Random.Range(pattern.MinRotationDegrees, pattern.MaxRotationDegrees) : 0f;
+            var rotation = groupRotationDegrees;
             var sideAngle = 360f / Mathf.Max(1, sideCount);
             rotation = Mathf.Round(rotation / sideAngle) * sideAngle;
             if (pattern != null)

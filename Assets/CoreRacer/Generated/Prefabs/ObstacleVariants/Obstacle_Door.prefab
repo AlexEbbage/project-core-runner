@@ -515,7 +515,7 @@ MonoBehaviour:
   doorLeft: {fileID: 2257970653887233997}
   doorRight: {fileID: 1005677607862381220}
   openDistance: 2.5
-  openSpeed: 1.5
-  startsOpen: 0
+  openSpeed: 2
+  startsOpen: 1
   cycleAutomatically: 1
-  cycleSeconds: 2.4
+  cycleSeconds: 3.2

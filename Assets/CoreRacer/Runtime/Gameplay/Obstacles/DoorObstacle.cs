@@ -26,6 +26,8 @@ namespace CoreRacer.Gameplay.Obstacles
         private void OnEnable()
         {
             _cycleElapsed = startsOpen ? Mathf.Max(0.1f, cycleSeconds) * 0.5f : 0f;
+            _target = startsOpen ? 1f : 0f;
+            ApplyAmount(_target);
         }
 
         public void SetOpen(bool open)
@@ -44,8 +46,13 @@ namespace CoreRacer.Gameplay.Obstacles
 
             var current = doorLeft != null ? Mathf.InverseLerp(_leftClosed.x, _leftClosed.x - openDistance, doorLeft.localPosition.x) : _target;
             current = Mathf.MoveTowards(current, _target, openSpeed * UnityEngine.Time.deltaTime);
-            if (doorLeft != null) doorLeft.localPosition = _leftClosed + Vector3.left * (openDistance * current);
-            if (doorRight != null) doorRight.localPosition = _rightClosed + Vector3.right * (openDistance * current);
+            ApplyAmount(current);
+        }
+
+        private void ApplyAmount(float amount)
+        {
+            if (doorLeft != null) doorLeft.localPosition = _leftClosed + Vector3.left * (openDistance * amount);
+            if (doorRight != null) doorRight.localPosition = _rightClosed + Vector3.right * (openDistance * amount);
         }
     }
 }

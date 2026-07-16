@@ -27,7 +27,7 @@ MonoBehaviour:
   ObstaclePrefab: {fileID: 5351176107964242451, guid: d8a9403ad4a894841bd2d0b251a04233, type: 3}
   ObstacleScale: 0.5714286
   RotationOffsetDegrees: -30
-  SpacingMultiplier: 1
+  SpacingMultiplier: 1.15
   MinRotationSpeedDegrees: 0
   MaxRotationSpeedDegrees: 0
   Segments: []

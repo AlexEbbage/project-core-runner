@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   RingPrefab: {fileID: 1252323892173402868, guid: 79d074a5195650b4881647e3995234e0, type: 3}
   PrewarmCount: 32
-  SpawnStartZ: 30
+  SpawnStartZ: 36
   SpawnAheadDistance: 160
   RecycleBehindDistance: 25
-  RingSpacing: 10
+  RingSpacing: 12
   TunnelSides: 6
   BaseDifficulty: 0
   DifficultyPerSecond: 0.05

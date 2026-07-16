@@ -160,6 +160,13 @@ namespace CoreRacer.Tests.PlayMode
             Assert.Less(Mathf.Abs(Mathf.DeltaAngle(references.ObstacleWorld.ActiveRings[0].transform.eulerAngles.z % 60f, 30f)), 0.01f,
                 "Authored obstacles must correct the thirty-degree alignment difference between the old and procedural hex tunnels.");
             Assert.AreEqual("wedge_easy", references.ObstacleWorld.ActiveRings[0].PatternId, "The starter difficulty must begin with a readable wedge pattern.");
+            Assert.GreaterOrEqual(references.ObstacleWorld.ActiveRings.Count, 2, "The starter group must contain enough rings to establish a readable lane.");
+            Assert.Less(
+                Mathf.Abs(Mathf.DeltaAngle(
+                    references.ObstacleWorld.ActiveRings[0].transform.eulerAngles.z,
+                    references.ObstacleWorld.ActiveRings[1].transform.eulerAngles.z)),
+                0.01f,
+                "Rings inside one obstacle group must preserve the same safe-lane orientation.");
             var trailPositions = new Vector3[trail.positionCount];
             trail.GetPositions(trailPositions);
             for (var i = 0; i < trailPositions.Length; i++)

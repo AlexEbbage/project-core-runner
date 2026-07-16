@@ -23,11 +23,11 @@ MonoBehaviour:
   MinRotationDegrees: 0
   MaxRotationDegrees: 300
   MinIterations: 2
-  MaxIterations: 4
+  MaxIterations: 3
   ObstaclePrefab: {fileID: 101377589085666745, guid: 6d1169598fc3bc74bbdab3fdd8d0709e, type: 3}
   ObstacleScale: 0.5714286
   RotationOffsetDegrees: -30
-  SpacingMultiplier: 1.1
+  SpacingMultiplier: 1.35
   MinRotationSpeedDegrees: 0
   MaxRotationSpeedDegrees: 0
   Segments: []

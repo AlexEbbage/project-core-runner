@@ -33,11 +33,11 @@ namespace CoreRacer.Editor.Builders
 
             var patterns = new List<ObstaclePatternDefinition>
             {
-                BuildPattern("wedge_easy", "Wedge Gate", ObstacleType.Walls, wallOne, 0f, 2.2f, 6f, 2, 3, 1f, 0f, 0f),
-                BuildPattern("wedge_medium", "Split Wedges", ObstacleType.Walls, wallThree, 0.9f, 4.5f, 4f, 2, 4, 1.05f, 0f, 0f),
-                BuildPattern("fan", "Rotating Fan", ObstacleType.Fan, fan, 1.5f, 999f, 2.5f, 1, 2, 1.45f, 25f, 48f),
-                BuildPattern("door", "Sliding Door", ObstacleType.Doors, door, 2.25f, 999f, 2f, 1, 2, 1.55f, 0f, 0f),
-                BuildPattern("wedge_hard", "Narrow Wedge Gate", ObstacleType.Walls, wallFive, 3f, 999f, 2f, 2, 4, 1.1f, 0f, 0f)
+                BuildPattern("wedge_easy", "Wedge Gate", ObstacleType.Walls, wallOne, 0f, 2.2f, 6f, 2, 3, 1.15f, 0f, 0f),
+                BuildPattern("wedge_medium", "Split Wedges", ObstacleType.Walls, wallThree, 0.9f, 4.5f, 4f, 2, 3, 1.25f, 0f, 0f),
+                BuildPattern("fan", "Rotating Fan", ObstacleType.Fan, fan, 1.5f, 999f, 2.5f, 1, 2, 1.65f, 22f, 40f),
+                BuildPattern("door", "Sliding Door", ObstacleType.Doors, door, 2.25f, 999f, 2f, 1, 2, 1.8f, 0f, 0f),
+                BuildPattern("wedge_hard", "Narrow Wedge Gate", ObstacleType.Walls, wallFive, 3f, 999f, 2f, 2, 3, 1.35f, 0f, 0f)
             };
 
             var config = AssetDatabase.LoadAssetAtPath<ObstacleGenerationConfig>(ConfigPath);
@@ -47,8 +47,8 @@ namespace CoreRacer.Editor.Builders
                 return;
             }
 
-            config.RingSpacing = 10f;
-            config.SpawnStartZ = 30f;
+            config.RingSpacing = 12f;
+            config.SpawnStartZ = 36f;
             config.TunnelSides = 6;
             config.BaseDifficulty = 0f;
             config.DifficultyPerSecond = 0.05f;
@@ -116,9 +116,10 @@ namespace CoreRacer.Editor.Builders
             serialized.FindProperty("doorLeft").objectReferenceValue = left;
             serialized.FindProperty("doorRight").objectReferenceValue = right;
             serialized.FindProperty("openDistance").floatValue = 2.5f;
-            serialized.FindProperty("openSpeed").floatValue = 1.5f;
+            serialized.FindProperty("openSpeed").floatValue = 2f;
+            serialized.FindProperty("startsOpen").boolValue = true;
             serialized.FindProperty("cycleAutomatically").boolValue = true;
-            serialized.FindProperty("cycleSeconds").floatValue = 2.4f;
+            serialized.FindProperty("cycleSeconds").floatValue = 3.2f;
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
