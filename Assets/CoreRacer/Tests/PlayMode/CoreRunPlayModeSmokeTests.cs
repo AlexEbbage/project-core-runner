@@ -243,6 +243,8 @@ namespace CoreRacer.Tests.PlayMode
             var originalBestDistance = profile.State.BestDistance;
             var originalSelectedIndex = profile.State.SelectedLevelIndex;
             var originalBoosters = new System.Collections.Generic.List<string>(profile.State.EquippedBoosterIds);
+            var cameraFollow = Object.FindObjectOfType<PlayerCameraFollow>(true);
+            Assert.NotNull(cameraFollow, "The player camera follow component is missing.");
 
             try
             {
