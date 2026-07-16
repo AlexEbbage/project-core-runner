@@ -29,6 +29,7 @@ namespace CoreRacer.Gameplay.Vfx
             for (int i = 0; i < particles.Length; i++)
             {
                 if (particles[i] == null) continue;
+                particles[i].gameObject.SetActive(true);
                 particles[i].Clear(true);
                 particles[i].Play(true);
             }
