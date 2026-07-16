@@ -31,6 +31,8 @@ namespace CoreRacer.Gameplay.Run
         [SerializeField] private BoosterCatalog boosterCatalog;
         [SerializeField] private VfxManager vfxManager;
         [SerializeField] private SpeedParticlesControllerV2 speedParticles;
+        [SerializeField] private PlayerCameraFollow cameraFollow;
+        [SerializeField] private float crashSlowMotionScale = 0.2f;
         [SerializeField] private string defaultLevelId = "hex_sector_01";
 
         private string _selectedLevelId;
@@ -67,6 +69,8 @@ namespace CoreRacer.Gameplay.Run
                 vfxManager = FindObjectOfType<VfxManager>();
             if (speedParticles == null)
                 speedParticles = FindObjectOfType<SpeedParticlesControllerV2>();
+            if (cameraFollow == null)
+                cameraFollow = FindObjectOfType<PlayerCameraFollow>();
             if (speedParticles == null && references != null && references.Player != null)
                 speedParticles = CreateRuntimeSpeedParticles(references.Player.transform);
 
@@ -242,6 +246,9 @@ namespace CoreRacer.Gameplay.Run
         {
             _continueRequestInFlight = false;
             _doubleRewardRequestInFlight = false;
+            UnityEngine.Time.timeScale = 1f;
+            cameraFollow?.SetFollowing(true);
+            references?.Player?.GetComponentInChildren<PlayerVisual>(true)?.RestoreVisible();
             StopRuntimeSystems();
             ClearRunBoosters();
             _lifecycle?.ReturnToMenu();
@@ -265,10 +272,15 @@ namespace CoreRacer.Gameplay.Run
             _lifecycle.Crash();
             _tutorial?.Notify(TutorialStepKind.WaitForCrash, "continue");
             StopRuntimeSystems();
+            cameraFollow?.SetFollowing(false);
+            references?.Player?.GetComponentInChildren<PlayerVisual>(true)?.PlayDissolve();
+            var crashPosition = references != null && references.Player != null ? references.Player.transform.position : transform.position;
+            vfxManager?.Play(VfxEventId.CrashSparks, crashPosition, Quaternion.identity, 2.5f);
+            vfxManager?.Play(VfxEventId.ContinueRespawnWarp, crashPosition, Quaternion.identity, 2f);
+            UnityEngine.Time.timeScale = Mathf.Clamp(crashSlowMotionScale, 0.05f, 0.9f);
             if (_continues.CanContinue(_lifecycle.Session))
             {
                 _stateMachine.TrySetState(RunState.ContinueOffered);
-                UnityEngine.Time.timeScale = 0f;
                 references?.Hud?.Hide();
                 references?.PauseMenu?.Hide();
                 references?.GameOver?.ShowContinueOffer();
@@ -366,6 +378,7 @@ namespace CoreRacer.Gameplay.Run
 
             _continues.ContinueRun(_lifecycle.Session);
             UnityEngine.Time.timeScale = 1f;
+            cameraFollow?.SetFollowing(true);
             references?.Hud?.Show();
             references?.GameOver?.Hide();
             references?.PauseMenu?.Hide();
@@ -374,7 +387,7 @@ namespace CoreRacer.Gameplay.Run
             references?.ObstacleWorld?.BeginRun();
             references?.PickupWorld?.BeginRun();
             var playerPosition = references != null && references.Player != null ? references.Player.transform.position : transform.position;
-            vfxManager?.Play(VfxEventId.ContinueRespawnWarp, playerPosition);
+            vfxManager?.Play(VfxEventId.ContinueRespawnWarp, playerPosition, Quaternion.identity, 1.5f);
         }
 
         private void OnRunStarted()
@@ -382,6 +395,8 @@ namespace CoreRacer.Gameplay.Run
             _continueRequestInFlight = false;
             _doubleRewardRequestInFlight = false;
             _lastResult = default;
+            UnityEngine.Time.timeScale = 1f;
+            cameraFollow?.SetFollowing(true);
             ApplySelectedRunDefinition();
             references?.Powerups?.ClearAll();
             references?.MainMenu?.Hide();
@@ -429,7 +444,8 @@ namespace CoreRacer.Gameplay.Run
             _analytics?.RunEnded(_lastResult);
             references?.GameOver?.Show(_lastResult);
             var playerPosition = references != null && references.Player != null ? references.Player.transform.position : transform.position;
-            vfxManager?.Play(VfxEventId.CrashSparks, playerPosition);
+            vfxManager?.Play(VfxEventId.CrashSparks, playerPosition, Quaternion.identity, 3.5f);
+            vfxManager?.Play(VfxEventId.ContinueRespawnWarp, playerPosition, Quaternion.identity, 2.5f);
             references?.Player?.GetComponentInChildren<PlayerVisual>(true)?.PlayDissolve();
             Debug.Log($"[CoreRacer.Run] Run ended (runId={CurrentRunId}, reason={reason})", this);
         }

@@ -11,6 +11,8 @@ namespace CoreRacer.Gameplay.Vfx
         [SerializeField] private Transform poolRoot;
         [SerializeField] private VfxLibrary library;
         private readonly Dictionary<VfxPooledInstance, ComponentPool<VfxPooledInstance>> _pools = new Dictionary<VfxPooledInstance, ComponentPool<VfxPooledInstance>>();
+        private Color _environmentTint = Color.white;
+        private bool _hasEnvironmentTint;
 
         public VfxEventId? LastPlayedEvent { get; private set; }
 
@@ -22,12 +24,25 @@ namespace CoreRacer.Gameplay.Vfx
             var pool = GetPool(prefab);
             var instance = pool.Take();
             instance.transform.SetPositionAndRotation(position, rotation);
+            if (_hasEnvironmentTint)
+                instance.SetTint(_environmentTint);
             instance.Play();
             StartCoroutine(ReleaseAfter(pool, instance, instance.EstimatedLifetime));
             return instance;
         }
 
+        public void SetEnvironmentTint(Color tint)
+        {
+            _environmentTint = tint;
+            _hasEnvironmentTint = true;
+        }
+
         public VfxPooledInstance Play(VfxEventId id, Vector3 position, Quaternion rotation = default)
+        {
+            return Play(id, position, rotation, 1.5f);
+        }
+
+        public VfxPooledInstance Play(VfxEventId id, Vector3 position, Quaternion rotation, float scale)
         {
             if (library == null)
             {
@@ -42,7 +57,10 @@ namespace CoreRacer.Gameplay.Vfx
             }
 
             LastPlayedEvent = id;
-            return Play(definition.Prefab, position, rotation);
+            var instance = Play(definition.Prefab, position, rotation);
+            if (instance != null)
+                instance.transform.localScale = Vector3.one * Mathf.Max(0.1f, scale);
+            return instance;
         }
 
         private IEnumerator ReleaseAfter(ComponentPool<VfxPooledInstance> pool, VfxPooledInstance instance, float seconds)

@@ -24,7 +24,7 @@ Use the docs set as the durable operating system for the project. Foundation doc
 ## Current Recommended Order
 
 1. Complete the cohesive progression/meta phase: XP and unlocks feeding Environment Select, Lab, Hangar, Tasks, Achievements, and Daily Rewards, with one integrated PlayMode proof pass
-2. Complete the VFX feedback phase over the fixed six-sided tunnel: pickup bursts, collision sparks, shield shell/break, dissolve, continue warp, and speed particles
+2. Complete the VFX feedback phase over the fixed six-sided tunnel: pickup bursts, collision sparks, shield shell/break, dissolve, continue warp, speed particles, crash slow motion, and camera-stop framing
 3. Add environment-specific obstacle/VFX styling, then perform the human portrait-device review and apply only focused clarity fixes
 4. Keep production ad SDK verification separate from editor/dev fallback validation
 

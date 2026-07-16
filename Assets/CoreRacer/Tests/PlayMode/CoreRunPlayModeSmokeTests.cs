@@ -161,9 +161,11 @@ namespace CoreRacer.Tests.PlayMode
             var play = Object.FindObjectOfType<BottomNavBarController>(true);
             var run = Object.FindObjectOfType<RunController>(true);
             var references = Object.FindObjectOfType<RunSceneReferences>(true);
+            var cameraFollow = Object.FindObjectOfType<PlayerCameraFollow>(true);
             Assert.NotNull(play);
             Assert.NotNull(run);
             Assert.NotNull(references);
+            Assert.NotNull(cameraFollow);
 
             play.StartCoreRun();
             yield return null;
@@ -252,6 +254,8 @@ namespace CoreRacer.Tests.PlayMode
                 references.CurrencyTracker.AddCoinPickup(10);
                 run.HandlePlayerDeath();
                 Assert.AreEqual(RunState.ContinueOffered, run.State, "A first death should offer a continue.");
+                Assert.AreEqual(0.2f, Time.timeScale, 0.01f, "Crash presentation should use slow motion instead of freezing time.");
+                Assert.IsFalse(cameraFollow.IsFollowing, "Crash presentation should stop camera follow movement.");
                 var continueButton = FindButton(references.GameOver.transform, "ContinueButton");
                 Assert.NotNull(continueButton);
                 Assert.AreEqual(0, continueButton.onClick.GetPersistentEventCount(), "Continue must be routed by the runtime Game Over controller, not a stale serialized listener.");
@@ -259,6 +263,7 @@ namespace CoreRacer.Tests.PlayMode
                 yield return null;
                 Assert.AreEqual(RunState.Running, run.State);
                 Assert.AreEqual(1f, Time.timeScale);
+                Assert.IsTrue(cameraFollow.IsFollowing, "Continue should restore camera follow movement.");
 
                 references.ScoreTracker.AddPickupScore(100);
                 references.CurrencyTracker.AddCoinPickup(10);

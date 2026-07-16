@@ -42,6 +42,20 @@ namespace CoreRacer.Gameplay.Vfx
                     particles[i].Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
 
+        public void SetTint(Color tint)
+        {
+            EnsureParticles();
+            var block = new MaterialPropertyBlock();
+            block.SetColor("_Color", tint);
+            for (var i = 0; i < particles.Length; i++)
+            {
+                if (particles[i] == null)
+                    continue;
+                var renderer = particles[i].GetComponent<ParticleSystemRenderer>();
+                renderer?.SetPropertyBlock(block);
+            }
+        }
+
         private void EnsureParticles()
         {
             if (particles == null || particles.Length == 0)

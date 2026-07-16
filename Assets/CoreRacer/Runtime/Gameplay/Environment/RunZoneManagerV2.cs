@@ -1,4 +1,5 @@
 using UnityEngine;
+using CoreRacer.Gameplay.Vfx;
 
 namespace CoreRacer.Gameplay.Environment
 {
@@ -7,6 +8,7 @@ namespace CoreRacer.Gameplay.Environment
         [SerializeField] private RunZoneCatalog catalog;
         [SerializeField] private MeshRenderer tunnelRenderer;
         [SerializeField] private TunnelWallGeneratorV2 tunnelGenerator;
+        [SerializeField] private VfxManager vfxManager;
 
         public string CurrentZoneId { get; private set; }
 
@@ -29,9 +31,12 @@ namespace CoreRacer.Gameplay.Environment
 
             if (tunnelGenerator == null)
                 tunnelGenerator = FindObjectOfType<TunnelWallGeneratorV2>();
+            if (vfxManager == null)
+                vfxManager = FindObjectOfType<VfxManager>();
 
             if (tunnelGenerator != null)
                 tunnelGenerator.SetWallTint(zone.WallTint);
+            vfxManager?.SetEnvironmentTint(zone.AccentColor);
 
             if (tunnelRenderer != null && zone.TunnelMaterial != null)
                 tunnelRenderer.sharedMaterial = zone.TunnelMaterial;

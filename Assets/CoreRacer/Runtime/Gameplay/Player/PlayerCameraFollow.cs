@@ -9,12 +9,19 @@ namespace CoreRacer.Gameplay.Player
         [SerializeField] private float followSharpness = 12f;
         [SerializeField] private bool lockRotation = true;
         [SerializeField] private bool followTargetRoll;
+        private bool _following = true;
 
         public bool FollowsTargetRoll => followTargetRoll;
+        public bool IsFollowing => _following;
+
+        public void SetFollowing(bool following)
+        {
+            _following = following;
+        }
 
         private void LateUpdate()
         {
-            if (target == null)
+            if (!_following || target == null)
                 return;
 
             var desired = target.position + (followTargetRoll ? target.rotation * offset : offset);
