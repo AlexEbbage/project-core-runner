@@ -28,5 +28,5 @@
 
 ## Known Follow-up
 
-- The one-piece obstacle collider remains a separate manual prefab follow-up.
-- First-run tutorial and touch-control comprehension are the next implementation slice.
+- The one-piece obstacle collider has received its manual layer/collision-mode correction.
+- First-run gameplay onboarding is runtime-proven; portrait-device touch and pacing signoff remains.

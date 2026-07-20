@@ -61,7 +61,11 @@ namespace CoreRacer.UI.Hud
         private void HandleScoreChanged(int score) => UiTextBinder.SetText(scoreText, $"SCORE  {score:N0}");
         private void HandleDistanceChanged(int distance) => UiTextBinder.SetText(distanceText, $"DIST  {distance:N0} m");
         private void HandleCoinsChanged(int added, int total) => UiTextBinder.SetText(coinsText, $"COINS  {total:N0}");
-        private void HandleHealthChanged(float current, float max) => UiTextBinder.SetText(healthText, $"HULL  {current:0}/{max:0}");
+        private void HandleHealthChanged(float current, float max)
+        {
+            var display = current < max - 0.001f ? $"HULL  {current:0}/{max:0}" : string.Empty;
+            UiTextBinder.SetText(healthText, display);
+        }
         private void HandlePowerupActivated(PowerupType type, float seconds) => powerupStrip?.SetActive(type, seconds);
         private void HandlePowerupExpired(PowerupType type) => powerupStrip?.Remove(type);
     }

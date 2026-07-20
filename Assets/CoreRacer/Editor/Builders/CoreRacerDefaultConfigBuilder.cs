@@ -264,7 +264,7 @@ namespace CoreRacer.Editor.Builders
         private static void CreateTutorialConfig()
         {
             var tutorial = CreateAsset<TutorialConfig>("TutorialConfig.asset");
-            tutorial.TutorialId = "core_racer_ftue_v2";
+            tutorial.TutorialId = "core_racer_ftue_v3";
             tutorial.RunOnFreshInstall = true;
             tutorial.Steps.Clear();
             tutorial.Steps.Add(new TutorialStepDefinition { Id = "welcome", Kind = TutorialStepKind.WaitForRunStarted, TitleKey = "ftue.welcome.title", BodyKey = "ftue.welcome.body", HighlightTargetId = "play", RequiresExplicitContinue = false });
@@ -272,9 +272,8 @@ namespace CoreRacer.Editor.Builders
             tutorial.Steps.Add(new TutorialStepDefinition { Id = "dodge_first_obstacle", Kind = TutorialStepKind.WaitForObstacleAvoided, TitleKey = "ftue.dodge.title", BodyKey = "ftue.dodge.body", HighlightTargetId = "obstacle", RequiresExplicitContinue = false });
             tutorial.Steps.Add(new TutorialStepDefinition { Id = "collect_currency", Kind = TutorialStepKind.WaitForPickup, TitleKey = "ftue.currency.title", BodyKey = "ftue.currency.body", HighlightTargetId = "coin", RequiresExplicitContinue = false });
             tutorial.Steps.Add(new TutorialStepDefinition { Id = "collect_powerup", Kind = TutorialStepKind.WaitForPowerup, TitleKey = "ftue.powerup.title", BodyKey = "ftue.powerup.body", HighlightTargetId = "powerup", RequiresExplicitContinue = false });
-            tutorial.Steps.Add(new TutorialStepDefinition { Id = "crash_continue_explanation", Kind = TutorialStepKind.Message, TitleKey = "ftue.crash.title", BodyKey = "ftue.crash.body", HighlightTargetId = "continue", RequiresExplicitContinue = true });
-            tutorial.Steps.Add(new TutorialStepDefinition { Id = "first_upgrade_prompt", Kind = TutorialStepKind.WaitForUpgradePromptOpened, TitleKey = "ftue.upgrade.title", BodyKey = "ftue.upgrade.body", HighlightTargetId = "lab", RequiresExplicitContinue = false });
-            tutorial.Steps.Add(new TutorialStepDefinition { Id = "daily_task_reward_prompt", Kind = TutorialStepKind.WaitForDailyTaskRewardPromptOpened, TitleKey = "ftue.tasks.title", BodyKey = "ftue.tasks.body", HighlightTargetId = "progression", RequiresExplicitContinue = false });
+            tutorial.Steps.Add(new TutorialStepDefinition { Id = "crash_continue_explanation", Kind = TutorialStepKind.WaitForCrash, TitleKey = "ftue.crash.title", BodyKey = "ftue.crash.body", HighlightTargetId = "continue", RequiresExplicitContinue = false });
+            tutorial.Steps.Add(new TutorialStepDefinition { Id = "continue_first_run", Kind = TutorialStepKind.WaitForContinue, TitleKey = "ftue.continue.title", BodyKey = "ftue.continue.body", HighlightTargetId = "continue", RequiresExplicitContinue = false });
             tutorial.Steps.Add(new TutorialStepDefinition { Id = "complete", Kind = TutorialStepKind.Complete, TitleKey = "ftue.complete.title", BodyKey = "ftue.complete.body", RequiresExplicitContinue = true });
             EditorUtility.SetDirty(tutorial);
         }

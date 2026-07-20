@@ -1,6 +1,8 @@
 using System.Collections;
 using CoreRacer.Bootstrap;
+using CoreRacer.FTUE;
 using CoreRacer.Gameplay.Environment;
+using CoreRacer.Gameplay.Pickups;
 using CoreRacer.Gameplay.Player;
 using CoreRacer.Gameplay.Powerups;
 using CoreRacer.Gameplay.Run;
@@ -20,6 +22,70 @@ namespace CoreRacer.Tests.PlayMode
 {
     public sealed class CoreRunPlayModeSmokeTests
     {
+        [UnityTest]
+        public IEnumerator FirstRunTutorial_WaitsForCrashAndSuccessfulContinue()
+        {
+            yield return LoadMainScene();
+
+            var run = Object.FindObjectOfType<RunController>(true);
+            var references = Object.FindObjectOfType<RunSceneReferences>(true);
+            Assert.NotNull(run);
+            Assert.NotNull(references);
+            Assert.IsTrue(GameServices.TryGet<TutorialService>(out var tutorial));
+
+            tutorial.ResetForTesting();
+            tutorial.Start();
+            Assert.AreEqual("welcome", tutorial.CurrentStep.Id);
+
+            run.StartRun();
+            yield return null;
+            Assert.AreEqual("move", tutorial.CurrentStep.Id);
+
+            tutorial.Notify(TutorialStepKind.WaitForInput, "player");
+            tutorial.Notify(TutorialStepKind.WaitForObstacleAvoided, "obstacle");
+            tutorial.Notify(TutorialStepKind.WaitForPickup, "coin");
+            tutorial.Notify(TutorialStepKind.WaitForPowerup, "powerup");
+            Assert.AreEqual("crash_continue_explanation", tutorial.CurrentStep.Id);
+            Assert.AreEqual(TutorialStepKind.WaitForCrash, tutorial.CurrentStep.Kind);
+
+            run.HandlePlayerDeath();
+            Assert.AreEqual(RunState.ContinueOffered, run.State);
+            Assert.AreEqual("continue_first_run", tutorial.CurrentStep.Id);
+            Assert.AreEqual(TutorialStepKind.WaitForContinue, tutorial.CurrentStep.Kind);
+
+            var continueButton = FindButton(references.GameOver.transform, "ContinueButton");
+            Assert.NotNull(continueButton);
+            continueButton.onClick.Invoke();
+            yield return null;
+
+            Assert.AreEqual(RunState.Running, run.State);
+            Assert.IsTrue(tutorial.State.Completed, "The gameplay tutorial should complete only after Continue restores the run.");
+
+            run.ReturnToMenu();
+        }
+
+        [UnityTest]
+        public IEnumerator CoinVisual_UsesHexLaneRotationCorrection()
+        {
+            yield return LoadMainScene();
+
+            var pickups = Object.FindObjectsOfType<PickupView>(true);
+            PickupView coin = null;
+            for (var i = 0; i < pickups.Length; i++)
+            {
+                if (pickups[i].Type == PickupType.Coin)
+                {
+                    coin = pickups[i];
+                    break;
+                }
+            }
+
+            Assert.NotNull(coin, "The coin pool must contain the authored coin prefab.");
+            var visual = coin.transform.Find("Visual");
+            Assert.NotNull(visual, "The coin prefab must keep its Visual child.");
+            Assert.That(Mathf.DeltaAngle(-30f, visual.localEulerAngles.z), Is.EqualTo(0f).Within(0.1f));
+        }
+
         [UnityTest]
         public IEnumerator PortraitHud_ShowsRunMetricsPowerupsAndPauseSafeState()
         {
@@ -42,7 +108,9 @@ namespace CoreRacer.Tests.PlayMode
             Assert.That(references.Hud.ScoreText.text, Does.StartWith("SCORE"));
             Assert.That(references.Hud.DistanceText.text, Does.StartWith("DIST"));
             Assert.That(references.Hud.CoinsText.text, Does.StartWith("COINS"));
-            Assert.That(references.Hud.HealthText.text, Does.StartWith("HULL"));
+            Assert.That(references.Hud.HealthText.text, Is.Empty, "Full hull should not consume HUD space during normal play.");
+            references.PlayerHealth.Damage(1f);
+            Assert.That(references.Hud.HealthText.text, Is.EqualTo("HULL  1/2"), "Hull should appear when the ship is damaged.");
 
             references.Powerups.Activate(PowerupType.Shield);
             Assert.AreEqual(1, references.Hud.PowerupStrip.ActiveCount);

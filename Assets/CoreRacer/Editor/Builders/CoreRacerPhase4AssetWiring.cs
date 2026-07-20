@@ -156,6 +156,9 @@ namespace CoreRacer.Editor.Builders
                 {
                     visual.name = "Visual";
                     visual.transform.SetParent(root.transform, false);
+                    visual.transform.localRotation = type == PickupType.Coin
+                        ? Quaternion.Euler(0f, 0f, -30f)
+                        : Quaternion.identity;
                     StripNonVisualComponents(visual);
                     AssignMaterial(visual, fallbackMaterialPath, true);
                 }
@@ -165,6 +168,9 @@ namespace CoreRacer.Editor.Builders
                 var visual = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                 visual.name = "Visual";
                 visual.transform.SetParent(root.transform, false);
+                visual.transform.localRotation = type == PickupType.Coin
+                    ? Quaternion.Euler(0f, 0f, -30f)
+                    : Quaternion.identity;
                 StripNonVisualComponents(visual);
                 AssignMaterial(visual, fallbackMaterialPath, true);
             }

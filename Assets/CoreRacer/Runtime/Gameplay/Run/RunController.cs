@@ -404,6 +404,7 @@ namespace CoreRacer.Gameplay.Run
             references?.PickupWorld?.BeginRun();
             var playerPosition = references != null && references.Player != null ? references.Player.transform.position : transform.position;
             vfxManager?.Play(VfxEventId.ContinueRespawnWarp, playerPosition, Quaternion.identity, 1.5f);
+            _tutorial?.Notify(TutorialStepKind.WaitForContinue, "continue");
         }
 
         private void OnRunStarted()

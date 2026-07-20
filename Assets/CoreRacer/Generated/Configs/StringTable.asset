@@ -212,7 +212,11 @@ MonoBehaviour:
   - Key: ftue.crash.title
     Value: Crashes and continues
   - Key: ftue.crash.body
-    Value: When you crash, a continue offer can get you back into the run.
+    Value: Keep flying until you crash. Your first run includes one continue.
+  - Key: ftue.continue.title
+    Value: Continue the run
+  - Key: ftue.continue.body
+    Value: Press Continue to respawn and keep your score and distance.
   - Key: ftue.upgrade.title
     Value: Upgrade in the Lab
   - Key: ftue.upgrade.body

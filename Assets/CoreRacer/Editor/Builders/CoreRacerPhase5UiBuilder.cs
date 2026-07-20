@@ -812,7 +812,7 @@ namespace CoreRacer.Editor.Builders
                 AssetDatabase.CreateAsset(config, GeneratedConfigFolder + "/TutorialConfig.asset");
             }
 
-            config.TutorialId = "core_racer_ftue_v2";
+            config.TutorialId = "core_racer_ftue_v3";
             config.RunOnFreshInstall = true;
             config.Steps = new List<TutorialStepDefinition>
             {
@@ -821,9 +821,8 @@ namespace CoreRacer.Editor.Builders
                 Step("dodge_first_obstacle", TutorialStepKind.WaitForObstacleAvoided, "ftue.dodge.title", "ftue.dodge.body", "obstacle", false, false),
                 Step("collect_currency", TutorialStepKind.WaitForPickup, "ftue.currency.title", "ftue.currency.body", "coin", false, false),
                 Step("collect_powerup", TutorialStepKind.WaitForPowerup, "ftue.powerup.title", "ftue.powerup.body", "powerup", false, false),
-                Step("crash_continue_explanation", TutorialStepKind.Message, "ftue.crash.title", "ftue.crash.body", "continue", false, true),
-                Step("first_upgrade_prompt", TutorialStepKind.WaitForUpgradePromptOpened, "ftue.upgrade.title", "ftue.upgrade.body", "lab", false, false),
-                Step("daily_task_reward_prompt", TutorialStepKind.WaitForDailyTaskRewardPromptOpened, "ftue.tasks.title", "ftue.tasks.body", "progression", false, false),
+                Step("crash_continue_explanation", TutorialStepKind.WaitForCrash, "ftue.crash.title", "ftue.crash.body", "continue", false, false),
+                Step("continue_first_run", TutorialStepKind.WaitForContinue, "ftue.continue.title", "ftue.continue.body", "continue", false, false),
                 Step("complete", TutorialStepKind.Complete, "ftue.complete.title", "ftue.complete.body", string.Empty, false, true)
             };
             EditorUtility.SetDirty(config);
@@ -1199,7 +1198,9 @@ namespace CoreRacer.Editor.Builders
             AddExtra(entries, "ftue.powerup.title", "Collect a powerup");
             AddExtra(entries, "ftue.powerup.body", "Powerups give short boosts that help you survive longer.");
             AddExtra(entries, "ftue.crash.title", "Crashes and continues");
-            AddExtra(entries, "ftue.crash.body", "When you crash, a continue offer can get you back into the run.");
+            AddExtra(entries, "ftue.crash.body", "Keep flying until you crash. Your first run includes one continue.");
+            AddExtra(entries, "ftue.continue.title", "Continue the run");
+            AddExtra(entries, "ftue.continue.body", "Press Continue to respawn and keep your score and distance.");
             AddExtra(entries, "ftue.upgrade.title", "Upgrade in the Lab");
             AddExtra(entries, "ftue.upgrade.body", "The Lab is where powerups become stronger over time.");
             AddExtra(entries, "ftue.tasks.title", "Claim daily rewards");

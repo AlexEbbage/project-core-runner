@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05220a967fefcd44eabc8c9dbe970fcd, type: 3}
   m_Name: TutorialConfig
   m_EditorClassIdentifier: 
-  TutorialId: core_racer_ftue_v2
+  TutorialId: core_racer_ftue_v3
   RunOnFreshInstall: 1
   Steps:
   - Id: welcome
@@ -56,26 +56,18 @@ MonoBehaviour:
     RequiresExplicitContinue: 0
     MinimumDisplaySeconds: 0.5
   - Id: crash_continue_explanation
-    Kind: 0
+    Kind: 6
     TitleKey: ftue.crash.title
     BodyKey: ftue.crash.body
     HighlightTargetId: continue
     PauseGame: 0
-    RequiresExplicitContinue: 1
-    MinimumDisplaySeconds: 0.5
-  - Id: first_upgrade_prompt
-    Kind: 9
-    TitleKey: ftue.upgrade.title
-    BodyKey: ftue.upgrade.body
-    HighlightTargetId: lab
-    PauseGame: 0
     RequiresExplicitContinue: 0
     MinimumDisplaySeconds: 0.5
-  - Id: daily_task_reward_prompt
-    Kind: 10
-    TitleKey: ftue.tasks.title
-    BodyKey: ftue.tasks.body
-    HighlightTargetId: progression
+  - Id: continue_first_run
+    Kind: 12
+    TitleKey: ftue.continue.title
+    BodyKey: ftue.continue.body
+    HighlightTargetId: continue
     PauseGame: 0
     RequiresExplicitContinue: 0
     MinimumDisplaySeconds: 0.5

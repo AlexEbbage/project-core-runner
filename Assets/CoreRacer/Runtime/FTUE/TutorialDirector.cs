@@ -60,9 +60,6 @@ namespace CoreRacer.FTUE
                     router?.Show(MainMenuPage.Progression);
                     break;
             }
-
-            if (step.Id == "crash_continue_explanation")
-                runController?.ReturnToMenu();
         }
     }
 }

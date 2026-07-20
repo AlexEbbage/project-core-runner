@@ -3,6 +3,7 @@
 - [Core obstacle patterns](17-core-obstacle-patterns.md)
 - [Gameplay audio feedback](18-gameplay-audio-feedback.md)
 - [Portrait gameplay clarity](19-portrait-gameplay-clarity.md)
+- [First-run gameplay onboarding](20-first-run-gameplay-onboarding.md)
 
 This folder contains one manual testing checklist per tracked experience feature.
 
@@ -37,3 +38,4 @@ Files:
 - [17-core-obstacle-patterns.md](./17-core-obstacle-patterns.md)
 - [18-gameplay-audio-feedback.md](./18-gameplay-audio-feedback.md)
 - [19-portrait-gameplay-clarity.md](./19-portrait-gameplay-clarity.md)
+- [20-first-run-gameplay-onboarding.md](./20-first-run-gameplay-onboarding.md)
