@@ -2,7 +2,7 @@
 
 ## Delivery Strategy
 
-Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. Core-run playability, Level Select/boosters, and run reward settlement are now live-verified. The next slice is human portrait-device review followed by the next approved progression surface.
+Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. Core-run playability, Level Select/boosters, run reward settlement, core audio, and portrait HUD clarity are now live-verified. The next slice is first-run onboarding and gameplay-pacing closeout on a portrait device.
 
 ## Phases
 
@@ -25,7 +25,7 @@ Use the docs set as the durable operating system for the project. Foundation doc
 
 1. Complete the cohesive progression/meta phase: XP and unlocks feeding Environment Select, Lab, Hangar, Tasks, Achievements, and Daily Rewards, with one integrated PlayMode proof pass
 2. Complete the VFX feedback phase over the fixed six-sided tunnel: pickup bursts, collision sparks, shield shell/break, dissolve, continue warp, speed particles, crash slow motion, and camera-stop framing
-3. Player-review obstacle pacing and the completed core audio pass, then proceed to focused portrait gameplay clarity; elemental environment presentation is deferred
+3. Player-review obstacle pacing, core audio, and the completed portrait gameplay clarity pass, then close out first-run onboarding and touch-control comprehension; elemental environment presentation is deferred
 4. Keep production ad SDK verification separate from editor/dev fallback validation
 
 ## Current Asset Wiring Status

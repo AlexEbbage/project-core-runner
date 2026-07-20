@@ -19,6 +19,18 @@ namespace CoreRacer.Gameplay.Powerups
         public event Action<PowerupType, float> PowerupActivated;
         public event Action<PowerupType> PowerupExpired;
 
+        public bool TryGetRemainingSeconds(PowerupType type, out float remainingSeconds)
+        {
+            if (_active.TryGetValue(type, out var active))
+            {
+                remainingSeconds = active.RemainingSeconds;
+                return true;
+            }
+
+            remainingSeconds = 0f;
+            return false;
+        }
+
         private void Awake()
         {
             _registry = new PowerupEffectRegistry();
@@ -82,7 +94,7 @@ namespace CoreRacer.Gameplay.Powerups
             if (_active.Count == 0)
                 return;
 
-            var delta = UnityEngine.Time.unscaledDeltaTime;
+            var delta = UnityEngine.Time.deltaTime;
             _expired.Clear();
             foreach (var pair in _active)
             {

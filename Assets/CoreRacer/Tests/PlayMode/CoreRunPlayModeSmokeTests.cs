@@ -8,6 +8,7 @@ using CoreRacer.Gameplay.Vfx;
 using CoreRacer.Meta.Profile;
 using CoreRacer.Services.Audio;
 using CoreRacer.UI.MainMenu;
+using CoreRacer.UI.Shared;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -19,6 +20,52 @@ namespace CoreRacer.Tests.PlayMode
 {
     public sealed class CoreRunPlayModeSmokeTests
     {
+        [UnityTest]
+        public IEnumerator PortraitHud_ShowsRunMetricsPowerupsAndPauseSafeState()
+        {
+            yield return LoadMainScene();
+
+            var run = Object.FindObjectOfType<RunController>(true);
+            var references = Object.FindObjectOfType<RunSceneReferences>(true);
+            var safeArea = Object.FindObjectOfType<SafeAreaRectTransform>(true);
+            Assert.NotNull(safeArea, "The gameplay HUD must be contained by the authored safe-area root.");
+            Assert.AreSame(safeArea.transform, references.Hud.transform.parent);
+            Assert.NotNull(references.Hud.ScoreText);
+            Assert.NotNull(references.Hud.DistanceText);
+            Assert.NotNull(references.Hud.CoinsText);
+            Assert.NotNull(references.Hud.HealthText);
+            Assert.NotNull(references.Hud.PowerupStrip);
+
+            run.StartRun();
+            yield return null;
+
+            Assert.That(references.Hud.ScoreText.text, Does.StartWith("SCORE"));
+            Assert.That(references.Hud.DistanceText.text, Does.StartWith("DIST"));
+            Assert.That(references.Hud.CoinsText.text, Does.StartWith("COINS"));
+            Assert.That(references.Hud.HealthText.text, Does.StartWith("HULL"));
+
+            references.Powerups.Activate(PowerupType.Shield);
+            Assert.AreEqual(1, references.Hud.PowerupStrip.ActiveCount);
+            Assert.That(references.Hud.PowerupStrip.DisplayText, Does.Contain("SHIELD"));
+            Assert.IsTrue(references.Powerups.TryGetRemainingSeconds(PowerupType.Shield, out var beforePause));
+
+            references.PauseMenu.TogglePause();
+            Assert.AreEqual(RunState.Paused, run.State);
+            Assert.AreEqual(0f, Time.timeScale);
+            Assert.IsTrue(references.PauseMenu.gameObject.activeInHierarchy);
+            yield return new WaitForSecondsRealtime(0.25f);
+
+            Assert.IsTrue(references.Powerups.TryGetRemainingSeconds(PowerupType.Shield, out var duringPause));
+            Assert.That(duringPause, Is.EqualTo(beforePause).Within(0.02f), "Powerups must not expire behind a paused HUD.");
+
+            references.PauseMenu.Resume();
+            yield return null;
+            Assert.AreEqual(RunState.Running, run.State);
+            Assert.AreEqual(1f, Time.timeScale);
+
+            run.ReturnToMenu();
+        }
+
         [UnityTest]
         public IEnumerator CoreAudio_RoutesMenuRunObstacleShieldAndDamageEvents()
         {

@@ -2,6 +2,7 @@
 
 - [Core obstacle patterns](17-core-obstacle-patterns.md)
 - [Gameplay audio feedback](18-gameplay-audio-feedback.md)
+- [Portrait gameplay clarity](19-portrait-gameplay-clarity.md)
 
 This folder contains one manual testing checklist per tracked experience feature.
 
@@ -35,3 +36,4 @@ Files:
 - [16-progression-shell-closeout.md](./16-progression-shell-closeout.md)
 - [17-core-obstacle-patterns.md](./17-core-obstacle-patterns.md)
 - [18-gameplay-audio-feedback.md](./18-gameplay-audio-feedback.md)
+- [19-portrait-gameplay-clarity.md](./19-portrait-gameplay-clarity.md)

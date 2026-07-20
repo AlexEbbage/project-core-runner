@@ -3,3 +3,4 @@ Delete nothing for the Level Select and Booster closeout slice.
 Delete nothing for CoreRacer_MVP_Obstacle_Pattern_Rework.
 Delete nothing for CoreRacer_Obstacle_Fairness_Pacing_Phase.
 Delete nothing for CoreRacer_Gameplay_Audio_Feedback_Phase.
+Delete nothing for CoreRacer_Portrait_Gameplay_Clarity_Phase.
