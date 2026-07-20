@@ -144,7 +144,20 @@ namespace CoreRacer.Editor.Builders
             view.PowerupType = powerupType;
             view.Amount = 1;
 
-            var collider = root.AddComponent<SphereCollider>();
+            var visualParent = root.transform;
+            var colliderOwner = root;
+            if (type == PickupType.Coin)
+            {
+                var radialBody = new GameObject("PickupBody");
+                radialBody.transform.SetParent(root.transform, false);
+                radialBody.transform.localPosition = Vector3.right * 3f;
+                visualParent = radialBody.transform;
+                colliderOwner = radialBody;
+                radialBody.AddComponent<PickupTriggerRelay>().Bind(view);
+                SetSerializedObject(view, "radialBody", radialBody.transform);
+            }
+
+            var collider = colliderOwner.AddComponent<SphereCollider>();
             collider.isTrigger = true;
             collider.radius = 0.45f;
 
@@ -155,10 +168,8 @@ namespace CoreRacer.Editor.Builders
                 if (visual != null)
                 {
                     visual.name = "Visual";
-                    visual.transform.SetParent(root.transform, false);
-                    visual.transform.localRotation = type == PickupType.Coin
-                        ? Quaternion.Euler(0f, 0f, -30f)
-                        : Quaternion.identity;
+                    visual.transform.SetParent(visualParent, false);
+                    visual.transform.localRotation = Quaternion.identity;
                     StripNonVisualComponents(visual);
                     AssignMaterial(visual, fallbackMaterialPath, true);
                 }
@@ -167,10 +178,8 @@ namespace CoreRacer.Editor.Builders
             {
                 var visual = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                 visual.name = "Visual";
-                visual.transform.SetParent(root.transform, false);
-                visual.transform.localRotation = type == PickupType.Coin
-                    ? Quaternion.Euler(0f, 0f, -30f)
-                    : Quaternion.identity;
+                visual.transform.SetParent(visualParent, false);
+                visual.transform.localRotation = Quaternion.identity;
                 StripNonVisualComponents(visual);
                 AssignMaterial(visual, fallbackMaterialPath, true);
             }

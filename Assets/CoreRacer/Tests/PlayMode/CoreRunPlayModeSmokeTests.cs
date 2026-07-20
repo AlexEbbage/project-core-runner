@@ -22,6 +22,45 @@ namespace CoreRacer.Tests.PlayMode
 {
     public sealed class CoreRunPlayModeSmokeTests
     {
+        private static readonly string[] TutorialSaveKeys =
+        {
+            "core_racer_tutorial_state",
+            "core_racer_tutorial_state.checksum",
+            "core_racer_tutorial_state.backup",
+            "core_racer_tutorial_state.backup.checksum"
+        };
+
+        private readonly bool[] _tutorialSaveExisted = new bool[TutorialSaveKeys.Length];
+        private readonly string[] _tutorialSaveValues = new string[TutorialSaveKeys.Length];
+
+        [UnitySetUp]
+        public IEnumerator PreserveTutorialSave()
+        {
+            for (var i = 0; i < TutorialSaveKeys.Length; i++)
+            {
+                _tutorialSaveExisted[i] = PlayerPrefs.HasKey(TutorialSaveKeys[i]);
+                _tutorialSaveValues[i] = PlayerPrefs.GetString(TutorialSaveKeys[i], string.Empty);
+            }
+
+            yield return null;
+        }
+
+        [UnityTearDown]
+        public IEnumerator RestoreTutorialSave()
+        {
+            for (var i = 0; i < TutorialSaveKeys.Length; i++)
+            {
+                if (_tutorialSaveExisted[i])
+                    PlayerPrefs.SetString(TutorialSaveKeys[i], _tutorialSaveValues[i]);
+                else
+                    PlayerPrefs.DeleteKey(TutorialSaveKeys[i]);
+            }
+
+            PlayerPrefs.Save();
+            Time.timeScale = 1f;
+            yield return null;
+        }
+
         [UnityTest]
         public IEnumerator FirstRunTutorial_WaitsForCrashAndSuccessfulContinue()
         {
@@ -62,6 +101,7 @@ namespace CoreRacer.Tests.PlayMode
             Assert.IsTrue(tutorial.State.Completed, "The gameplay tutorial should complete only after Continue restores the run.");
 
             run.ReturnToMenu();
+            tutorial.ResetForTesting();
         }
 
         [UnityTest]
@@ -69,7 +109,12 @@ namespace CoreRacer.Tests.PlayMode
         {
             yield return LoadMainScene();
 
-            var pickups = Object.FindObjectsOfType<PickupView>(true);
+            var run = Object.FindObjectOfType<RunController>(true);
+            var references = Object.FindObjectOfType<RunSceneReferences>(true);
+            run.StartRun();
+            yield return null;
+
+            var pickups = Object.FindObjectsOfType<PickupView>();
             PickupView coin = null;
             for (var i = 0; i < pickups.Length; i++)
             {
@@ -81,9 +126,29 @@ namespace CoreRacer.Tests.PlayMode
             }
 
             Assert.NotNull(coin, "The coin pool must contain the authored coin prefab.");
-            var visual = coin.transform.Find("Visual");
+            Assert.NotNull(coin.RadialBody, "The coin needs a radial child so its lane placement is visible in the hierarchy.");
+            Assert.NotNull(coin.RadialBody.GetComponent<SphereCollider>(), "The coin trigger must move with its radial body.");
+            Assert.NotNull(coin.RadialBody.GetComponent<PickupTriggerRelay>(), "The radial trigger must relay collection to the pooled pickup root.");
+            Assert.That(coin.transform.position.x, Is.EqualTo(0f).Within(0.01f));
+            Assert.That(coin.transform.position.y, Is.EqualTo(0f).Within(0.01f));
+            Assert.That(coin.RadialBody.localPosition.x, Is.EqualTo(3f).Within(0.01f));
+            Assert.That(coin.RadialBody.localPosition.y, Is.EqualTo(0f).Within(0.01f));
+            Assert.That(coin.RadialBody.localPosition.z, Is.EqualTo(0f).Within(0.01f));
+            var normalizedAngle = Mathf.Repeat(coin.transform.eulerAngles.z, 60f);
+            Assert.That(normalizedAngle, Is.EqualTo(30f).Within(0.1f), "Coins should occupy hex wall centres, not tunnel corners.");
+            var visual = coin.RadialBody.Find("Visual");
             Assert.NotNull(visual, "The coin prefab must keep its Visual child.");
-            Assert.That(Mathf.DeltaAngle(-30f, visual.localEulerAngles.z), Is.EqualTo(0f).Within(0.1f));
+            Assert.That(Mathf.DeltaAngle(0f, visual.localEulerAngles.z), Is.EqualTo(0f).Within(0.1f));
+
+            var coinsBefore = references.CurrencyTracker.Coins;
+            references.Player.transform.position = coin.WorldPosition;
+            Physics.SyncTransforms();
+            yield return new WaitForFixedUpdate();
+            Assert.That(references.CurrencyTracker.Coins, Is.GreaterThan(coinsBefore), "The offset child trigger must still collect the coin.");
+
+            run.ReturnToMenu();
+            if (GameServices.TryGet<TutorialService>(out var tutorial))
+                tutorial.ResetForTesting();
         }
 
         [UnityTest]
@@ -155,10 +220,14 @@ namespace CoreRacer.Tests.PlayMode
             Assert.AreEqual(AudioEventId.RunMusic, audio.LastPlayedEventId);
             Assert.AreEqual("Zone1Music", host.MusicSource.clip.name);
             var firstRing = references.ObstacleWorld.ActiveRings[0];
+            var playerCollider = references.Player.GetComponent<Collider>();
+            Assert.NotNull(playerCollider);
+            playerCollider.enabled = false;
             var deltaTime = (firstRing.Z + 1f - references.Player.transform.position.z) /
                             Mathf.Max(0.01f, references.Player.Motor.EffectiveForwardSpeed);
             references.Player.Motor.Move(0f, deltaTime);
             yield return null;
+            playerCollider.enabled = true;
             Assert.AreEqual(AudioEventId.ObstaclePassed, audio.LastPlayedEventId);
 
             references.PlayerHealth.Damage(0.1f);

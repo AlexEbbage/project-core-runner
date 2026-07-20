@@ -119,7 +119,7 @@ namespace CoreRacer.Gameplay.Pickups
             var pickup = _coinPool.Take();
             pickup.Type = PickupType.Coin;
             pickup.Amount = 1;
-            pickup.transform.position = position;
+            pickup.PlaceAtWorldPosition(position);
             pickup.Collected += HandleCollected;
             _active.Add(pickup);
         }
@@ -143,7 +143,7 @@ namespace CoreRacer.Gameplay.Pickups
         {
             pickup.Collected -= HandleCollected;
             _active.Remove(pickup);
-            PickupCollected?.Invoke(pickup.Type, pickup.PowerupType, pickup.transform.position);
+            PickupCollected?.Invoke(pickup.Type, pickup.PowerupType, pickup.WorldPosition);
 
             if (pickup.Type == PickupType.Coin)
             {

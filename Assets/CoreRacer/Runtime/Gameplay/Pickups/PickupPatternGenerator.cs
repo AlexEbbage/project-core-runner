@@ -20,7 +20,8 @@ namespace CoreRacer.Gameplay.Pickups
             for (int i = 0; i < count; i++)
             {
                 var side = (startSide + i) % _config.TunnelSides;
-                var angle = side * Mathf.PI * 2f / _config.TunnelSides;
+                var sideAngle = Mathf.PI * 2f / _config.TunnelSides;
+                var angle = (side + 0.5f) * sideAngle;
                 points.Add(new Vector3(Mathf.Cos(angle) * _config.RingRadius, Mathf.Sin(angle) * _config.RingRadius, z + i * 1.2f));
             }
             return points;

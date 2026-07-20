@@ -42,6 +42,7 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - Core runs now start on the bottom rail at 270 degrees. The camera-local Y offset is `1.25`, placing the player at portrait viewport Y `0.411`; steering is initially tuned to `140` degrees/second.
 - `RuntimeTunnel` uses two renderer-local white/grey shades on alternating longitudinal sections so the shared `WallMaterial` remains unchanged, and player trails are cleared after the run-start teleport.
 - Obstacle generation now uses clean copies of the authored Blender wedge, fan, and door prefabs. Pattern groups snap to the six tunnel sides and unlock by elapsed difficulty plus the selected route multiplier.
+- Coin pickups now use centre pivots rotated to six wall-centre angles with an offset `PickupBody` child holding both mesh and trigger, keeping lane placement readable in the hierarchy.
 - Phase 8 final validation and handoff is captured in `docs/rewrite/final-handoff.md`; closed testing remains blocked by placeholder privacy links. Live inspection on 2026-07-15 confirmed `Assets/CoreRacer/Scenes/CoreRacer_Main.unity` is the only enabled Build Settings scene.
 - Manual art follow-up is tracked in `docs/rewrite/manual-art-wiring-needed.md`.
 

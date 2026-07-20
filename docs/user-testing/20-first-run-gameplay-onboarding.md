@@ -11,13 +11,15 @@
 - The welcome prompt advances only after the run starts.
 - The movement prompt explains left/right or drag steering and advances after real steering input.
 - The first passed obstacle advances the dodge prompt.
-- A reachable coin is supplied for the coin step and its face aligns with the hex lane rather than appearing 30 degrees twisted.
+- A reachable coin is supplied for the coin step and sits at the centre of a tunnel wall rather than in a hex corner.
+- Inspect a spawned coin and confirm its root is at tunnel centre, its root Z rotation is `30 + n * 60`, and `PickupBody` is locally offset by the tunnel radius.
 - A reachable powerup is supplied for the powerup step.
 - The crash explanation appears while the run continues; it does not return to the menu.
 - Crashing enters slow motion and displays the Game Over Continue offer.
 - The tutorial asks for Continue and does not advance from an overlay-only acknowledgement.
 - Pressing the real Continue button restores the player, camera, controls, forward movement, and `Time.timeScale = 1`.
 - The tutorial completes after the successful Continue and does not repeat after returning Home and starting another run.
+- Running the PlayMode suite must leave tutorial progress reset rather than silently marking the local editor profile complete.
 - At full health no redundant `HULL 2/2` label is shown. If the player takes non-lethal damage, `HULL 1/2` appears.
 - Retry and Home still complete their normal clean lifecycle.
 

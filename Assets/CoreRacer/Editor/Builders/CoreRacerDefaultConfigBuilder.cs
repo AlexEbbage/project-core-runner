@@ -264,7 +264,7 @@ namespace CoreRacer.Editor.Builders
         private static void CreateTutorialConfig()
         {
             var tutorial = CreateAsset<TutorialConfig>("TutorialConfig.asset");
-            tutorial.TutorialId = "core_racer_ftue_v3";
+            tutorial.TutorialId = "core_racer_ftue_v4";
             tutorial.RunOnFreshInstall = true;
             tutorial.Steps.Clear();
             tutorial.Steps.Add(new TutorialStepDefinition { Id = "welcome", Kind = TutorialStepKind.WaitForRunStarted, TitleKey = "ftue.welcome.title", BodyKey = "ftue.welcome.body", HighlightTargetId = "play", RequiresExplicitContinue = false });

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05220a967fefcd44eabc8c9dbe970fcd, type: 3}
   m_Name: TutorialConfig
   m_EditorClassIdentifier: 
-  TutorialId: core_racer_ftue_v3
+  TutorialId: core_racer_ftue_v4
   RunOnFreshInstall: 1
   Steps:
   - Id: welcome

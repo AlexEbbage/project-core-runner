@@ -812,7 +812,7 @@ namespace CoreRacer.Editor.Builders
                 AssetDatabase.CreateAsset(config, GeneratedConfigFolder + "/TutorialConfig.asset");
             }
 
-            config.TutorialId = "core_racer_ftue_v3";
+            config.TutorialId = "core_racer_ftue_v4";
             config.RunOnFreshInstall = true;
             config.Steps = new List<TutorialStepDefinition>
             {

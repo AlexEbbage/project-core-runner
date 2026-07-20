@@ -2,7 +2,7 @@
 
 ## Outcome
 
-- Corrected the coin visual by applying a persistent `-30 degree` local Z rotation in both the prefab and its idempotent asset builder.
+- Initial coin correction applied a visual rotation. This was superseded by `CoreRacer_Coin_Lane_Tutorial_Visibility_Fix`, which correctly offsets spawn lanes and restores the centre-pivot/radial-child hierarchy.
 - Preserved the user's single-wall collider correction: cleared include/exclude layer overrides and changed collision detection from continuous speculative to continuous.
 - Replaced the misleading always-visible `HULL 2/2` label with a contextual damaged-state readout.
 - Upgraded the tutorial config to `core_racer_ftue_v3`.

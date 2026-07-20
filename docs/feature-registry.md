@@ -38,7 +38,7 @@ These `F#` identifiers remain the stable feature IDs used by `task-registry.md` 
 | ID | Group | Canonical Feature | Status | Notes |
 | --- | --- | --- | --- | --- |
 | F1 | Core Gameplay | Endless Run Foundation | Implemented (awaiting player review) | Live PlayMode verification covers Play entry, camera/control framing, recycling tunnel, score/distance, crash/Game Over, Retry/Home, plus menu/run music and core pickup, obstacle, damage, shield, and speed audio feedback. |
-| F2 | Core Gameplay | Obstacle and Pickup Generation | Implemented (awaiting player review) | Recovered wedge, fan, and door assets spawn in readable side-aligned groups with the corrected single-wall collider settings; pickups align to the same six-sided lane frame and moving patterns reset cleanly |
+| F2 | Core Gameplay | Obstacle and Pickup Generation | Implemented (awaiting player review) | Recovered wedge, fan, and door assets spawn in readable side-aligned groups with the corrected single-wall collider settings; coin pivots now rotate to wall centres with radius-offset mesh/trigger children |
 | F3 | Core Gameplay | Score, Combo, and Speed Loop | Implemented | Distance and pickup scoring, combo growth/decay, speed escalation |
 | F4 | Core Gameplay | Continue and Rewarded Continue Flow | Implemented | Crash recovery with capped continues and rewarded ad usage |
 | F5 | Core Gameplay | Powerup Gameplay Loop | Partial | Runtime powerups are present and the current slice has converged the roster, HUD support, and upgrade fallback behavior, but authored content polish is still pending |
@@ -57,7 +57,7 @@ These `F#` identifiers remain the stable feature IDs used by `task-registry.md` 
 | F18 | Meta | Long-Term Progression Economy and Lab Upgrades | Implemented (awaiting review) | The progression milestone now routes lab progression through the hub with purchase-refresh hooks and shared profile ownership; the authored six-row lab roster is now the closeout slice and only runtime review remains |
 | F19 | Meta | Achievements and Challenge Tiers | In progress | A five-track achievement shell, authored config, progress evaluation, and persistent tier-claim flow are now in repo through the existing profile metrics; live Unity validation remains |
 | F20 | Meta | Pre-Run Boosters | Implemented (awaiting player review) | One-per-family loadout persistence and run-scoped shield, coin, and score effects are wired and live-verified; only player-facing clarity review remains |
-| F21 | UI | FTUE Tutorial | Implemented (awaiting player review) | The save-backed v3 sequence now teaches the core run only, provides deterministic pickup assists, waits for real crash/Continue actions, and has focused PlayMode coverage |
+| F21 | UI | FTUE Tutorial | Implemented (awaiting player review) | The save-backed v4 sequence teaches the core run only, provides deterministic pickup assists, waits for real crash/Continue actions, and resets its test state so validation does not hide the tutorial afterward |
 
 ## Review Notes
 

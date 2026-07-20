@@ -5,3 +5,4 @@ Delete nothing for CoreRacer_Obstacle_Fairness_Pacing_Phase.
 Delete nothing for CoreRacer_Gameplay_Audio_Feedback_Phase.
 Delete nothing for CoreRacer_Portrait_Gameplay_Clarity_Phase.
 Delete nothing for CoreRacer_First_Run_Gameplay_Onboarding_Phase.
+Delete nothing for CoreRacer_Coin_Lane_Tutorial_Visibility_Fix.
