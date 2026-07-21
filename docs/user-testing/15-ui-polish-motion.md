@@ -2,7 +2,7 @@
 
 ## Status
 
-Superseded as a future acceptance target by planned F22. Existing uGUI/DOTween motion is transitional; final motion acceptance will use UI Toolkit and LitMotion after the complete migration.
+Migrated to UI Toolkit and LitMotion by F22; Editor animation and interruption checks pass. Physical-device motion/readability acceptance remains pending.
 
 ## Goal
 

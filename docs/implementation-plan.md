@@ -2,7 +2,7 @@
 
 ## Delivery Strategy
 
-Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. Core gameplay and a validated Android Development APK exist, but the current menu/UI is not acceptance-ready: the layout is poor and most menu actions are reported non-functional. Physical-device release signoff is therefore deferred. The final roadmap phase will completely replace the current UI implementation with UI Toolkit, UXML, USS, source-driven C# presentation, and LitMotion before end-to-end acceptance is repeated.
+Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. F22 has replaced the broken menu with one Editor-validated UI Toolkit/UXML/USS/source-driven C# and LitMotion implementation. Physical Android release signoff is now the active next phase.
 
 ## Phases
 
@@ -23,15 +23,13 @@ Use the docs set as the durable operating system for the project. Foundation doc
 
 ## Current Recommended Order
 
-1. Continue only explicitly approved non-UI gameplay, content, service, or progression work; do not spend more time repairing the temporary menu architecture
-2. Preserve the current UI only as a behavioural/content reference while underlying systems are completed
-3. At the end of the roadmap, execute the complete F22 UI rework in one migration: UI Toolkit/UXML/USS/C# presentation, LitMotion, central routing/layers, reusable components, modal input blocking, component gallery, tests, documentation, and removal of superseded uGUI/DOTween UI
-4. After the replacement UI is complete, repeat full Android device acceptance for every important screen/button plus the complete Play/Continue/Retry/Home lifecycle
-5. Keep production ad SDK verification separate from editor/dev fallback validation
+1. Repeat full Android device acceptance against the replacement UI: safe area, touch/back input, pause/resume lifecycle, complete Play/Continue/Retry/Home flow, readability, and performance
+2. Capture device logs/screenshots and fix only device-specific UI or lifecycle regressions found by that pass
+3. Keep production ad SDK verification separate from editor/dev fallback validation
 
 ## Current Asset Wiring Status
 
-- **Acceptance warning:** the current uGUI menu hierarchy is temporary and reported broken. Existing scene/UI validation proves references and some isolated routes, not a usable or visually acceptable menu. Do not describe it as finished or acceptance-ready.
+- `CoreRacer_Main.unity` now contains one `GameUiRoot` with one `UIDocument`, central screen/layer routing, LitMotion feedback, source-bound actions, and no active legacy Canvas.
 - `CoreRacer_Main.unity` now uses generated wrappers around safe existing player, obstacle, pickup, tunnel, audio, and VFX assets.
 - `CoreRacer_Main.unity` now also contains an authored clean hub flow for `Play`, `Shop`, `Hangar`, `Lab`, `Progression`, and `Settings`, with nested level select, daily login, rotating tasks, achievements, comfort, privacy, and support/debug surfaces.
 - `CoreRacer_Main.unity` now has the Phase 6 FTUE tutorial overlay, scene director, deterministic first coin/powerup assistance, support reset action, and save-backed tutorial progress wiring. The gameplay-focused v4 sequence waits for a real crash and successful Continue before completion.
@@ -51,12 +49,12 @@ Use the docs set as the durable operating system for the project. Foundation doc
 
 ## Dependencies and Blockers
 
-- End-to-end MVP and device acceptance are blocked by the current broken menu implementation. The approved resolution is the deferred full F22 UI rework, not incremental repair or another parallel UI layer.
+- Editor UI acceptance is complete; end-to-end release acceptance now depends on physical Android safe-area, input, lifecycle, and performance checks.
 - Monetisation expansion depends on an approved catalog and entitlement model.
 - UI tooling changes depend on an explicit package adoption decision.
 - The progression bundle now depends on a player-facing review pass in `CoreRacer_Main` to confirm navigation clarity, layout polish, content readability, and FTUE pacing across the authored hub shell.
 - Level Select and boosters are runtime-proven but still require a human portrait-device clarity review. Shop, ship customisation, lab, tasks, daily login, achievements, and UI polish retain their broader UX review gates.
-- DOTween remains part of the temporary uGUI implementation only. The final F22 UI architecture standardizes meaningful UI motion on LitMotion and removes superseded DOTween UI wiring after migration.
+- UI Toolkit uses LitMotion for semantic motion. Superseded runtime uGUI/DOTween presentation wiring is no longer active in `CoreRacer_Main`.
 - SDK release blockers remain for LevelPlay C# API installation/verification, Firebase Crashlytics installation, Addressables installation if remote content is required, and replacement of placeholder privacy links.
 - Build settings currently target the clean `CoreRacer_Main.unity`; keep this checked during release preparation rather than relying on the stale legacy-scene assumption.
 - The runtime tunnel now generates 48 longitudinal mesh sections for the fixed six-sided MVP type and recenters in 40-unit steps while keeping 20 units behind the player. The preserved FBX tunnel is hidden only during Play Mode.
@@ -74,4 +72,4 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - Asset or inspector dependencies:
   - Treat scene references, prefabs, ScriptableObjects, and UI wiring as part of the feature change surface for all future implementation work
   - Core-run PlayMode smoke test: `CoreRunPlayModeSmokeTests.VisiblePlay_StartsCoreGameplay`
-- Latest automated result: 47/47 EditMode tests and 13/13 PlayMode tests passed after the Android build on 2026-07-21. `CoreRacer-1.1.2-dev.apk` is a valid 128.2 MB ARMv7/ARM64 APK targeting API 36, signed with the Android debug certificate; SHA-256 is `B396DD79DFCB38FD917AFD5A37BB939CB7D17B33B46390A337AD3261860510D3`. Device profiling remains pending because no Android device was connected.
+- Latest UI result: 43/43 EditMode and 7/7 PlayMode tests passed after the complete UI Toolkit migration on 2026-07-21. Live Editor interaction proved visible Play, crash/Game Over, Continue with restored time, Retry/Home routing, modal input blocking, and zero active legacy Canvases. The earlier `CoreRacer-1.1.2-dev.apk` predates this UI commit and must be rebuilt before device acceptance.

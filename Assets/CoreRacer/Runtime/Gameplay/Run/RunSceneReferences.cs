@@ -3,10 +3,6 @@ using CoreRacer.Gameplay.Obstacles;
 using CoreRacer.Gameplay.Pickups;
 using CoreRacer.Gameplay.Player;
 using CoreRacer.Gameplay.Powerups;
-using CoreRacer.UI.GameOver;
-using CoreRacer.UI.Hud;
-using CoreRacer.UI.MainMenu;
-using CoreRacer.UI.Pause;
 using UnityEngine;
 
 namespace CoreRacer.Gameplay.Run
@@ -22,10 +18,10 @@ namespace CoreRacer.Gameplay.Run
         public ObstacleWorldController ObstacleWorld;
         public PickupWorldController PickupWorld;
         public PowerupRuntimeController Powerups;
-        public HudController Hud;
-        public GameOverController GameOver;
-        public MainMenuShell MainMenu;
-        public PauseMenuController PauseMenu;
+        [Tooltip("Must implement IRunUiPresenter. Kept as MonoBehaviour so Unity can serialize the scene reference.")]
+        public MonoBehaviour RunUiBehaviour;
+
+        public IRunUiPresenter RunUi => RunUiBehaviour as IRunUiPresenter;
 
         public bool HasRequiredReferences()
         {
@@ -44,10 +40,7 @@ namespace CoreRacer.Gameplay.Run
             if (ObstacleWorld == null) result.Warning("RunSceneReferences.ObstacleWorld is missing. Runs can start, but no obstacles will spawn.");
             if (PickupWorld == null) result.Warning("RunSceneReferences.PickupWorld is missing. Runs can start, but no pickups will spawn.");
             if (Powerups == null) result.Warning("RunSceneReferences.Powerups is missing. Powerup pickups will not apply effects.");
-            if (Hud == null) result.Warning("RunSceneReferences.Hud is missing. Gameplay HUD will not update.");
-            if (GameOver == null) result.Warning("RunSceneReferences.GameOver is missing. Game-over UI must be triggered manually.");
-            if (MainMenu == null) result.Warning("RunSceneReferences.MainMenu is missing. Return-to-menu UI will not be shown automatically.");
-            if (PauseMenu == null) result.Warning("RunSceneReferences.PauseMenu is missing. Pause UI will not be hidden automatically.");
+            if (RunUi == null) result.Error("RunSceneReferences.RunUiBehaviour is missing or does not implement IRunUiPresenter.");
             return result;
         }
     }

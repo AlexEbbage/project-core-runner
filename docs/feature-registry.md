@@ -52,18 +52,18 @@ These `F#` identifiers remain the stable feature IDs used by `task-registry.md` 
 | F13 | Services | Ads and Reward Monetisation | Partial | Continue and Double Rewards are live-verified with the development fallback provider; production LevelPlay readiness and mid-run offer review remain separate gates |
 | F14 | Services | Premium Commerce | Partial | Remove-ads exists; broader premium catalog is planned |
 | F15 | Services | Analytics Coverage | Implemented (awaiting review) | Shared event names and normalized payload keys now cover run outcomes, ads, hub navigation, shop, hangar, progression claims, and level-select actions; the remaining gate is live Unity review and signoff |
-| F16 | UI | UI Polish and Motion Stack | Partial | Existing DOTween/uGUI motion is transitional and not the final architecture. F22 supersedes this direction with UI Toolkit and LitMotion when the end-of-roadmap migration begins. |
+| F16 | UI | UI Polish and Motion Stack | Implemented (awaiting device review) | F22 superseded the transitional uGUI/DOTween presentation with the final UI Toolkit and interruption-safe LitMotion stack; device motion/readability review remains. |
 | F17 | Meta | Expanded Content Catalog | In progress | Ship customisation now builds on the authored shop ids with a preview-first hangar flow, and remaining work is runtime verification plus broader future category expansion |
 | F18 | Meta | Long-Term Progression Economy and Lab Upgrades | Implemented (awaiting review) | The progression milestone now routes lab progression through the hub with purchase-refresh hooks and shared profile ownership; the authored six-row lab roster is now the closeout slice and only runtime review remains |
 | F19 | Meta | Achievements and Challenge Tiers | In progress | A five-track achievement shell, authored config, progress evaluation, and persistent tier-claim flow are now in repo through the existing profile metrics; live Unity validation remains |
 | F20 | Meta | Pre-Run Boosters | Implemented (awaiting player review) | One-per-family loadout persistence and run-scoped shield, coin, and score effects are wired and live-verified; only player-facing clarity review remains |
-| F21 | UI | FTUE Tutorial | Partial | The save-backed v4 behaviour and deterministic assists are proven, but the overlay/presentation must migrate into F22 before acceptance. |
-| F22 | UI | Complete UI Toolkit and LitMotion Rework | Planned | Approved for the final roadmap phase: replace the entire current UI presentation architecture—menu, screens, HUD, overlays, popups, routing, animation, and tests—with one UI Toolkit/UXML/USS/source-driven C# solution using LitMotion. Preserve underlying behaviour, remove superseded uGUI/DOTween UI after verified migration, and do not create a permanent compatibility layer. |
+| F21 | UI | FTUE Tutorial | Implemented (awaiting player review) | The save-backed v4 behaviour and deterministic assists are proven and the tutorial overlay now runs through the replacement modal UI layer; player pacing/readability review remains. |
+| F22 | UI | Complete UI Toolkit and LitMotion Rework | Implemented (awaiting device review) | One persistent UI Toolkit root now owns menu, screens, HUD, overlays, popups, routing, LitMotion, and source-bound actions. Editor lifecycle tests and live interaction pass; superseded runtime uGUI is removed. Android safe-area, input, and performance acceptance is next. |
 
 ## Review Notes
 
 - Treat `In progress` as the current active bundle work, not a promise of single-feature exclusivity. The repo currently carries approved bundles across `F8`, `F10`, `F11`, `F12`, `F15`, `F16`, `F17`, `F18`, and `F19`; avoid starting additional features unless the user explicitly approves them.
 - Treat `Implemented` as "present in repo and usable now", not "fully production complete".
 - Treat `Partial` as "some implementation exists but the documented product goal is not complete".
-- Current UI validation is not evidence that the menu is usable. F6, F7, F16, and F21 remain partial until F22 replaces the presentation architecture and every important interaction is verified.
+- F22 replaced the active presentation architecture and restored an Editor-verified menu/run lifecycle. F6, F7, F16, and F21 retain player/device review gates where their broader feature rows say so.
 - Experience rows may map to multiple canonical `F#` features when the player-facing slice spans gameplay, UI, and monetisation.

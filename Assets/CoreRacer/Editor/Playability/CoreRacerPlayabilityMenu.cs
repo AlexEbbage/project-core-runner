@@ -1,4 +1,4 @@
-using CoreRacer.UI.MainMenu;
+using CoreRacer.Gameplay.Run;
 using UnityEditor;
 using UnityEngine;
 
@@ -51,15 +51,15 @@ namespace CoreRacer.Editor.Playability
         private static void StartCoreRunInPlayMode()
         {
             Time.timeScale = 1f;
-            var levelSelect = Object.FindObjectOfType<LevelSelectPageController>(true);
-            if (levelSelect == null)
+            var run = Object.FindObjectOfType<RunController>(true);
+            if (run == null)
             {
-                Debug.LogError("Quick Play failed: no active LevelSelectPageController exists in the loaded scene.");
+                Debug.LogError("Quick Play failed: no active RunController exists in the loaded scene.");
                 return;
             }
 
-            if (!levelSelect.TryQuickPlayCoreRun())
-                Debug.LogError("Quick Play failed. See the preceding validation errors for the missing run setup.", levelSelect);
+            if (!run.TryQuickPlayCoreRun())
+                Debug.LogError("Quick Play failed. See the preceding validation errors for the missing run setup.", run);
         }
     }
 }

@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using CoreRacer.FTUE;
 using CoreRacer.Localization;
-using CoreRacer.UI.Debugging;
-using CoreRacer.UI.FTUE;
+using CoreRacer.UI.Toolkit;
 using UnityEditor;
 using UnityEngine;
 
@@ -75,20 +74,8 @@ namespace CoreRacer.Editor.Validation
         {
             if (Object.FindObjectOfType<TutorialDirector>() == null)
                 issues.Add("Scene is missing TutorialDirector.");
-            if (Object.FindObjectOfType<TutorialOverlayController>(true) == null)
-                issues.Add("Scene is missing TutorialOverlayController.");
-
-            var support = Object.FindObjectOfType<SupportDebugPanel>(true);
-            if (support == null)
-            {
-                issues.Add("Scene is missing SupportDebugPanel.");
-                return;
-            }
-
-            var so = new SerializedObject(support);
-            var resetButton = so.FindProperty("resetTutorialButton");
-            if (resetButton == null || resetButton.objectReferenceValue == null)
-                issues.Add("SupportDebugPanel resetTutorialButton is not wired.");
+            if (Object.FindObjectOfType<CoreRacerUiController>(true) == null)
+                issues.Add("Scene is missing the UI Toolkit CoreRacerUiController.");
         }
 
         private static T LoadFirst<T>() where T : Object

@@ -2,7 +2,7 @@
 
 ## Status
 
-Behavioural evidence retained. Final overlay, input-blocking, and interaction acceptance is deferred until F22 migrates the tutorial presentation.
+Behaviour and replacement UI Toolkit overlay are implemented. Editor modal/input lifecycle checks pass; player pacing and Android presentation review remain pending.
 
 ## Setup
 

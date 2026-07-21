@@ -6,7 +6,9 @@
     "UnityEngine.Purchasing",
     "UnityEngine.Purchasing.Stores",
     "Unity.Notifications.Android",
-    "Unity.Notifications.iOS"
+    "Unity.Notifications.iOS",
+    "LitMotion",
+    "LitMotion.Extensions"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

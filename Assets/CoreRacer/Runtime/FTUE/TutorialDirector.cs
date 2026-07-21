@@ -2,8 +2,6 @@ using CoreRacer.Bootstrap;
 using CoreRacer.Gameplay.Obstacles;
 using CoreRacer.Gameplay.Pickups;
 using CoreRacer.Gameplay.Run;
-using CoreRacer.UI.FTUE;
-using CoreRacer.UI.MainMenu;
 using UnityEngine;
 
 namespace CoreRacer.FTUE
@@ -13,8 +11,6 @@ namespace CoreRacer.FTUE
         [SerializeField] private RunController runController;
         [SerializeField] private ObstacleWorldController obstacleWorld;
         [SerializeField] private PickupWorldController pickupWorld;
-        [SerializeField] private MainMenuPageRouter router;
-        [SerializeField] private TutorialOverlayController overlay;
 
         private TutorialService _tutorial;
 
@@ -29,7 +25,8 @@ namespace CoreRacer.FTUE
             if (_tutorial == null && GameServices.TryGet(out _tutorial))
                 _tutorial.StepChanged += HandleStepChanged;
 
-            overlay?.BeginIfNeeded();
+            if (_tutorial != null && _tutorial.ShouldRunForFreshInstall())
+                _tutorial.Start();
         }
 
         private void OnDisable()
@@ -52,12 +49,8 @@ namespace CoreRacer.FTUE
                     pickupWorld?.QueueTutorialPowerup();
                     break;
                 case TutorialStepKind.WaitForUpgradePromptOpened:
-                    runController?.ReturnToMenu();
-                    router?.Show(MainMenuPage.Lab);
-                    break;
                 case TutorialStepKind.WaitForDailyTaskRewardPromptOpened:
                     runController?.ReturnToMenu();
-                    router?.Show(MainMenuPage.Progression);
                     break;
             }
         }

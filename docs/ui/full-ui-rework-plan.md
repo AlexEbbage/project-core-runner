@@ -2,7 +2,7 @@
 
 ## Status
 
-Approved, deliberately deferred to the final roadmap phase. Do not begin incremental migration or broad repairs to the temporary menu.
+Implemented and live-validated in the Editor. Android/device acceptance is the next release gate.
 
 ## Problem Statement
 
@@ -44,7 +44,7 @@ This is a complete replacement, not a parallel prototype or permanent compatibil
 - A development component gallery exists.
 - Superseded UI implementation and temporary compatibility code are removed after verification; useful content assets are retained.
 - Architecture, conventions, extension guidance, animation rules, popup/input behaviour, and testing strategy are documented.
-- Full physical-device menu and core-run lifecycle acceptance passes after migration.
+- Full physical-device menu and core-run lifecycle acceptance passes after migration as the following release-validation phase.
 
 ## Before Implementation
 

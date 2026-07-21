@@ -297,9 +297,9 @@ namespace CoreRacer.Gameplay.Run
             if (_continues.CanContinue(_lifecycle.Session))
             {
                 _stateMachine.TrySetState(RunState.ContinueOffered);
-                references?.Hud?.Hide();
-                references?.PauseMenu?.Hide();
-                references?.GameOver?.ShowContinueOffer();
+                references?.RunUi?.HideHud();
+                references?.RunUi?.HidePause();
+                references?.RunUi?.ShowContinueOffer();
             }
             else
             {
@@ -315,20 +315,20 @@ namespace CoreRacer.Gameplay.Run
             ResolveServices();
             if (_rewardedAds == null || !_rewardedAds.CanShow(AdPlacement.ContinueRun))
             {
-                references?.GameOver?.ShowContinueUnavailable();
+                references?.RunUi?.ShowContinueUnavailable();
                 _lifecycle.EndRun(RunEndReason.PlayerDeath);
                 return false;
             }
 
             _continueRequestInFlight = true;
-            references?.GameOver?.SetContinuePending(true);
+            references?.RunUi?.SetContinuePending(true);
             _rewardedAds.ShowOrBypass(AdPlacement.ContinueRun, result =>
             {
                 if (!_continueRequestInFlight)
                     return;
 
                 _continueRequestInFlight = false;
-                references?.GameOver?.SetContinuePending(false);
+                references?.RunUi?.SetContinuePending(false);
                 if (State != RunState.ContinueOffered)
                     return;
 
@@ -336,7 +336,7 @@ namespace CoreRacer.Gameplay.Run
                     ApplyContinue();
                 else
                 {
-                    references?.GameOver?.ShowContinueUnavailable();
+                    references?.RunUi?.ShowContinueUnavailable();
                     _lifecycle.EndRun(RunEndReason.PlayerDeath);
                 }
             });
@@ -363,26 +363,26 @@ namespace CoreRacer.Gameplay.Run
             ResolveServices();
             if (_rewardedAds == null || !_rewardedAds.CanShow(AdPlacement.DoubleRunRewards))
             {
-                references?.GameOver?.ShowDoubleRewardUnavailable();
+                references?.RunUi?.ShowDoubleRewardUnavailable();
                 return false;
             }
 
             _doubleRewardRequestInFlight = true;
-            references?.GameOver?.SetDoubleRewardPending(true);
+            references?.RunUi?.SetDoubleRewardPending(true);
             _rewardedAds.ShowOrBypass(AdPlacement.DoubleRunRewards, result =>
             {
                 if (!_doubleRewardRequestInFlight)
                     return;
 
                 _doubleRewardRequestInFlight = false;
-                references?.GameOver?.SetDoubleRewardPending(false);
+                references?.RunUi?.SetDoubleRewardPending(false);
                 if (State != RunState.GameOver || _lifecycle.Session.DoubleRewardsGranted)
                     return;
 
                 if (_rewardedAds.ShouldGrantReward(result))
                     GrantDoubleRewards();
                 else
-                    references?.GameOver?.ShowDoubleRewardUnavailable();
+                    references?.RunUi?.ShowDoubleRewardUnavailable();
             });
             return true;
         }
@@ -395,9 +395,9 @@ namespace CoreRacer.Gameplay.Run
             _continues.ContinueRun(_lifecycle.Session);
             UnityEngine.Time.timeScale = 1f;
             cameraFollow?.SetFollowing(true);
-            references?.Hud?.Show();
-            references?.GameOver?.Hide();
-            references?.PauseMenu?.Hide();
+            references?.RunUi?.ShowHud();
+            references?.RunUi?.HidePause();
+            references?.RunUi?.HideGameOver();
             references?.Player?.BeginRun();
             references?.Player?.GetComponentInChildren<PlayerVisual>(true)?.RestoreVisible();
             references?.ObstacleWorld?.BeginRun();
@@ -417,9 +417,9 @@ namespace CoreRacer.Gameplay.Run
             cameraFollow?.SetFollowing(true);
             ApplySelectedRunDefinition();
             references?.Powerups?.ClearAll();
-            references?.MainMenu?.Hide();
-            references?.PauseMenu?.Hide();
-            references?.GameOver?.Hide();
+            references?.RunUi?.HideMainMenu();
+            references?.RunUi?.HidePause();
+            references?.RunUi?.HideGameOver();
             references?.Player?.BeginRun();
             references?.Player?.GetComponentInChildren<PlayerVisual>(true)?.RestoreVisible();
             references?.PlayerHealth?.ResetHealth();
@@ -429,7 +429,7 @@ namespace CoreRacer.Gameplay.Run
             ApplyRunBoosters();
             references?.ObstacleWorld?.BeginRun();
             references?.PickupWorld?.BeginRun();
-            references?.Hud?.Show();
+            references?.RunUi?.ShowHud();
             _audio?.PlayEvent(AudioEventId.RunStart);
             _audio?.PlayEvent(AudioEventId.RunMusic);
             Debug.Log("[CoreRacer.Run] Gameplay root activated", this);
@@ -445,8 +445,8 @@ namespace CoreRacer.Gameplay.Run
 
             StopRuntimeSystems();
             ClearRunBoosters();
-            references?.Hud?.Hide();
-            references?.PauseMenu?.Hide();
+            references?.RunUi?.HideHud();
+            references?.RunUi?.HidePause();
 
             _lastResult = _rewards != null
                 ? _rewards.BuildResult(
@@ -462,7 +462,7 @@ namespace CoreRacer.Gameplay.Run
             _rewards?.Grant(_lastResult);
             _lifecycle.Session.RewardsGranted = true;
             _analytics?.RunEnded(_lastResult);
-            references?.GameOver?.Show(_lastResult);
+            references?.RunUi?.ShowGameOver(_lastResult);
             var playerPosition = references != null && references.Player != null ? references.Player.transform.position : transform.position;
             vfxManager?.Play(VfxEventId.CrashSparks, playerPosition, Quaternion.identity, 3.5f);
             vfxManager?.Play(VfxEventId.ContinueRespawnWarp, playerPosition, Quaternion.identity, 2.5f);
@@ -520,7 +520,7 @@ namespace CoreRacer.Gameplay.Run
             var bonus = _rewards.BuildBonusResult(_lastResult);
             _rewards.GrantBonus(bonus);
             _lifecycle.Session.DoubleRewardsGranted = true;
-            references?.GameOver?.ShowDoubleRewardGranted(bonus);
+            references?.RunUi?.ShowDoubleRewardGranted(bonus);
         }
 
         private void ResolveSelectedLevel()
@@ -666,9 +666,7 @@ namespace CoreRacer.Gameplay.Run
             valid &= RequireCoreReference(tunnelWallGenerator != null, "TunnelWallGeneratorV2");
             valid &= RequireCoreReference(references.ObstacleWorld != null, "ObstacleWorld");
             valid &= RequireCoreReference(references.PickupWorld != null, "PickupWorld");
-            valid &= RequireCoreReference(references.Hud != null, "Hud");
-            valid &= RequireCoreReference(references.GameOver != null, "GameOver");
-            valid &= RequireCoreReference(references.MainMenu != null, "MainMenu");
+            valid &= RequireCoreReference(references.RunUi != null, "Run UI presenter");
 
             if (_selectedLevel == null)
             {
@@ -707,10 +705,10 @@ namespace CoreRacer.Gameplay.Run
 
         private void ShowMainMenu()
         {
-            references?.Hud?.Hide();
-            references?.GameOver?.Hide();
-            references?.PauseMenu?.Hide();
-            references?.MainMenu?.Show();
+            references?.RunUi?.HideHud();
+            references?.RunUi?.HidePause();
+            references?.RunUi?.HideGameOver();
+            references?.RunUi?.ShowMainMenu();
         }
     }
 }

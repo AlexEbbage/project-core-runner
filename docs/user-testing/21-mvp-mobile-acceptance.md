@@ -2,7 +2,7 @@
 
 ## Status
 
-Deferred and blocked until the complete F22 UI replacement is implemented. The validated Android Development APK remains useful technical evidence, but it must not be treated as product acceptance while the current menu is visually unacceptable and most menu actions are reported non-functional.
+Active next release gate after the completed F22 UI replacement. The earlier validated Android Development APK predates the replacement UI and must be rebuilt before physical-device acceptance.
 
 ## Goal
 

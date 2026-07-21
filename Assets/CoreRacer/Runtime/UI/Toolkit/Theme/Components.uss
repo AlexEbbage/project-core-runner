@@ -1,0 +1,165 @@
+.primary-button,
+.secondary-button,
+.icon-button,
+.nav-button,
+.tab-button {
+    min-height: 46px;
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-top-left-radius: var(--cr-radius-md);
+    border-top-right-radius: var(--cr-radius-md);
+    border-bottom-left-radius: var(--cr-radius-md);
+    border-bottom-right-radius: var(--cr-radius-md);
+    padding-left: var(--cr-space-4);
+    padding-right: var(--cr-space-4);
+    margin-top: var(--cr-space-1);
+    margin-bottom: var(--cr-space-1);
+    transition-duration: 0.08s;
+    transition-property: scale, background-color, color;
+}
+
+.primary-button {
+    color: rgb(8, 14, 27);
+    background-color: var(--cr-orange);
+    border-top-color: rgb(255, 184, 104);
+    border-right-color: rgb(255, 184, 104);
+    border-bottom-color: rgb(211, 91, 18);
+    border-left-color: rgb(255, 184, 104);
+}
+
+.primary-button:hover,
+.primary-button:focus {
+    background-color: rgb(255, 164, 83);
+    scale: 1.015 1.015;
+}
+
+.primary-button:active,
+.secondary-button:active,
+.icon-button:active,
+.nav-button:active,
+.tab-button:active {
+    scale: 0.97 0.97;
+}
+
+.primary-button:disabled,
+.secondary-button:disabled {
+    opacity: 0.42;
+}
+
+.secondary-button,
+.icon-button {
+    color: var(--cr-text);
+    background-color: var(--cr-surface);
+    border-top-color: var(--cr-line);
+    border-right-color: var(--cr-line);
+    border-bottom-color: var(--cr-line);
+    border-left-color: var(--cr-line);
+}
+
+.secondary-button:hover,
+.icon-button:hover {
+    background-color: var(--cr-surface-strong);
+    border-top-color: var(--cr-cyan);
+    border-right-color: var(--cr-cyan);
+    border-bottom-color: var(--cr-cyan);
+    border-left-color: var(--cr-cyan);
+}
+
+.content-card,
+.hero-card,
+.settings-group,
+.dynamic-card {
+    background-color: var(--cr-surface);
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-top-color: var(--cr-line);
+    border-right-color: var(--cr-line);
+    border-bottom-color: var(--cr-line);
+    border-left-color: var(--cr-line);
+    border-top-left-radius: var(--cr-radius-lg);
+    border-top-right-radius: var(--cr-radius-lg);
+    border-bottom-left-radius: var(--cr-radius-lg);
+    border-bottom-right-radius: var(--cr-radius-lg);
+    padding-top: var(--cr-space-4);
+    padding-right: var(--cr-space-4);
+    padding-bottom: var(--cr-space-4);
+    padding-left: var(--cr-space-4);
+    margin-bottom: var(--cr-space-3);
+}
+
+.hero-card {
+    background-color: rgb(20, 44, 73);
+    border-top-color: rgba(66, 220, 255, 0.55);
+    border-right-color: rgba(66, 220, 255, 0.55);
+    border-bottom-color: rgba(66, 220, 255, 0.55);
+    border-left-color: rgba(66, 220, 255, 0.55);
+    min-height: 150px;
+    justify-content: center;
+}
+
+.dynamic-card.is-selected {
+    background-color: rgb(26, 62, 92);
+    border-top-color: var(--cr-cyan);
+    border-right-color: var(--cr-cyan);
+    border-bottom-color: var(--cr-cyan);
+    border-left-color: var(--cr-cyan);
+}
+
+.dynamic-card.is-locked {
+    opacity: 0.55;
+}
+
+.dynamic-card__header,
+.dynamic-card__footer {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dynamic-card__description {
+    color: var(--cr-text-muted);
+    white-space: normal;
+    margin-top: var(--cr-space-2);
+    margin-bottom: var(--cr-space-3);
+}
+
+.dynamic-card__action {
+    min-width: 116px;
+}
+
+.status-pill {
+    align-self: flex-start;
+    color: var(--cr-text);
+    background-color: var(--cr-surface-strong);
+    border-top-left-radius: 999px;
+    border-top-right-radius: 999px;
+    border-bottom-left-radius: 999px;
+    border-bottom-right-radius: 999px;
+    padding-top: 5px;
+    padding-right: 10px;
+    padding-bottom: 5px;
+    padding-left: 10px;
+    font-size: 10px;
+    margin-top: var(--cr-space-2);
+}
+
+.status-pill--success,
+.state--success { border-left-color: var(--cr-green); }
+.state--warning { border-left-color: var(--cr-yellow); }
+.state--error { border-left-color: var(--cr-red); }
+
+.progress-bar {
+    margin-top: var(--cr-space-2);
+    margin-bottom: var(--cr-space-3);
+}
+
+.settings-toggle {
+    min-height: 44px;
+    color: var(--cr-text);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--cr-line);
+}

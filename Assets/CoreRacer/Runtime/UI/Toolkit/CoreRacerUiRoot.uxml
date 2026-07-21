@@ -1,0 +1,221 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="project://database/Assets/CoreRacer/Runtime/UI/Toolkit/Theme/Layout.uss" />
+    <ui:Style src="project://database/Assets/CoreRacer/Runtime/UI/Toolkit/Theme/Components.uss" />
+    <ui:Style src="project://database/Assets/CoreRacer/Runtime/UI/Toolkit/Theme/Typography.uss" />
+    <ui:Style src="project://database/Assets/CoreRacer/Runtime/UI/Toolkit/Theme/Tokens.uss" />
+    <ui:VisualElement name="GameUiRoot" class="game-ui-root">
+        <ui:VisualElement name="HudLayer" class="layer layer--hud is-hidden">
+            <ui:VisualElement class="hud-safe-area">
+                <ui:VisualElement class="hud-metrics">
+                    <ui:Label name="HudScore" text="SCORE  0" class="hud-stat" />
+                    <ui:Label name="HudDistance" text="DIST  0 m" class="hud-stat" />
+                    <ui:Label name="HudCoins" text="COINS  0" class="hud-stat hud-stat--accent" />
+                    <ui:Label name="HudHealth" text="" class="hud-stat hud-stat--danger" />
+                </ui:VisualElement>
+                <ui:VisualElement name="PowerupStrip" class="powerup-strip" />
+                <ui:Button name="PauseButton" text="II" class="icon-button pause-button" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="ScreenLayer" class="layer layer--screen">
+            <ui:VisualElement name="MainMenuScreen" class="screen main-menu-screen">
+                <ui:VisualElement name="TopBar" class="top-bar">
+                    <ui:Button name="ProfileButton" class="profile-chip">
+                        <ui:Label text="CORE PILOT" class="eyebrow" />
+                        <ui:Label name="LevelLabel" text="LV 1" class="profile-level" />
+                    </ui:Button>
+                    <ui:VisualElement class="resource-strip">
+                        <ui:Label name="SoftCurrencyLabel" text="0" class="resource-chip resource-chip--coin" />
+                        <ui:Label name="PremiumCurrencyLabel" text="0" class="resource-chip resource-chip--premium" />
+                        <ui:Button name="SettingsShortcutButton" text="SETTINGS" class="icon-button" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <ui:VisualElement name="MenuContent" class="menu-content">
+                    <ui:ScrollView name="PlayScreen" class="menu-page">
+                        <ui:Label text="SELECT CORE RUN" class="screen-title" />
+                        <ui:Label text="One tunnel. Clean lines. Survive as long as you can." class="screen-subtitle" />
+                        <ui:VisualElement name="SelectedRunCard" class="hero-card">
+                            <ui:Label name="SelectedLevelTitle" text="CORE SECTOR" class="hero-title" />
+                            <ui:Label name="SelectedLevelDescription" text="Neutral hex tunnel" class="body-copy" />
+                            <ui:Label name="SelectedLevelStatus" text="READY" class="status-pill status-pill--success" />
+                        </ui:VisualElement>
+                        <ui:Label text="ROUTES" class="section-title" />
+                        <ui:VisualElement name="LevelList" class="card-list" />
+                        <ui:Label text="RUN BOOSTERS" class="section-title" />
+                        <ui:Label name="BoosterSummary" text="No boosters equipped" class="body-copy" />
+                        <ui:VisualElement name="BoosterList" class="card-list card-list--compact" />
+                        <ui:Button name="PlayButton" text="START CORE RUN" class="primary-button play-button" />
+                    </ui:ScrollView>
+
+                    <ui:ScrollView name="ShopScreen" class="menu-page is-hidden">
+                        <ui:Label text="SHOP" class="screen-title" />
+                        <ui:Label text="Unlock ships, cosmetics and utility with earned currency." class="screen-subtitle" />
+                        <ui:Label name="ShopStatus" text="" class="inline-status" />
+                        <ui:VisualElement name="ShopList" class="card-grid" />
+                    </ui:ScrollView>
+
+                    <ui:ScrollView name="HangarScreen" class="menu-page is-hidden">
+                        <ui:Label text="HANGAR" class="screen-title" />
+                        <ui:Label text="Choose your runner and customise its signal." class="screen-subtitle" />
+                        <ui:VisualElement class="hero-card hangar-preview">
+                            <ui:Label name="HangarSelectionTitle" text="STARTER RUNNER" class="hero-title" />
+                            <ui:Label name="HangarSelectionStatus" text="EQUIPPED" class="status-pill status-pill--success" />
+                            <ui:Label name="HangarStats" text="Handling  •  Shield  •  Pickup" class="body-copy" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="HangarTabs" class="tab-row">
+                            <ui:Button name="HangarShipsTab" text="SHIPS" class="tab-button is-selected" />
+                            <ui:Button name="HangarSkinsTab" text="SKINS" class="tab-button" />
+                            <ui:Button name="HangarTrailsTab" text="TRAILS" class="tab-button" />
+                            <ui:Button name="HangarCoreFxTab" text="CORE FX" class="tab-button" />
+                        </ui:VisualElement>
+                        <ui:Label name="HangarStatus" text="" class="inline-status" />
+                        <ui:VisualElement name="HangarList" class="card-grid" />
+                    </ui:ScrollView>
+
+                    <ui:ScrollView name="LabScreen" class="menu-page is-hidden">
+                        <ui:Label text="LAB" class="screen-title" />
+                        <ui:Label text="Invest earned coins in lasting run upgrades." class="screen-subtitle" />
+                        <ui:Label name="LabStatus" text="" class="inline-status" />
+                        <ui:VisualElement name="LabList" class="card-list" />
+                    </ui:ScrollView>
+
+                    <ui:ScrollView name="ProgressionScreen" class="menu-page is-hidden">
+                        <ui:Label text="PROGRESSION" class="screen-title" />
+                        <ui:Label name="ProgressionSummary" text="Build your pilot profile." class="screen-subtitle" />
+                        <ui:VisualElement name="ProgressionTabs" class="tab-row">
+                            <ui:Button name="DailyTab" text="DAILY" class="tab-button is-selected" />
+                            <ui:Button name="TasksTab" text="TASKS" class="tab-button" />
+                            <ui:Button name="AchievementsTab" text="ACHIEVEMENTS" class="tab-button" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="DailyPanel" class="sub-panel">
+                            <ui:Label name="DailyStatus" text="" class="inline-status" />
+                            <ui:VisualElement name="DailyList" class="card-list card-list--compact" />
+                            <ui:VisualElement class="action-row">
+                                <ui:Button name="ClaimDailyButton" text="CLAIM" class="primary-button action-row__button" />
+                                <ui:Button name="ClaimDailyDoubleButton" text="CLAIM x2" class="secondary-button action-row__button" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:VisualElement name="TasksPanel" class="sub-panel is-hidden">
+                            <ui:VisualElement name="TaskList" class="card-list" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="AchievementsPanel" class="sub-panel is-hidden">
+                            <ui:VisualElement name="AchievementList" class="card-list" />
+                        </ui:VisualElement>
+                    </ui:ScrollView>
+
+                    <ui:ScrollView name="SettingsScreen" class="menu-page is-hidden">
+                        <ui:Label text="SETTINGS" class="screen-title" />
+                        <ui:Label text="Tune comfort, accessibility and privacy." class="screen-subtitle" />
+                        <ui:VisualElement class="settings-group">
+                            <ui:Label text="AUDIO &amp; FEEDBACK" class="section-title" />
+                            <ui:Slider name="MusicSlider" label="Music" low-value="0" high-value="1" class="settings-slider" />
+                            <ui:Slider name="SfxSlider" label="Sound effects" low-value="0" high-value="1" class="settings-slider" />
+                            <ui:Toggle name="HapticsToggle" text="Haptics" class="settings-toggle" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="settings-group">
+                            <ui:Label text="COMFORT" class="section-title" />
+                            <ui:Toggle name="DragControlsToggle" text="Drag controls" class="settings-toggle" />
+                            <ui:Toggle name="ReducedMotionToggle" text="Reduced motion" class="settings-toggle" />
+                            <ui:Toggle name="HighContrastToggle" text="High contrast" class="settings-toggle" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="settings-group">
+                            <ui:Label text="SUPPORT &amp; PRIVACY" class="section-title" />
+                            <ui:Button name="PrivacyButton" text="PRIVACY CONTROLS" class="secondary-button" />
+                            <ui:Button name="SupportButton" text="GENERATE SUPPORT SUMMARY" class="secondary-button" />
+                            <ui:Button name="ResetTutorialButton" text="RESET TUTORIAL" class="secondary-button" />
+                            <ui:Button name="GalleryButton" text="OPEN COMPONENT GALLERY" class="secondary-button dev-only" />
+                            <ui:Label name="SettingsStatus" text="" class="inline-status" />
+                        </ui:VisualElement>
+                    </ui:ScrollView>
+                </ui:VisualElement>
+
+                <ui:VisualElement name="BottomNav" class="bottom-nav">
+                    <ui:Button name="NavPlay" text="PLAY" class="nav-button is-selected" />
+                    <ui:Button name="NavShop" text="SHOP" class="nav-button" />
+                    <ui:Button name="NavHangar" text="HANGAR" class="nav-button" />
+                    <ui:Button name="NavLab" text="LAB" class="nav-button" />
+                    <ui:Button name="NavProgression" text="PROGRESS" class="nav-button" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="OverlayLayer" class="layer layer--overlay">
+            <ui:VisualElement name="PauseOverlay" class="modal-backdrop is-hidden">
+                <ui:VisualElement class="modal-card">
+                    <ui:Label text="RUN PAUSED" class="modal-title" />
+                    <ui:Label text="The tunnel is waiting." class="body-copy" />
+                    <ui:Button name="ResumeButton" text="RESUME" class="primary-button" />
+                    <ui:Button name="PauseHomeButton" text="RETURN HOME" class="secondary-button" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="TutorialOverlay" class="tutorial-overlay is-hidden">
+                <ui:Label name="TutorialTitle" text="WELCOME" class="tutorial-title" />
+                <ui:Label name="TutorialBody" text="Follow the prompts to learn the core run." class="tutorial-body" />
+                <ui:Button name="TutorialContinueButton" text="CONTINUE" class="primary-button tutorial-button" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="PopupLayer" class="layer layer--popup">
+            <ui:VisualElement name="GameOverPopup" class="modal-backdrop is-hidden">
+                <ui:VisualElement class="modal-card game-over-card">
+                    <ui:Label name="GameOverTitle" text="RUN COMPLETE" class="modal-title" />
+                    <ui:Label name="GameOverMessage" text="" class="inline-status" />
+                    <ui:VisualElement name="ResultStats" class="result-grid">
+                        <ui:Label name="ResultScore" text="SCORE  0" class="result-stat" />
+                        <ui:Label name="ResultCoins" text="COINS  0" class="result-stat" />
+                        <ui:Label name="ResultXp" text="XP  0" class="result-stat" />
+                        <ui:Label name="ResultPremium" text="CORE  0" class="result-stat" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="ContinueActions" class="action-stack is-hidden">
+                        <ui:Button name="ContinueRunButton" text="CONTINUE RUN" class="primary-button" />
+                        <ui:Button name="EndRunButton" text="END RUN" class="secondary-button" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="FinalActions" class="action-stack">
+                        <ui:Button name="DoubleRewardsButton" text="DOUBLE REWARDS" class="secondary-button" />
+                        <ui:Button name="RetryButton" text="RETRY" class="primary-button" />
+                        <ui:Button name="HomeButton" text="HOME" class="secondary-button" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="GenericModal" class="modal-backdrop is-hidden">
+                <ui:VisualElement class="modal-card">
+                    <ui:Label name="ModalTitle" text="DETAILS" class="modal-title" />
+                    <ui:Label name="ModalBody" text="" class="body-copy" />
+                    <ui:Button name="ModalPrimaryButton" text="CONFIRM" class="primary-button" />
+                    <ui:Button name="ModalCloseButton" text="CLOSE" class="secondary-button" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="ToastLayer" class="layer layer--toast">
+            <ui:Label name="Toast" text="" class="toast is-hidden" />
+        </ui:VisualElement>
+
+        <ui:VisualElement name="LoadingLayer" class="layer layer--loading is-hidden">
+            <ui:VisualElement class="loading-card">
+                <ui:Label text="LOADING" class="loading-title" />
+                <ui:VisualElement class="loading-bar"><ui:VisualElement name="LoadingFill" class="loading-fill" /></ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:ScrollView name="ComponentGallery" class="layer component-gallery is-hidden">
+            <ui:Label text="CORE RACER UI GALLERY" class="screen-title" />
+            <ui:Label text="Development-only reusable components and motion states." class="screen-subtitle" />
+            <ui:Button name="GalleryCloseButton" text="CLOSE GALLERY" class="secondary-button" />
+            <ui:Label text="BUTTONS" class="section-title" />
+            <ui:Button text="PRIMARY ACTION" class="primary-button" />
+            <ui:Button text="SECONDARY ACTION" class="secondary-button" />
+            <ui:Button text="DISABLED ACTION" enabled="false" class="primary-button" />
+            <ui:Label text="CARDS &amp; STATES" class="section-title" />
+            <ui:VisualElement class="content-card"><ui:Label text="STANDARD CARD" class="card-title" /><ui:Label text="Readable supporting information." class="body-copy" /></ui:VisualElement>
+            <ui:VisualElement class="content-card state--success"><ui:Label text="SUCCESS" class="card-title" /></ui:VisualElement>
+            <ui:VisualElement class="content-card state--warning"><ui:Label text="WARNING" class="card-title" /></ui:VisualElement>
+            <ui:VisualElement class="content-card state--error"><ui:Label text="ERROR" class="card-title" /></ui:VisualElement>
+            <ui:Label text="PROGRESS &amp; STATUS" class="section-title" />
+            <ui:ProgressBar value="68" title="PROFILE LEVEL" class="progress-bar" />
+            <ui:Label text="READY" class="status-pill status-pill--success" />
+            <ui:Button name="GalleryMotionButton" text="PLAY STANDARD MOTION" class="primary-button" />
+        </ui:ScrollView>
+    </ui:VisualElement>
+</ui:UXML>

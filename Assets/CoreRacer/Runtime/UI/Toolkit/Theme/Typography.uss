@@ -1,0 +1,68 @@
+.game-ui-root {
+    color: var(--cr-text);
+    font-size: 16px;
+}
+
+.eyebrow,
+.section-title,
+.status-pill,
+.nav-button,
+.tab-button,
+.primary-button,
+.secondary-button,
+.icon-button {
+    -unity-font-style: bold;
+    letter-spacing: 1.2px;
+}
+
+.eyebrow {
+    color: var(--cr-cyan);
+    font-size: 10px;
+}
+
+.screen-title {
+    color: var(--cr-text);
+    font-size: 30px;
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+    margin-bottom: var(--cr-space-1);
+}
+
+.screen-subtitle,
+.body-copy {
+    color: var(--cr-text-muted);
+    white-space: normal;
+}
+
+.screen-subtitle {
+    font-size: 15px;
+    margin-bottom: var(--cr-space-5);
+}
+
+.section-title {
+    color: var(--cr-cyan);
+    font-size: 13px;
+    margin-top: var(--cr-space-5);
+    margin-bottom: var(--cr-space-3);
+}
+
+.hero-title,
+.modal-title {
+    color: var(--cr-text);
+    font-size: 23px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+}
+
+.card-title {
+    color: var(--cr-text);
+    font-size: 17px;
+    -unity-font-style: bold;
+}
+
+.inline-status {
+    color: var(--cr-yellow);
+    white-space: normal;
+    margin-top: var(--cr-space-2);
+    margin-bottom: var(--cr-space-3);
+}

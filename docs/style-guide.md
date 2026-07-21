@@ -52,12 +52,12 @@
 - Unity LevelPlay for rewarded ads
 - DOTween for the temporary authored uGUI implementation only
 
-### Final Target (Deferred F22 Rework)
+### Final Runtime UI (F22)
 
 - Unity UI Toolkit is the primary runtime interface: UXML for structure, USS for styling/simple states, and explicit C# views/presenters for behaviour.
 - LitMotion is the standard for meaningful, coordinated, interruptible UI animation.
 - The final migration removes superseded uGUI/DOTween UI instead of maintaining two permanent stacks.
-- Until F22 starts, current UI assets are behavioural/content references rather than an accepted visual baseline.
+- The saved `CoreRacerUiRoot.uxml` hierarchy and shared Toolkit theme are the active visual baseline. Legacy Canvas UI is historical reference only.
 
 ### Motion Principles
 

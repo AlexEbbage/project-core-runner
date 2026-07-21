@@ -176,25 +176,25 @@ Validation:
 
 Status: Accepted
 
-Implementation timing: Deferred to the final roadmap phase.
+Implementation timing: Implemented on 2026-07-21. Android/device acceptance is the next release gate.
 
 Context:
 The current uGUI menu is visually unacceptable and most buttons are reported non-functional. Static wiring and isolated PlayMode checks overstated its readiness. Incremental repairs would deepen an architecture that is not intended to ship.
 
 Decision:
-At the end of the roadmap, replace the complete relevant UI presentation with one primary Unity UI Toolkit architecture: `UIDocument`, UXML structure, shared USS styling/state, explicit C# views and presenters, central screen/layer routing, and LitMotion for meaningful animation. Preserve stable game/application/service behaviour, then remove superseded uGUI screens, Canvas hierarchies, Inspector event wiring, UI-only Animator/DOTween code, and temporary compatibility adapters after migration is verified.
+The complete relevant UI presentation uses one primary Unity UI Toolkit architecture: `UIDocument`, UXML structure, shared USS styling/state, explicit C# presentation, central screen/layer routing, and LitMotion for meaningful animation. Stable game/application/service behaviour remains behind the UI boundary; superseded runtime uGUI screens, Canvas hierarchies, Inspector event wiring, and UI-only motion code are removed.
 
 Implications:
 
-- DR-004 and DR-008 describe only the temporary implementation until F22 completes; they will be marked superseded when the replacement ships.
-- Do not add a parallel UI Toolkit prototype or continue broad repair/polish work on the temporary menu.
+- DR-004 and DR-008 describe the superseded temporary implementation and are retained only as historical decisions.
+- Do not add a parallel Canvas/uGUI implementation or restore the superseded menu.
 - Important UI contracts must be source-readable through `.cs`, `.uxml`, and `.uss`, with explicit element names and failure messages.
 - The final migration includes all important screens, HUD, overlays, popups, modal input blocking, responsive layout, reusable components, a development component gallery, tests, documentation, and removal of the old UI architecture.
 - Physical-device acceptance must be repeated after migration.
 
 Validation:
 
-- Not yet implemented. Completion requires the F22 definition of done in `docs/ui/full-ui-rework-plan.md` and end-to-end human verification.
+- Editor implementation and lifecycle validation passed. Physical Android safe-area, touch/back input, performance, and release lifecycle verification remains pending.
 
 ## Template
 

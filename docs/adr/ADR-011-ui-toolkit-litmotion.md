@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted; implementation deferred to the final roadmap phase.
+Accepted and implemented. Android/device acceptance is the next release gate.
 
 ## Date
 
@@ -33,7 +33,7 @@ Replace all relevant runtime UI in one complete end-of-roadmap migration with Un
 
 ## Validation
 
-Not yet implemented. F22 is complete only when the requirements in `docs/ui/full-ui-rework-plan.md` are satisfied and end-to-end device verification passes.
+Implemented in `CoreRacer_Main` with one `UIDocument`, source-driven routing, layered modal ownership, LitMotion, and no active legacy Canvas. EditMode and PlayMode coverage plus live Editor interaction prove the replacement architecture and core run lifecycle. Physical Android safe-area, input, and performance acceptance remains the next release gate.
 
 ## Links
 
