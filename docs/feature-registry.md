@@ -37,7 +37,7 @@ These `F#` identifiers remain the stable feature IDs used by `task-registry.md` 
 
 | ID | Group | Canonical Feature | Status | Notes |
 | --- | --- | --- | --- | --- |
-| F1 | Core Gameplay | Endless Run Foundation | Implemented (awaiting device review) | Live PlayMode verification covers Play entry, immediate screen-side touch steering, camera/control framing, recycling tunnel, score/distance, crash/Game Over, Continue grace, Retry/Home, plus menu/run music and core feedback. Physical-device feel and sustained performance remain the signoff gate. |
+| F1 | Core Gameplay | Endless Run Foundation | Implemented (awaiting device review) | Live PlayMode verification covers Play entry, immediate screen-side touch steering, camera/control framing, recycling tunnel, score/distance, crash/Game Over, Continue grace, Retry/Home, plus menu/run music and core feedback. A validated dual-ABI Android Development APK is ready; physical-device feel and sustained performance remain the signoff gate. |
 | F2 | Core Gameplay | Obstacle and Pickup Generation | Implemented (awaiting device review) | Recovered wedge, fan, and door assets spawn in readable side-aligned groups with the corrected single-wall collider settings; coin pivots rotate to wall centres with radius-offset mesh/trigger children; a 450 m synthetic traversal proves bounded obstacle and pickup pools. |
 | F3 | Core Gameplay | Score, Combo, and Speed Loop | Implemented | Distance and pickup scoring, combo growth/decay, speed escalation |
 | F4 | Core Gameplay | Continue and Rewarded Continue Flow | Implemented | Crash recovery with capped continues and rewarded ad usage |

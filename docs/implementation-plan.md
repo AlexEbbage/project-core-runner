@@ -2,7 +2,7 @@
 
 ## Delivery Strategy
 
-Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. Core-run playability, obstacle generation, Level Select/boosters, run reward settlement, core audio, portrait HUD clarity, first-run gameplay tutorial, and the Editor-side mobile acceptance pass are now runtime-verified. The next slice is a release-candidate build and physical-device signoff pass.
+Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. Core-run playability, obstacle generation, Level Select/boosters, run reward settlement, core audio, portrait HUD clarity, first-run gameplay tutorial, Editor-side mobile acceptance, and a validated Android Development APK are now complete. The next slice is physical-device signoff using that build.
 
 ## Phases
 
@@ -35,6 +35,7 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - `CoreRacer_Main.unity` now also contains an authored clean hub flow for `Play`, `Shop`, `Hangar`, `Lab`, `Progression`, and `Settings`, with nested level select, daily login, rotating tasks, achievements, comfort, privacy, and support/debug surfaces.
 - `CoreRacer_Main.unity` now has the Phase 6 FTUE tutorial overlay, scene director, deterministic first coin/powerup assistance, support reset action, and save-backed tutorial progress wiring. The gameplay-focused v4 sequence waits for a real crash and successful Continue before completion.
 - Default touch steering now reacts immediately to either screen half with a centre dead zone; the optional Drag Controls setting retains continuous analog steering. A sustained traversal smoke test proves bounded obstacle/pickup pools and Continue recovery grace.
+- `Tools > Core Racer > Build > Android Development APK` creates a profiler-connectable debug-signed APK without exposing release signing credentials. It forces APK output only for the build and restores the custom-keystore and App Bundle preferences afterward.
 - `CoreRacer_Main.unity` now has Phase 7 safe SDK adapter wiring for verified Unity IAP, Firebase Analytics, and Mobile Notifications APIs; LevelPlay, Crashlytics, and Addressables remain disabled/manual setup blockers.
 - `CoreRacer_Main.unity` now routes the visible bottom Play button directly through validated level selection into run startup. The development editor command is `Tools > Core Racer > Playability > Start Core Run`.
 - `CoreRacer_Main.unity` now owns a `RuntimeTunnel` generator configured by the selected route. The gameplay camera follows the player's orbital position and roll so the craft stays upright in frame while the tunnel appears to rotate.
@@ -71,4 +72,4 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - Asset or inspector dependencies:
   - Treat scene references, prefabs, ScriptableObjects, and UI wiring as part of the feature change surface for all future implementation work
   - Core-run PlayMode smoke test: `CoreRunPlayModeSmokeTests.VisiblePlay_StartsCoreGameplay`
-- Latest automated result: 47/47 EditMode tests and 13/13 PlayMode tests passed on 2026-07-21. A live Editor-profiler sample at 87 m reported 94 batches, 17.4k triangles, approximately 1.4 ms main-thread render work, and approximately 1.0 ms render-thread work; this is not a substitute for device profiling.
+- Latest automated result: 47/47 EditMode tests and 13/13 PlayMode tests passed after the Android build on 2026-07-21. `CoreRacer-1.1.2-dev.apk` is a valid 128.2 MB ARMv7/ARM64 APK targeting API 36, signed with the Android debug certificate; SHA-256 is `B396DD79DFCB38FD917AFD5A37BB939CB7D17B33B46390A337AD3261860510D3`. Device profiling remains pending because no Android device was connected.

@@ -7,3 +7,4 @@ Delete nothing for CoreRacer_Portrait_Gameplay_Clarity_Phase.
 Delete nothing for CoreRacer_First_Run_Gameplay_Onboarding_Phase.
 Delete nothing for CoreRacer_Coin_Lane_Tutorial_Visibility_Fix.
 Delete nothing for CoreRacer_MVP_Mobile_Acceptance_Tuning_Phase.
+Delete nothing for CoreRacer_Android_Release_Candidate_Build_Phase.

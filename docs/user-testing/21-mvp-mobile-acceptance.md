@@ -30,6 +30,17 @@ Prove the complete core run is understandable, fair, and stable on a portrait mo
 - `TouchSteeringInterpreterTests`: eight screen-side and analog-drag cases.
 - `CoreRun_LongTraversalReusesPoolsAndContinueProvidesRecoveryGrace`: sustained synthetic traversal, bounded pools, score/distance progress, Continue repositioning, time reset, and invulnerability.
 - Full result on 2026-07-21: 47/47 EditMode and 13/13 PlayMode passed.
+- Android artifact: `Builds/Android/CoreRacer-1.1.2-dev.apk` (128.2 MB, ARMv7 + ARM64, min SDK 24, target SDK 36, debug signed).
+- APK SHA-256: `B396DD79DFCB38FD917AFD5A37BB939CB7D17B33B46390A337AD3261860510D3`.
+
+## Android Installation
+
+1. Enable USB debugging and connect the device so `adb devices -l` reports it as authorized.
+2. Run `adb install -r Builds/Android/CoreRacer-1.1.2-dev.apk` from the project root.
+3. In Unity, open `Window > Analysis > Profiler` and select the connected `Core Runner` player.
+4. Complete the checklist above and record device/OS, frame timing, memory, screenshots, and failures.
+
+To rebuild, use `Tools > Core Racer > Build > Android Development APK`. The command uses debug signing for the Development APK and restores the project release-signing and App Bundle preferences afterward.
 
 ## Signoff Boundary
 
