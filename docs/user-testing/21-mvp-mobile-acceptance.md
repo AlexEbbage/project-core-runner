@@ -1,5 +1,9 @@
 # MVP Mobile Acceptance
 
+## Status
+
+Deferred and blocked until the complete F22 UI replacement is implemented. The validated Android Development APK remains useful technical evidence, but it must not be treated as product acceptance while the current menu is visually unacceptable and most menu actions are reported non-functional.
+
 ## Goal
 
 Prove the complete core run is understandable, fair, and stable on a portrait mobile device before expanding content.

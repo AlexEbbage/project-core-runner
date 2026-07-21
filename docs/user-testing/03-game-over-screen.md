@@ -1,5 +1,9 @@
 # Game Over Screen User Test
 
+## Status
+
+Behavioural evidence retained. Final presentation and interaction acceptance is deferred until F22 migrates this flow to the replacement UI architecture.
+
 ## Goal
 
 Verify the end-of-run screen presents the resolved run summary, grants base rewards once, gates continue behind the timer, and resolves the one-shot `x2 Rewards` flow correctly.

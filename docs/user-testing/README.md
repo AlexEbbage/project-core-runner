@@ -5,6 +5,7 @@
 - [Portrait gameplay clarity](19-portrait-gameplay-clarity.md)
 - [First-run gameplay onboarding](20-first-run-gameplay-onboarding.md)
 - [MVP mobile acceptance](21-mvp-mobile-acceptance.md)
+- [Complete UI rework acceptance](22-complete-ui-rework.md)
 
 This folder contains one manual testing checklist per tracked experience feature.
 
@@ -41,3 +42,4 @@ Files:
 - [19-portrait-gameplay-clarity.md](./19-portrait-gameplay-clarity.md)
 - [20-first-run-gameplay-onboarding.md](./20-first-run-gameplay-onboarding.md)
 - [21-mvp-mobile-acceptance.md](./21-mvp-mobile-acceptance.md)
+- [22-complete-ui-rework.md](./22-complete-ui-rework.md)

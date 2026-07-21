@@ -14,6 +14,8 @@ This `docs/` folder is the authoritative project context for product framing, ar
 | `script-registry.md` | Restore map of major runtime script ownership |
 | `implementation-plan.md` | Delivery sequence and validation expectations |
 | `decision-registry.md` | Accepted production and technical decisions |
+| `ui/full-ui-rework-plan.md` | Approved deferred brief and definition of done for the final UI replacement |
+| `adr/ADR-011-ui-toolkit-litmotion.md` | Architectural record for the final UI Toolkit and LitMotion direction |
 | `codex-context.md` | Working rules for future Codex execution in this repo |
 | `user-testing/` | Manual test checklists, one file per tracked experience feature |
 

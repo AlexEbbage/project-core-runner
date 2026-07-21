@@ -172,6 +172,30 @@ Validation:
 - Live Unity inspection confirmed an authored wedge prefab in the active obstacle ring and a two-submesh neutral tunnel.
 - Seven focused PlayMode tests passed, including authored obstacle wiring and starter-pattern assertions.
 
+### DR-011: Adopt UI Toolkit and LitMotion as the final UI architecture
+
+Status: Accepted
+
+Implementation timing: Deferred to the final roadmap phase.
+
+Context:
+The current uGUI menu is visually unacceptable and most buttons are reported non-functional. Static wiring and isolated PlayMode checks overstated its readiness. Incremental repairs would deepen an architecture that is not intended to ship.
+
+Decision:
+At the end of the roadmap, replace the complete relevant UI presentation with one primary Unity UI Toolkit architecture: `UIDocument`, UXML structure, shared USS styling/state, explicit C# views and presenters, central screen/layer routing, and LitMotion for meaningful animation. Preserve stable game/application/service behaviour, then remove superseded uGUI screens, Canvas hierarchies, Inspector event wiring, UI-only Animator/DOTween code, and temporary compatibility adapters after migration is verified.
+
+Implications:
+
+- DR-004 and DR-008 describe only the temporary implementation until F22 completes; they will be marked superseded when the replacement ships.
+- Do not add a parallel UI Toolkit prototype or continue broad repair/polish work on the temporary menu.
+- Important UI contracts must be source-readable through `.cs`, `.uxml`, and `.uss`, with explicit element names and failure messages.
+- The final migration includes all important screens, HUD, overlays, popups, modal input blocking, responsive layout, reusable components, a development component gallery, tests, documentation, and removal of the old UI architecture.
+- Physical-device acceptance must be repeated after migration.
+
+Validation:
+
+- Not yet implemented. Completion requires the F22 definition of done in `docs/ui/full-ui-rework-plan.md` and end-to-end human verification.
+
 ## Template
 
 ```text

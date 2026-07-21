@@ -1,5 +1,9 @@
 # First-Run Gameplay Onboarding
 
+## Status
+
+Behavioural evidence retained. Final overlay, input-blocking, and interaction acceptance is deferred until F22 migrates the tutorial presentation.
+
 ## Setup
 
 1. Open `Assets/CoreRacer/Scenes/CoreRacer_Main.unity` in a 9:16 Game view.

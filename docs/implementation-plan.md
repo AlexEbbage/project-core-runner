@@ -2,7 +2,7 @@
 
 ## Delivery Strategy
 
-Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. Core-run playability, obstacle generation, Level Select/boosters, run reward settlement, core audio, portrait HUD clarity, first-run gameplay tutorial, Editor-side mobile acceptance, and a validated Android Development APK are now complete. The next slice is physical-device signoff using that build.
+Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. Core gameplay and a validated Android Development APK exist, but the current menu/UI is not acceptance-ready: the layout is poor and most menu actions are reported non-functional. Physical-device release signoff is therefore deferred. The final roadmap phase will completely replace the current UI implementation with UI Toolkit, UXML, USS, source-driven C# presentation, and LitMotion before end-to-end acceptance is repeated.
 
 ## Phases
 
@@ -23,14 +23,15 @@ Use the docs set as the durable operating system for the project. Foundation doc
 
 ## Current Recommended Order
 
-1. Complete the cohesive progression/meta phase: XP and unlocks feeding Environment Select, Lab, Hangar, Tasks, Achievements, and Daily Rewards, with one integrated PlayMode proof pass
-2. Complete the VFX feedback phase over the fixed six-sided tunnel: pickup bursts, collision sparks, shield shell/break, dissolve, continue warp, speed particles, crash slow motion, and camera-stop framing
-3. Player-review obstacle pacing, core audio, portrait gameplay clarity, and the completed first-run gameplay tutorial; elemental environment presentation is deferred
-4. Complete physical Android/iOS device signoff for touch feel, safe areas, collision fairness, sustained frame pacing, heat/memory behavior, and the complete Retry/Home loop
+1. Continue only explicitly approved non-UI gameplay, content, service, or progression work; do not spend more time repairing the temporary menu architecture
+2. Preserve the current UI only as a behavioural/content reference while underlying systems are completed
+3. At the end of the roadmap, execute the complete F22 UI rework in one migration: UI Toolkit/UXML/USS/C# presentation, LitMotion, central routing/layers, reusable components, modal input blocking, component gallery, tests, documentation, and removal of superseded uGUI/DOTween UI
+4. After the replacement UI is complete, repeat full Android device acceptance for every important screen/button plus the complete Play/Continue/Retry/Home lifecycle
 5. Keep production ad SDK verification separate from editor/dev fallback validation
 
 ## Current Asset Wiring Status
 
+- **Acceptance warning:** the current uGUI menu hierarchy is temporary and reported broken. Existing scene/UI validation proves references and some isolated routes, not a usable or visually acceptable menu. Do not describe it as finished or acceptance-ready.
 - `CoreRacer_Main.unity` now uses generated wrappers around safe existing player, obstacle, pickup, tunnel, audio, and VFX assets.
 - `CoreRacer_Main.unity` now also contains an authored clean hub flow for `Play`, `Shop`, `Hangar`, `Lab`, `Progression`, and `Settings`, with nested level select, daily login, rotating tasks, achievements, comfort, privacy, and support/debug surfaces.
 - `CoreRacer_Main.unity` now has the Phase 6 FTUE tutorial overlay, scene director, deterministic first coin/powerup assistance, support reset action, and save-backed tutorial progress wiring. The gameplay-focused v4 sequence waits for a real crash and successful Continue before completion.
@@ -50,11 +51,12 @@ Use the docs set as the durable operating system for the project. Foundation doc
 
 ## Dependencies and Blockers
 
+- End-to-end MVP and device acceptance are blocked by the current broken menu implementation. The approved resolution is the deferred full F22 UI rework, not incremental repair or another parallel UI layer.
 - Monetisation expansion depends on an approved catalog and entitlement model.
 - UI tooling changes depend on an explicit package adoption decision.
 - The progression bundle now depends on a player-facing review pass in `CoreRacer_Main` to confirm navigation clarity, layout polish, content readability, and FTUE pacing across the authored hub shell.
 - Level Select and boosters are runtime-proven but still require a human portrait-device clarity review. Shop, ship customisation, lab, tasks, daily login, achievements, and UI polish retain their broader UX review gates.
-- DOTween is now the approved UI motion layer, so UI polish work should use the reusable motion helper rather than introducing a second transition stack.
+- DOTween remains part of the temporary uGUI implementation only. The final F22 UI architecture standardizes meaningful UI motion on LitMotion and removes superseded DOTween UI wiring after migration.
 - SDK release blockers remain for LevelPlay C# API installation/verification, Firebase Crashlytics installation, Addressables installation if remote content is required, and replacement of placeholder privacy links.
 - Build settings currently target the clean `CoreRacer_Main.unity`; keep this checked during release preparation rather than relying on the stale legacy-scene assumption.
 - The runtime tunnel now generates 48 longitudinal mesh sections for the fixed six-sided MVP type and recenters in 40-unit steps while keeping 20 units behind the player. The preserved FBX tunnel is hidden only during Play Mode.

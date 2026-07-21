@@ -1,5 +1,9 @@
 # UI Polish and Motion Stack User Test
 
+## Status
+
+Superseded as a future acceptance target by planned F22. Existing uGUI/DOTween motion is transitional; final motion acceptance will use UI Toolkit and LitMotion after the complete migration.
+
 ## Goal
 
 Verify the new UI motion layer improves the feel of the hub and overlays without breaking readability, input, or panel state.

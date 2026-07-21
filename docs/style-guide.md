@@ -50,12 +50,14 @@
 - Unity Input System for gameplay and UI input
 - Unity IAP for commerce
 - Unity LevelPlay for rewarded ads
-- DOTween for authored panel transitions, button feedback, reward emphasis, and badge pulses
+- DOTween for the temporary authored uGUI implementation only
 
-### Target Additions
+### Final Target (Deferred F22 Rework)
 
-- Additional layout/effects tooling may be adopted later if it clearly improves mobile responsiveness or visual quality.
-- These target additions are not part of the current dependency contract until explicitly installed and accepted.
+- Unity UI Toolkit is the primary runtime interface: UXML for structure, USS for styling/simple states, and explicit C# views/presenters for behaviour.
+- LitMotion is the standard for meaningful, coordinated, interruptible UI animation.
+- The final migration removes superseded uGUI/DOTween UI instead of maintaining two permanent stacks.
+- Until F22 starts, current UI assets are behavioural/content references rather than an accepted visual baseline.
 
 ### Motion Principles
 

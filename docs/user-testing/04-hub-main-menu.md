@@ -1,5 +1,9 @@
 # Hub (Main Menu) User Test
 
+## Status
+
+Blocked. Player review reports that the current menu is visually unacceptable and most buttons are non-functional. Preserve this checklist as the behavioural contract for F22; do not treat earlier static or isolated route validation as menu acceptance.
+
 ## Goal
 
 Verify the `CoreRacer_Main` hub lands on `Level Select`, routes clearly to the five target destinations, and exposes side-entry reward/progression actions with sensible badge state.
