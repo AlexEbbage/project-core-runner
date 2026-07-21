@@ -1190,7 +1190,7 @@ namespace CoreRacer.Editor.Builders
             AddExtra(entries, "ftue.welcome.title", "Welcome, pilot");
             AddExtra(entries, "ftue.welcome.body", "Pick a route and start your first tunnel run.");
             AddExtra(entries, "ftue.move.title", "Move left and right");
-            AddExtra(entries, "ftue.move.body", "Use left/right input or drag to rotate around the tunnel.");
+            AddExtra(entries, "ftue.move.body", "Touch either side to steer. Drag Controls in Settings enables analog steering.");
             AddExtra(entries, "ftue.dodge.title", "Dodge the first obstacle");
             AddExtra(entries, "ftue.dodge.body", "Slip through the open lane and keep moving forward.");
             AddExtra(entries, "ftue.currency.title", "Collect currency");

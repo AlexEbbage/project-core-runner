@@ -2,7 +2,7 @@
 
 ## Delivery Strategy
 
-Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. Core-run playability, obstacle generation, Level Select/boosters, run reward settlement, core audio, portrait HUD clarity, and the first-run gameplay tutorial are now runtime-verified. The next slice is an MVP mobile acceptance and tuning pass on a portrait device.
+Use the docs set as the durable operating system for the project. Foundation documentation is completed first, then future work proceeds one approved feature at a time. Core-run playability, obstacle generation, Level Select/boosters, run reward settlement, core audio, portrait HUD clarity, first-run gameplay tutorial, and the Editor-side mobile acceptance pass are now runtime-verified. The next slice is a release-candidate build and physical-device signoff pass.
 
 ## Phases
 
@@ -26,14 +26,15 @@ Use the docs set as the durable operating system for the project. Foundation doc
 1. Complete the cohesive progression/meta phase: XP and unlocks feeding Environment Select, Lab, Hangar, Tasks, Achievements, and Daily Rewards, with one integrated PlayMode proof pass
 2. Complete the VFX feedback phase over the fixed six-sided tunnel: pickup bursts, collision sparks, shield shell/break, dissolve, continue warp, speed particles, crash slow motion, and camera-stop framing
 3. Player-review obstacle pacing, core audio, portrait gameplay clarity, and the completed first-run gameplay tutorial; elemental environment presentation is deferred
-4. Run an MVP mobile acceptance and tuning pass covering touch comprehension, collision fairness, frame pacing, pooling, and the complete Retry/Home loop
+4. Complete physical Android/iOS device signoff for touch feel, safe areas, collision fairness, sustained frame pacing, heat/memory behavior, and the complete Retry/Home loop
 5. Keep production ad SDK verification separate from editor/dev fallback validation
 
 ## Current Asset Wiring Status
 
 - `CoreRacer_Main.unity` now uses generated wrappers around safe existing player, obstacle, pickup, tunnel, audio, and VFX assets.
 - `CoreRacer_Main.unity` now also contains an authored clean hub flow for `Play`, `Shop`, `Hangar`, `Lab`, `Progression`, and `Settings`, with nested level select, daily login, rotating tasks, achievements, comfort, privacy, and support/debug surfaces.
-- `CoreRacer_Main.unity` now has the Phase 6 FTUE tutorial overlay, scene director, deterministic first coin/powerup assistance, support reset action, and save-backed tutorial progress wiring. The gameplay-focused v3 sequence waits for a real crash and successful Continue before completion.
+- `CoreRacer_Main.unity` now has the Phase 6 FTUE tutorial overlay, scene director, deterministic first coin/powerup assistance, support reset action, and save-backed tutorial progress wiring. The gameplay-focused v4 sequence waits for a real crash and successful Continue before completion.
+- Default touch steering now reacts immediately to either screen half with a centre dead zone; the optional Drag Controls setting retains continuous analog steering. A sustained traversal smoke test proves bounded obstacle/pickup pools and Continue recovery grace.
 - `CoreRacer_Main.unity` now has Phase 7 safe SDK adapter wiring for verified Unity IAP, Firebase Analytics, and Mobile Notifications APIs; LevelPlay, Crashlytics, and Addressables remain disabled/manual setup blockers.
 - `CoreRacer_Main.unity` now routes the visible bottom Play button directly through validated level selection into run startup. The development editor command is `Tools > Core Racer > Playability > Start Core Run`.
 - `CoreRacer_Main.unity` now owns a `RuntimeTunnel` generator configured by the selected route. The gameplay camera follows the player's orbital position and roll so the craft stays upright in frame while the tunnel appears to rotate.
@@ -70,4 +71,4 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - Asset or inspector dependencies:
   - Treat scene references, prefabs, ScriptableObjects, and UI wiring as part of the feature change surface for all future implementation work
   - Core-run PlayMode smoke test: `CoreRunPlayModeSmokeTests.VisiblePlay_StartsCoreGameplay`
-- Latest automated result: 39/39 EditMode tests and 12/12 PlayMode tests passed on 2026-07-20.
+- Latest automated result: 47/47 EditMode tests and 13/13 PlayMode tests passed on 2026-07-21. A live Editor-profiler sample at 87 m reported 94 batches, 17.4k triangles, approximately 1.4 ms main-thread render work, and approximately 1.0 ms render-thread work; this is not a substitute for device profiling.

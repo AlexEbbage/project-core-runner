@@ -37,8 +37,8 @@ These `F#` identifiers remain the stable feature IDs used by `task-registry.md` 
 
 | ID | Group | Canonical Feature | Status | Notes |
 | --- | --- | --- | --- | --- |
-| F1 | Core Gameplay | Endless Run Foundation | Implemented (awaiting player review) | Live PlayMode verification covers Play entry, camera/control framing, recycling tunnel, score/distance, crash/Game Over, Retry/Home, plus menu/run music and core pickup, obstacle, damage, shield, and speed audio feedback. |
-| F2 | Core Gameplay | Obstacle and Pickup Generation | Implemented (awaiting player review) | Recovered wedge, fan, and door assets spawn in readable side-aligned groups with the corrected single-wall collider settings; coin pivots now rotate to wall centres with radius-offset mesh/trigger children |
+| F1 | Core Gameplay | Endless Run Foundation | Implemented (awaiting device review) | Live PlayMode verification covers Play entry, immediate screen-side touch steering, camera/control framing, recycling tunnel, score/distance, crash/Game Over, Continue grace, Retry/Home, plus menu/run music and core feedback. Physical-device feel and sustained performance remain the signoff gate. |
+| F2 | Core Gameplay | Obstacle and Pickup Generation | Implemented (awaiting device review) | Recovered wedge, fan, and door assets spawn in readable side-aligned groups with the corrected single-wall collider settings; coin pivots rotate to wall centres with radius-offset mesh/trigger children; a 450 m synthetic traversal proves bounded obstacle and pickup pools. |
 | F3 | Core Gameplay | Score, Combo, and Speed Loop | Implemented | Distance and pickup scoring, combo growth/decay, speed escalation |
 | F4 | Core Gameplay | Continue and Rewarded Continue Flow | Implemented | Crash recovery with capped continues and rewarded ad usage |
 | F5 | Core Gameplay | Powerup Gameplay Loop | Partial | Runtime powerups are present and the current slice has converged the roster, HUD support, and upgrade fallback behavior, but authored content polish is still pending |

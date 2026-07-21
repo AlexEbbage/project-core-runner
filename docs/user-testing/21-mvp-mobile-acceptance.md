@@ -1,0 +1,36 @@
+# MVP Mobile Acceptance
+
+## Goal
+
+Prove the complete core run is understandable, fair, and stable on a portrait mobile device before expanding content.
+
+## Device Checklist
+
+1. Install a Development Build on one representative Android device and, when available, one iPhone.
+2. Start from the main menu and tap Play with a fresh tutorial save.
+3. Hold the left and right screen halves. Steering must respond immediately without requiring a drag.
+4. Enable `Drag Controls` in Comfort settings and verify small drags produce continuous analog steering.
+5. Complete a run of at least five minutes. Record minimum/average frame rate, GC spikes, memory growth, heat, and battery impact.
+6. Confirm the player, HUD, tutorial, pause button, and Game Over actions remain inside the device safe area.
+7. Collide with each obstacle family. Single walls, multi-walls, fan, and door must damage or end the run consistently.
+8. On the first death, use Continue. Confirm slow motion ends, the player returns behind the crash, and the short grace period prevents an immediate repeat death.
+9. End the continued run, press Retry, and confirm score, distance, pickups, effects, speed, and obstacle state start cleanly.
+10. Press Home, confirm the menu returns at normal speed, then start another run.
+
+## Evidence to Capture
+
+- Device model, OS, build target, quality level, and build commit.
+- Portrait screenshots of tutorial steering, active gameplay, Continue, Game Over, Retry, and Home.
+- Profiler or platform frame-time capture from the first minute and after five minutes.
+- Peak memory and any GC/frame spikes above the chosen device budget.
+- Notes for collision misses, unreadable patterns, control confusion, thermal throttling, or unsafe-area overlap.
+
+## Current Automated Evidence
+
+- `TouchSteeringInterpreterTests`: eight screen-side and analog-drag cases.
+- `CoreRun_LongTraversalReusesPoolsAndContinueProvidesRecoveryGrace`: sustained synthetic traversal, bounded pools, score/distance progress, Continue repositioning, time reset, and invulnerability.
+- Full result on 2026-07-21: 47/47 EditMode and 13/13 PlayMode passed.
+
+## Signoff Boundary
+
+Editor tests and Editor profiler samples do not close physical-device acceptance. Mark this checklist complete only after a human records a clean full lifecycle on device.

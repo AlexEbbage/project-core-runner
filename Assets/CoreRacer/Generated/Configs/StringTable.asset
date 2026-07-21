@@ -196,7 +196,7 @@ MonoBehaviour:
   - Key: ftue.move.title
     Value: Move left and right
   - Key: ftue.move.body
-    Value: Use left/right input or drag to rotate around the tunnel.
+    Value: Touch either side to steer. Drag Controls in Settings enables analog steering.
   - Key: ftue.dodge.title
     Value: Dodge the first obstacle
   - Key: ftue.dodge.body

@@ -2,6 +2,7 @@ using System.Collections;
 using CoreRacer.Bootstrap;
 using CoreRacer.FTUE;
 using CoreRacer.Gameplay.Environment;
+using CoreRacer.Gameplay.Obstacles;
 using CoreRacer.Gameplay.Pickups;
 using CoreRacer.Gameplay.Player;
 using CoreRacer.Gameplay.Powerups;
@@ -638,6 +639,67 @@ namespace CoreRacer.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator CoreRun_LongTraversalReusesPoolsAndContinueProvidesRecoveryGrace()
+        {
+            yield return LoadMainScene();
+
+            var run = Object.FindObjectOfType<RunController>(true);
+            var references = Object.FindObjectOfType<RunSceneReferences>(true);
+            Assert.NotNull(run);
+            Assert.NotNull(references);
+            Assert.NotNull(references.Player);
+            Assert.NotNull(references.Player.Motor);
+            Assert.NotNull(references.PlayerHealth);
+
+            run.StartRun();
+            yield return null;
+            Assert.AreEqual(RunState.Running, run.State);
+
+            var playerCollider = references.Player.GetComponent<Collider>();
+            if (playerCollider != null)
+                playerCollider.enabled = false;
+
+            var initialRingCount = CountSceneObjects<ObstacleRingView>();
+            var initialPickupCount = CountSceneObjects<PickupView>();
+            var initialDistance = references.StatsTracker.Distance;
+            var initialScore = references.ScoreTracker.CurrentScore;
+
+            for (var step = 0; step < 180; step++)
+            {
+                references.Player.Motor.Move(Mathf.Sin(step * 0.15f), 0.25f);
+                yield return null;
+            }
+
+            Assert.Greater(references.StatsTracker.Distance, initialDistance + 300f, "A sustained run must keep advancing distance.");
+            Assert.Greater(references.ScoreTracker.CurrentScore, initialScore, "A sustained run must keep increasing score.");
+            Assert.AreEqual(initialRingCount, CountSceneObjects<ObstacleRingView>(), "Obstacle traversal must reuse its prewarmed pool.");
+            Assert.AreEqual(initialPickupCount, CountSceneObjects<PickupView>(), "Pickup traversal must reuse its existing pool.");
+
+            var crashZ = references.Player.transform.position.z;
+            run.HandlePlayerDeath();
+            Assert.AreEqual(RunState.ContinueOffered, run.State);
+            var continueButton = FindButton(references.GameOver.transform, "ContinueButton");
+            Assert.NotNull(continueButton);
+            continueButton.onClick.Invoke();
+            yield return null;
+
+            Assert.AreEqual(RunState.Running, run.State);
+            Assert.AreEqual(1f, Time.timeScale, 0.001f);
+            Assert.Less(references.Player.transform.position.z, crashZ - 7f, "Continue must move the player behind the collision point.");
+            Assert.IsTrue(references.PlayerHealth.IsInvulnerable, "Continue must provide a short recovery grace period.");
+            var revivedHealth = references.PlayerHealth.CurrentHealth;
+            references.PlayerHealth.Damage(float.MaxValue);
+            Assert.AreEqual(revivedHealth, references.PlayerHealth.CurrentHealth, "Damage must be ignored during continue grace.");
+
+            if (playerCollider != null)
+                playerCollider.enabled = true;
+            run.ReturnToMenu();
+            yield return null;
+            Assert.AreEqual(RunState.MainMenu, run.State);
+            Assert.AreEqual(1f, Time.timeScale, 0.001f);
+        }
+
+        [UnityTest]
         public IEnumerator RoadmapAndBoosters_PersistSelectionAndApplyOnlyToTheRun()
         {
             yield return LoadMainScene();
@@ -765,6 +827,13 @@ namespace CoreRacer.Tests.PlayMode
             while (!load.isDone)
                 yield return null;
             yield return null;
+
+            // Runtime services persist between test scenes. Reassert the authored menu state
+            // after the previous scene has fully torn down so late trigger/audio callbacks
+            // cannot leak into the next behaviour assertion.
+            var run = Object.FindObjectOfType<RunController>(true);
+            run?.ReturnToMenu();
+            yield return null;
         }
 
         private static void EndCurrentRun(RunController run)
@@ -781,6 +850,16 @@ namespace CoreRacer.Tests.PlayMode
                 if (buttons[i].name == name)
                     return buttons[i];
             return null;
+        }
+
+        private static int CountSceneObjects<T>() where T : Component
+        {
+            var objects = Resources.FindObjectsOfTypeAll<T>();
+            var count = 0;
+            for (var i = 0; i < objects.Length; i++)
+                if (objects[i] != null && objects[i].gameObject.scene.IsValid())
+                    count++;
+            return count;
         }
 
         private static Rect GetWorldRect(RectTransform transform)

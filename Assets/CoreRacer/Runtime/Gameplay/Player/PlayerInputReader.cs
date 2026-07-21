@@ -97,22 +97,25 @@ namespace CoreRacer.Gameplay.Player
                 return;
             }
 
+            var deadZone = EffectiveDeadZone();
+            var dragControls = _accessibility != null && _accessibility.State != null && _accessibility.State.DragControlsEnabled;
+            if (!dragControls)
+            {
+                state.Horizontal += TouchSteeringInterpreter.EvaluateScreenSide(position.x, Screen.width, deadZone);
+                state.IsPressing |= Mathf.Abs(state.Horizontal) > 0.01f;
+                _touchStart = position;
+                _touchActive = true;
+                return;
+            }
+
             if (began || !_touchActive)
             {
                 _touchStart = position;
                 _touchActive = true;
             }
 
-            var delta = position - _touchStart;
-            var deadZone = EffectiveDeadZone();
-            if (Mathf.Abs(delta.x) <= deadZone)
-                return;
-
-            var dragControls = _accessibility != null && _accessibility.State != null && _accessibility.State.DragControlsEnabled;
-            state.Horizontal += dragControls
-                ? Mathf.Clamp(delta.x / (deadZone * 3f), -1f, 1f)
-                : Mathf.Sign(delta.x);
-            state.IsPressing = true;
+            state.Horizontal += TouchSteeringInterpreter.EvaluateDrag(position.x, _touchStart.x, deadZone);
+            state.IsPressing |= Mathf.Abs(state.Horizontal) > 0.01f;
         }
 
 #if ENABLE_LEGACY_INPUT_MANAGER
