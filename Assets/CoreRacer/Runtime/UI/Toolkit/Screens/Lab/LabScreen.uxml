@@ -1,0 +1,25 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="/Assets/CoreRacer/Runtime/UI/Toolkit/Screens/Lab/LabScreen.uss" />
+    <ui:ScrollView name="LabScreen" class="menu-page is-hidden">
+        <ui:VisualElement class="screen-heading">
+            <ui:VisualElement>
+                <ui:Label text="LAB" class="screen-title" />
+                <ui:Label text="Research upgrades and improve every run." class="screen-subtitle" />
+            </ui:VisualElement>
+            <ui:VisualElement class="lab-hero"><ui:Label text="⚗" class="lab-hero__icon" /></ui:VisualElement>
+        </ui:VisualElement>
+        <ui:Label name="LabStatus" text="" class="inline-status" />
+        <ui:VisualElement class="lab-section">
+            <ui:VisualElement class="lab-section__heading"><ui:Label text="RUN BOOSTERS" class="section-heading" /><ui:Label text="Temporary powerups upgraded permanently." class="section-support" /></ui:VisualElement>
+            <ui:VisualElement name="LabList" class="action-list" />
+        </ui:VisualElement>
+        <ui:VisualElement class="lab-section">
+            <ui:VisualElement class="lab-section__heading"><ui:Label text="PASSIVE UPGRADES" class="section-heading" /><ui:Label text="Permanent improvements for every ship." class="section-support" /></ui:VisualElement>
+            <ui:VisualElement name="PassiveUpgradeList" class="action-list" />
+        </ui:VisualElement>
+        <ui:VisualElement class="lab-section">
+            <ui:VisualElement class="lab-section__heading"><ui:Label text="CORE EXPERIMENTS" class="section-heading" /><ui:Label text="Unlock new environments and modifiers." class="section-support" /></ui:VisualElement>
+            <ui:VisualElement name="CoreExperimentList" class="action-list" />
+        </ui:VisualElement>
+    </ui:ScrollView>
+</ui:UXML>

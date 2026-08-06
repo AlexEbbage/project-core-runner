@@ -1,0 +1,55 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="/Assets/CoreRacer/Runtime/UI/Toolkit/Screens/Play/PlayScreen.uss" />
+    <ui:ScrollView name="PlayScreen" class="menu-page play-screen">
+        <ui:Label text="LEVEL SELECT" class="screen-title screen-title--center" />
+        <ui:VisualElement class="level-carousel">
+            <ui:Button name="PreviousZoneButton" text="‹" class="carousel-arrow is-invisible" />
+            <ui:VisualElement name="SelectedRunCard" class="level-stage">
+                <ui:VisualElement class="level-stage__heading">
+                    <ui:VisualElement class="level-emblem"><ui:Label text="⬢" class="level-emblem__ring" /><ui:Label text="●" class="level-emblem__core" /></ui:VisualElement>
+                    <ui:Label name="SelectedLevelTitle" text="CORE RUN" class="level-stage__title" />
+                </ui:VisualElement>
+                <ui:VisualElement class="score-cluster">
+                    <ui:Label text="HIGH SCORE" class="metric-label" />
+                    <ui:Label name="SelectedLevelHighScore" text="0" class="high-score" />
+                    <ui:VisualElement class="star-row">
+                        <ui:Label name="LevelStarOne" text="★" class="level-star" />
+                        <ui:Label name="LevelStarTwo" text="★" class="level-star" />
+                        <ui:Label name="LevelStarThree" text="★" class="level-star" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement class="section-divider"><ui:Label text="REWARDS" class="section-divider__label" /></ui:VisualElement>
+                <ui:VisualElement class="reward-row">
+                    <ui:VisualElement name="LevelRewardOne" class="reward-tile">
+                        <ui:VisualElement class="reward-tile__icon reward-tile__icon--credits"><ui:Label text="C" /></ui:VisualElement>
+                        <ui:Label text="500" class="reward-tile__value" />
+                        <ui:Label name="LevelRewardOneState" text="AT 500" class="reward-tile__state" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="LevelRewardTwo" class="reward-tile">
+                        <ui:VisualElement class="reward-tile__icon reward-tile__icon--shards"><ui:Label text="◆" /></ui:VisualElement>
+                        <ui:Label text="10" class="reward-tile__value" />
+                        <ui:Label name="LevelRewardTwoState" text="AT 2,500" class="reward-tile__state" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="LevelRewardThree" class="reward-tile">
+                        <ui:VisualElement class="reward-tile__icon reward-tile__icon--core"><ui:Label text="⬢" /></ui:VisualElement>
+                        <ui:Label text="1 CORE" class="reward-tile__value" />
+                        <ui:Label name="LevelRewardThreeState" text="AT 5,000" class="reward-tile__state" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement class="level-stage__footer">
+                    <ui:Label name="SelectedLevelStatus" text="READY" class="status-pill is-success" />
+                    <ui:Label name="SelectedLevelDescription" text="Survive, collect cores, and push your best score." class="level-stage__description" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:Button name="NextZoneButton" text="›" class="carousel-arrow" />
+        </ui:VisualElement>
+
+        <ui:VisualElement class="section-divider section-divider--wide"><ui:Label text="RUN BOOSTERS" class="section-divider__label" /></ui:VisualElement>
+        <ui:Label name="BoosterSummary" text="Choose up to one booster from each family." class="section-support" />
+        <ui:VisualElement name="BoosterList" class="booster-row" />
+        <ui:Button name="PlayButton" class="button button--primary start-button">
+            <ui:Label text="▶" class="start-button__icon" />
+            <ui:Label text="START" class="start-button__label" />
+        </ui:Button>
+    </ui:ScrollView>
+</ui:UXML>

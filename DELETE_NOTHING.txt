@@ -1,10 +1,1 @@
-Delete nothing for CoreRacer_SuperPatch_1_2_Live_UI_Quick_Play.
-Delete nothing for the Level Select and Booster closeout slice.
-Delete nothing for CoreRacer_MVP_Obstacle_Pattern_Rework.
-Delete nothing for CoreRacer_Obstacle_Fairness_Pacing_Phase.
-Delete nothing for CoreRacer_Gameplay_Audio_Feedback_Phase.
-Delete nothing for CoreRacer_Portrait_Gameplay_Clarity_Phase.
-Delete nothing for CoreRacer_First_Run_Gameplay_Onboarding_Phase.
-Delete nothing for CoreRacer_Coin_Lane_Tutorial_Visibility_Fix.
-Delete nothing for CoreRacer_MVP_Mobile_Acceptance_Tuning_Phase.
-Delete nothing for CoreRacer_Android_Release_Candidate_Build_Phase.
+Delete nothing for this hotfix.

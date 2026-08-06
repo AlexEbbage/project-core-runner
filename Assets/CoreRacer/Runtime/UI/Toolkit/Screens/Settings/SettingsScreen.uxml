@@ -1,0 +1,31 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="/Assets/CoreRacer/Runtime/UI/Toolkit/Screens/Settings/SettingsScreen.uss" />
+    <ui:ScrollView name="SettingsScreen" class="menu-page is-hidden">
+        <ui:VisualElement class="screen-heading">
+            <ui:VisualElement>
+                <ui:Label text="SETTINGS" class="screen-title" />
+                <ui:Label text="Audio, controls, comfort, privacy, and support." class="screen-subtitle" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement class="settings-section">
+            <ui:Label text="AUDIO &amp; FEEDBACK" class="section-heading" />
+            <ui:Slider name="MusicSlider" label="Music" low-value="0" high-value="1" class="settings-control" />
+            <ui:Slider name="SfxSlider" label="Sound effects" low-value="0" high-value="1" class="settings-control" />
+            <ui:Toggle name="HapticsToggle" text="Haptics" class="settings-toggle" />
+        </ui:VisualElement>
+        <ui:VisualElement class="settings-section">
+            <ui:Label text="COMFORT" class="section-heading" />
+            <ui:Toggle name="DragControlsToggle" text="Drag controls" class="settings-toggle" />
+            <ui:Toggle name="ReducedMotionToggle" text="Reduced motion" class="settings-toggle" />
+            <ui:Toggle name="HighContrastToggle" text="High contrast" class="settings-toggle" />
+        </ui:VisualElement>
+        <ui:VisualElement class="settings-section">
+            <ui:Label text="SUPPORT &amp; PRIVACY" class="section-heading" />
+            <ui:Button name="PrivacyButton" text="PRIVACY CONTROLS" class="button button--secondary" />
+            <ui:Button name="SupportButton" text="GENERATE SUPPORT SUMMARY" class="button button--secondary" />
+            <ui:Button name="ResetTutorialButton" text="RESET TUTORIAL" class="button button--secondary" />
+            <ui:Button name="GalleryButton" text="OPEN UI SANDBOX" class="button button--secondary dev-only" />
+            <ui:Label name="SettingsStatus" text="" class="inline-status" />
+        </ui:VisualElement>
+    </ui:ScrollView>
+</ui:UXML>

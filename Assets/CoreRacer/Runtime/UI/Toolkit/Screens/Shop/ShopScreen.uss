@@ -1,0 +1,16 @@
+.featured-offer {
+    min-height: 300px; flex-direction: row; align-items: stretch; overflow: hidden;
+    background-color: rgb(18, 31, 50);
+    border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px;
+    border-top-color: rgba(255, 82, 34, 0.5); border-right-color: rgba(255, 82, 34, 0.5); border-bottom-color: rgba(255, 82, 34, 0.5); border-left-color: rgba(255, 82, 34, 0.5);
+    border-top-left-radius: 30px; border-top-right-radius: 30px; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px;
+    margin-bottom: 18px;
+}
+.featured-offer__copy { width: 58%; padding: 30px; justify-content: center; }
+.offer-badge { align-self: flex-start; color: var(--cr-orange); font-size: 15px; -unity-font-style: bold; letter-spacing: 1px; margin-bottom: 12px; }
+.featured-offer__title { color: var(--cr-text); font-size: 38px; -unity-font-style: bold; }
+.featured-offer__description { color: var(--cr-text-soft); font-size: 21px; white-space: normal; margin-top: 8px; margin-bottom: 18px; }
+.featured-offer__price { color: var(--cr-yellow); font-size: 27px; -unity-font-style: bold; margin-bottom: 14px; }
+.featured-offer__copy .button { width: 250px; }
+.featured-offer__art { flex-grow: 1; align-items: center; justify-content: center; background-color: rgba(255, 82, 34, 0.08); }
+.featured-offer__ship { color: var(--cr-orange); font-size: 170px; rotate: -15deg; }

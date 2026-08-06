@@ -1,0 +1,75 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Template name="PlayTemplate" src="/Assets/CoreRacer/Runtime/UI/Toolkit/Screens/Play/PlayScreen.uxml" />
+    <ui:Template name="ShopTemplate" src="/Assets/CoreRacer/Runtime/UI/Toolkit/Screens/Shop/ShopScreen.uxml" />
+    <ui:Template name="HangarTemplate" src="/Assets/CoreRacer/Runtime/UI/Toolkit/Screens/Hangar/HangarScreen.uxml" />
+    <ui:Template name="LabTemplate" src="/Assets/CoreRacer/Runtime/UI/Toolkit/Screens/Lab/LabScreen.uxml" />
+    <ui:Template name="ProgressionTemplate" src="/Assets/CoreRacer/Runtime/UI/Toolkit/Screens/Progression/ProgressionScreen.uxml" />
+    <ui:Template name="SettingsTemplate" src="/Assets/CoreRacer/Runtime/UI/Toolkit/Screens/Settings/SettingsScreen.uxml" />
+
+    <ui:VisualElement name="MainMenuScreen" class="main-menu-screen">
+        <ui:VisualElement name="TopBar" class="top-bar">
+            <ui:Button name="ProfileButton" class="profile-summary">
+                <ui:VisualElement class="profile-summary__avatar">
+                    <ui:Label text="CR" class="profile-summary__avatar-label" />
+                </ui:VisualElement>
+                <ui:VisualElement class="profile-summary__copy">
+                    <ui:Label text="CORE PILOT" class="profile-summary__title" />
+                    <ui:Label name="LevelLabel" text="LV 1" class="profile-summary__level" />
+                    <ui:Label name="ProfileXpLabel" text="0 / 500 XP" class="profile-summary__xp" />
+                    <ui:ProgressBar name="ProfileXpBar" low-value="0" high-value="100" value="0" class="profile-xp-bar" />
+                </ui:VisualElement>
+            </ui:Button>
+            <ui:VisualElement class="resource-strip">
+                <ui:VisualElement class="resource-pill resource-pill--credits">
+                    <ui:Label text="C" class="resource-pill__icon" />
+                    <ui:VisualElement>
+                        <ui:Label name="SoftCurrencyLabel" text="0" class="resource-pill__value" />
+                        <ui:Label text="CREDITS" class="resource-pill__label" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement class="resource-pill resource-pill--shards">
+                    <ui:Label text="◆" class="resource-pill__icon" />
+                    <ui:VisualElement>
+                        <ui:Label name="PremiumCurrencyLabel" text="0" class="resource-pill__value" />
+                        <ui:Label text="SHARDS" class="resource-pill__label" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:Button name="SettingsShortcutButton" tooltip="Settings" class="icon-button settings-shortcut">
+                    <ui:Label text="⚙" class="icon-button__glyph" />
+                </ui:Button>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="MenuContent" class="menu-content">
+            <ui:Instance template="PlayTemplate" />
+            <ui:Instance template="ShopTemplate" />
+            <ui:Instance template="HangarTemplate" />
+            <ui:Instance template="LabTemplate" />
+            <ui:Instance template="ProgressionTemplate" />
+            <ui:Instance template="SettingsTemplate" />
+        </ui:VisualElement>
+
+        <ui:VisualElement name="BottomNav" class="bottom-nav">
+            <ui:Button name="NavPlay" class="nav-item is-selected">
+                <ui:Label text="▶" class="nav-item__icon" />
+                <ui:Label text="PLAY" class="nav-item__label" />
+            </ui:Button>
+            <ui:Button name="NavShop" tooltip="Shop" class="nav-item">
+                <ui:Label text="$" class="nav-item__icon" />
+                <ui:Label text="SHOP" class="nav-item__label" />
+            </ui:Button>
+            <ui:Button name="NavHangar" tooltip="Hangar" class="nav-item">
+                <ui:Label text="▲" class="nav-item__icon" />
+                <ui:Label text="HANGAR" class="nav-item__label" />
+            </ui:Button>
+            <ui:Button name="NavLab" tooltip="Lab" class="nav-item">
+                <ui:Label text="⚗" class="nav-item__icon" />
+                <ui:Label text="LAB" class="nav-item__label" />
+            </ui:Button>
+            <ui:Button name="NavProgression" tooltip="Progress" class="nav-item">
+                <ui:Label text="▥" class="nav-item__icon" />
+                <ui:Label text="PROGRESS" class="nav-item__label" />
+            </ui:Button>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -176,7 +176,7 @@ Validation:
 
 Status: Accepted
 
-Implementation timing: Implemented on 2026-07-21. Android/device acceptance is the next release gate.
+Implementation timing: Final modular architecture implemented in the 2026-08-06 patch; Unity import, scene installation, automated tests, and device acceptance are the next gates.
 
 Context:
 The current uGUI menu is visually unacceptable and most buttons are reported non-functional. Static wiring and isolated PlayMode checks overstated its readiness. Incremental repairs would deepen an architecture that is not intended to ship.
@@ -194,7 +194,7 @@ Implications:
 
 Validation:
 
-- Editor implementation and lifecycle validation passed. Physical Android safe-area, touch/back input, performance, and release lifecycle verification remains pending.
+- The patch includes modular screen templates, Views/Presenters, routing, modal capture, LitMotion configuration, installer validation, and test updates. Unity compilation, test execution, scene installation, and physical Android safe-area/input/performance verification remain pending.
 
 ## Template
 

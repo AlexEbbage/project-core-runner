@@ -1,0 +1,14 @@
+.pause-panel { width: 650px; }
+.tutorial-sheet { position: absolute; left: 24px; right: 24px; bottom: 26px; padding: 24px; background-color: rgba(11, 23, 41, 0.96); border-top-left-radius: 26px; border-top-right-radius: 26px; border-bottom-left-radius: 26px; border-bottom-right-radius: 26px; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-color: var(--cr-line); border-right-color: var(--cr-line); border-bottom-color: var(--cr-line); border-left-color: var(--cr-line); }
+.tutorial-sheet__title { color: var(--cr-text); font-size: 28px; -unity-font-style: bold; }
+.tutorial-sheet__body { color: var(--cr-text-soft); font-size: 20px; white-space: normal; margin-top: 6px; margin-bottom: 16px; }
+.run-bottom-sheet { position: absolute; left: 22px; right: 22px; bottom: 24px; align-items: center; }
+.run-bottom-sheet__content { width: 100%; max-width: 920px; padding: 28px; background-color: rgba(11, 23, 41, 0.97); border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-color: var(--cr-line-strong); border-right-color: var(--cr-line-strong); border-bottom-color: var(--cr-line-strong); border-left-color: var(--cr-line-strong); border-top-left-radius: 30px; border-top-right-radius: 30px; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; }
+.run-bottom-sheet__title { color: var(--cr-text); font-size: 34px; -unity-font-style: bold; -unity-text-align: middle-center; }
+.run-bottom-sheet__message { color: var(--cr-text-soft); font-size: 20px; white-space: normal; -unity-text-align: middle-center; margin-top: 6px; margin-bottom: 18px; }
+.result-strip { flex-direction: row; margin-bottom: 18px; }
+.result-strip__item { flex-grow: 1; align-items: center; padding: 10px; }
+.result-strip__label { color: var(--cr-text-muted); font-size: 14px; -unity-font-style: bold; }
+.result-strip__value { color: var(--cr-text); font-size: 27px; -unity-font-style: bold; }
+.run-bottom-sheet__actions { align-items: stretch; }
+.run-bottom-sheet__actions .button { margin-top: 7px; }

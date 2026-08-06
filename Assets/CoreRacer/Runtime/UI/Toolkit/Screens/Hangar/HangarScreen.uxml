@@ -1,0 +1,38 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="/Assets/CoreRacer/Runtime/UI/Toolkit/Screens/Hangar/HangarScreen.uss" />
+    <ui:ScrollView name="HangarScreen" class="menu-page is-hidden">
+        <ui:VisualElement class="screen-heading screen-heading--center">
+            <ui:Label text="HANGAR" class="screen-title" />
+            <ui:Label text="Select and upgrade your ship." class="screen-subtitle" />
+        </ui:VisualElement>
+        <ui:VisualElement class="hangar-stage">
+            <ui:Button name="HangarPreviousButton" text="‹" class="carousel-arrow" />
+            <ui:VisualElement name="HangarShipPreview" class="hangar-ship-preview">
+                <ui:Label text="▲" class="hangar-ship-preview__fallback" />
+            </ui:VisualElement>
+            <ui:Button name="HangarNextButton" text="›" class="carousel-arrow" />
+        </ui:VisualElement>
+        <ui:VisualElement class="hangar-selection-heading">
+            <ui:Label name="HangarSelectionTitle" text="STARTER RUNNER" class="hangar-selection-title" />
+            <ui:Label name="HangarSelectionStatus" text="EQUIPPED" class="status-pill is-success" />
+        </ui:VisualElement>
+        <ui:VisualElement name="HangarTabs" class="segmented-tabs">
+            <ui:Button name="HangarShipsTab" text="SHIPS" class="segment-tab is-selected" />
+            <ui:Button name="HangarSkinsTab" text="SKINS" class="segment-tab" />
+            <ui:Button name="HangarTrailsTab" text="TRAILS" class="segment-tab" />
+            <ui:Button name="HangarCoreFxTab" text="CORE FX" class="segment-tab" />
+        </ui:VisualElement>
+        <ui:VisualElement name="HangarList" class="hangar-thumbnail-row" />
+        <ui:VisualElement class="hangar-stats">
+            <ui:ProgressBar name="HangarSpeedStat" low-value="0" high-value="10" value="5" title="SPEED" class="stat-bar" />
+            <ui:ProgressBar name="HangarHandlingStat" low-value="0" high-value="10" value="5" title="HANDLING" class="stat-bar" />
+            <ui:ProgressBar name="HangarShieldStat" low-value="0" high-value="10" value="5" title="SHIELD" class="stat-bar" />
+            <ui:ProgressBar name="HangarBoostStat" low-value="0" high-value="10" value="5" title="BOOST" class="stat-bar" />
+        </ui:VisualElement>
+        <ui:Label name="HangarStatus" text="" class="inline-status" />
+        <ui:VisualElement class="hangar-actions">
+            <ui:Button name="HangarUpgradeButton" text="UPGRADE" class="button button--secondary" />
+            <ui:Button name="HangarEquipButton" text="EQUIP" class="button button--primary" />
+        </ui:VisualElement>
+    </ui:ScrollView>
+</ui:UXML>

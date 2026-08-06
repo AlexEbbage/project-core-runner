@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b77e694daf4c441d9bba84d9029d58f7, type: 3}
+  m_Name: UiAnimationSettings
+  m_EditorClassIdentifier: 
+  ScreenDuration: 0.22
+  PopupDuration: 0.2
+  ToastDuration: 0.16
+  FeedbackDuration: 0.3
+  ScreenTravel: 22
+  BottomSheetTravel: 72
+  InvalidShakeDistance: 12
+  SuccessPunchScale: 0.07
+  ScreenEase: 8
+  PopupEase: 26
+  FeedbackEase: 5

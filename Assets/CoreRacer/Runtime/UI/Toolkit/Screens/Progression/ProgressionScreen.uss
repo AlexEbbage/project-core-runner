@@ -1,0 +1,12 @@
+.progress-hero { flex-direction: row; align-items: center; min-height: 190px; padding: 26px; margin-bottom: 22px; background-color: rgba(16, 31, 52, 0.72); border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-color: var(--cr-line); border-right-color: var(--cr-line); border-bottom-color: var(--cr-line); border-left-color: var(--cr-line); border-top-left-radius: 28px; border-top-right-radius: 28px; border-bottom-left-radius: 28px; border-bottom-right-radius: 28px; }
+.progress-hero__level { width: 190px; align-items: center; justify-content: center; border-right-width: 1px; border-right-color: var(--cr-line); }
+.progress-hero__number { color: var(--cr-orange); font-size: 72px; -unity-font-style: bold; }
+.progress-hero__xp { flex-grow: 1; padding-left: 28px; padding-right: 28px; }
+.progress-hero__xp-value { color: var(--cr-text); font-size: 26px; -unity-font-style: bold; margin-bottom: 14px; }
+.progress-hero__stars { width: 180px; align-items: center; }
+.progress-hero__star { color: var(--cr-yellow); font-size: 64px; }
+.progress-hero__stars-value { color: var(--cr-text); font-size: 26px; -unity-font-style: bold; }
+.progression-tabs { margin-top: 4px; }
+.progress-panel { padding-top: 8px; }
+.progress-actions { flex-direction: row; justify-content: center; margin-top: 18px; }
+.progress-actions .button { width: 310px; margin-left: 8px; margin-right: 8px; }

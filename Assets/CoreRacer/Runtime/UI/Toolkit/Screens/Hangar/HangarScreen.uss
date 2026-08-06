@@ -1,0 +1,14 @@
+.hangar-stage { height: 480px; flex-direction: row; align-items: center; justify-content: center; }
+.hangar-ship-preview { width: 680px; height: 430px; align-items: center; justify-content: center; background-position: center; background-repeat: no-repeat; background-size: contain; }
+.hangar-ship-preview__fallback { color: var(--cr-orange); font-size: 260px; rotate: -12deg; }
+.hangar-ship-preview.has-image .hangar-ship-preview__fallback { display: none; }
+.hangar-selection-heading { flex-direction: row; align-items: center; justify-content: center; margin-bottom: 18px; }
+.hangar-selection-title { color: var(--cr-text); font-size: 38px; -unity-font-style: bold; margin-right: 18px; }
+.hangar-thumbnail-row { flex-direction: row; justify-content: center; margin-bottom: 24px; }
+.hangar-thumbnail { width: 150px; height: 140px; margin-left: 6px; margin-right: 6px; padding: 10px; background-color: var(--cr-surface); border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-color: var(--cr-line); border-right-color: var(--cr-line); border-bottom-color: var(--cr-line); border-left-color: var(--cr-line); border-top-left-radius: 18px; border-top-right-radius: 18px; border-bottom-left-radius: 18px; border-bottom-right-radius: 18px; align-items: center; }
+.hangar-thumbnail.is-selected { border-top-color: var(--cr-orange); border-right-color: var(--cr-orange); border-bottom-color: var(--cr-orange); border-left-color: var(--cr-orange); background-color: var(--cr-orange-soft); }
+.hangar-thumbnail__icon { width: 90px; height: 80px; }
+.hangar-thumbnail__label { color: var(--cr-text-soft); font-size: 14px; -unity-font-style: bold; white-space: normal; -unity-text-align: middle-center; }
+.hangar-stats { padding: 24px 28px 14px 28px; background-color: rgba(16, 31, 52, 0.66); border-top-left-radius: 24px; border-top-right-radius: 24px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; }
+.hangar-actions { flex-direction: row; justify-content: center; margin-top: 18px; }
+.hangar-actions .button { width: 360px; margin-left: 8px; margin-right: 8px; }

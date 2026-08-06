@@ -1,0 +1,38 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="/Assets/CoreRacer/Runtime/UI/Toolkit/Screens/Progression/ProgressionScreen.uss" />
+    <ui:ScrollView name="ProgressionScreen" class="menu-page is-hidden">
+        <ui:VisualElement class="screen-heading screen-heading--center">
+            <ui:Label text="PROGRESS" class="screen-title" />
+            <ui:Label name="ProgressionSummary" text="Keep racing to reach the next level." class="screen-subtitle" />
+        </ui:VisualElement>
+        <ui:VisualElement class="progress-hero">
+            <ui:VisualElement class="progress-hero__level">
+                <ui:Label text="LEVEL" class="metric-label" />
+                <ui:Label name="ProgressionLevelValue" text="1" class="progress-hero__number" />
+            </ui:VisualElement>
+            <ui:VisualElement class="progress-hero__xp">
+                <ui:Label name="ProgressionXpValue" text="0 / 500 XP" class="progress-hero__xp-value" />
+                <ui:ProgressBar name="ProgressionXpBar" low-value="0" high-value="100" value="0" class="progress-meter progress-meter--large" />
+            </ui:VisualElement>
+            <ui:VisualElement class="progress-hero__stars">
+                <ui:Label text="★" class="progress-hero__star" />
+                <ui:Label name="ProgressionStarsValue" text="0 / 3" class="progress-hero__stars-value" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement class="segmented-tabs progression-tabs">
+            <ui:Button name="DailyTab" text="DAILY" class="segment-tab is-selected" />
+            <ui:Button name="TasksTab" text="TASKS" class="segment-tab" />
+            <ui:Button name="AchievementsTab" text="ACHIEVEMENTS" class="segment-tab" />
+        </ui:VisualElement>
+        <ui:VisualElement name="DailyPanel" class="progress-panel">
+            <ui:VisualElement name="DailyList" class="action-list" />
+            <ui:Label name="DailyStatus" text="" class="inline-status" />
+            <ui:VisualElement class="progress-actions">
+                <ui:Button name="ClaimDailyButton" text="CLAIM" class="button button--primary" />
+                <ui:Button name="ClaimDailyDoubleButton" text="CLAIM X2" class="button button--secondary" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="TasksPanel" class="progress-panel is-hidden"><ui:VisualElement name="TaskList" class="action-list" /></ui:VisualElement>
+        <ui:VisualElement name="AchievementsPanel" class="progress-panel is-hidden"><ui:VisualElement name="AchievementList" class="action-list" /></ui:VisualElement>
+    </ui:ScrollView>
+</ui:UXML>

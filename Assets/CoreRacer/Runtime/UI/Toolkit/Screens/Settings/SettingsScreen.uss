@@ -1,0 +1,5 @@
+.settings-section { padding: 24px; margin-bottom: 18px; background-color: rgba(16, 31, 52, 0.66); border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-color: var(--cr-line); border-right-color: var(--cr-line); border-bottom-color: var(--cr-line); border-left-color: var(--cr-line); border-top-left-radius: 24px; border-top-right-radius: 24px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; }
+.settings-section .section-heading { margin-bottom: 18px; }
+.settings-control { height: 58px; margin-bottom: 12px; }
+.settings-toggle { height: 54px; color: var(--cr-text-soft); font-size: 21px; margin-bottom: 8px; }
+.settings-section .button { margin-top: 8px; }

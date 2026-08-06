@@ -1,0 +1,30 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="/Assets/CoreRacer/Runtime/UI/Toolkit/Screens/Shop/ShopScreen.uss" />
+    <ui:ScrollView name="ShopScreen" class="menu-page is-hidden">
+        <ui:VisualElement class="screen-heading">
+            <ui:VisualElement>
+                <ui:Label text="SHOP" class="screen-title" />
+                <ui:Label text="Useful upgrades and optional extras." class="screen-subtitle" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement class="segmented-tabs">
+            <ui:Button name="ShopFeaturedTab" text="FEATURED" class="segment-tab is-selected" />
+            <ui:Button name="ShopBoostersTab" text="BOOSTERS" class="segment-tab" />
+            <ui:Button name="ShopCoresTab" text="CORES" class="segment-tab" />
+            <ui:Button name="ShopCurrencyTab" text="CURRENCY" class="segment-tab" />
+        </ui:VisualElement>
+        <ui:Label name="ShopStatus" text="" class="inline-status" />
+        <ui:VisualElement name="FeaturedOffer" class="featured-offer">
+            <ui:VisualElement class="featured-offer__copy">
+                <ui:Label name="FeaturedBadge" text="FEATURED" class="offer-badge" />
+                <ui:Label name="FeaturedTitle" text="STARTER PACK" class="featured-offer__title" />
+                <ui:Label name="FeaturedDescription" text="Everything you need for the first few runs." class="featured-offer__description" />
+                <ui:Label name="FeaturedPrice" text="SPECIAL" class="featured-offer__price" />
+                <ui:Button name="FeaturedActionButton" text="VIEW OFFER" class="button button--primary" />
+            </ui:VisualElement>
+            <ui:VisualElement class="featured-offer__art"><ui:Label text="▲" class="featured-offer__ship" /></ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement class="section-divider section-divider--wide"><ui:Label text="AVAILABLE ITEMS" class="section-divider__label" /></ui:VisualElement>
+        <ui:VisualElement name="ShopList" class="shop-grid" />
+    </ui:ScrollView>
+</ui:UXML>

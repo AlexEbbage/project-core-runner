@@ -347,8 +347,6 @@ MonoBehaviour:
   runController: {fileID: 1956600069}
   obstacleWorld: {fileID: 1956600072}
   pickupWorld: {fileID: 1956600071}
-  router: {fileID: 0}
-  overlay: {fileID: 0}
 --- !u!4 &452757542
 Transform:
   m_ObjectHideFlags: 0
@@ -389,7 +387,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 666062980}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 90bfffb4392c10842a7da471caea221c, type: 3}
   m_Name: 
@@ -397,6 +395,7 @@ MonoBehaviour:
   document: {fileID: 666062982}
   runController: {fileID: 1956600069}
   runReferences: {fileID: 1956600070}
+  animationSettings: {fileID: 11400000, guid: d499c0a9a12ec6b42bf0252523fbfd43, type: 2}
   levelRoadmap: {fileID: 11400000, guid: 0e4710d6cd737b941ad67e0151e7a585, type: 2}
   boosterCatalog: {fileID: 11400000, guid: c91fd0c2f78a0b54d958d81178a5c633, type: 2}
   shipDatabase: {fileID: 11400000, guid: f6863b7fc102e1342b466eacd712dda6, type: 2}
@@ -1397,10 +1396,6 @@ MonoBehaviour:
   PickupWorld: {fileID: 1956600071}
   Powerups: {fileID: 892592779}
   RunUiBehaviour: {fileID: 666062981}
-  Hud: {fileID: 0}
-  GameOver: {fileID: 0}
-  MainMenu: {fileID: 0}
-  PauseMenu: {fileID: 0}
 --- !u!114 &1956600071
 MonoBehaviour:
   m_ObjectHideFlags: 0

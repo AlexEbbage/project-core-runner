@@ -9,38 +9,92 @@ namespace CoreRacer.UI.Toolkit
         CoreRacerScreenId Current { get; }
         event Action<CoreRacerScreenId> Changed;
         void Show(CoreRacerScreenId screen);
+        void RefreshCurrent();
     }
 
-    public sealed class CoreRacerScreenRouter : ICoreRacerScreenRouter
+    public sealed class CoreRacerScreenRouter : ICoreRacerScreenRouter, IDisposable
     {
-        private readonly Dictionary<CoreRacerScreenId, VisualElement> _screens;
+        private readonly Dictionary<CoreRacerScreenId, IUiScreenPresenter> _screens;
         private readonly Dictionary<CoreRacerScreenId, Button> _navigation;
-        private readonly IUiAnimationService _animations;
+        private IUiScreenPresenter _currentPresenter;
+        private bool _disposed;
+
+        public CoreRacerScreenRouter(
+            IDictionary<CoreRacerScreenId, IUiScreenPresenter> screens,
+            IDictionary<CoreRacerScreenId, Button> navigation)
+        {
+            if (screens == null)
+                throw new ArgumentNullException(nameof(screens));
+            if (navigation == null)
+                throw new ArgumentNullException(nameof(navigation));
+
+            _screens = new Dictionary<CoreRacerScreenId, IUiScreenPresenter>(screens);
+            _navigation = new Dictionary<CoreRacerScreenId, Button>(navigation);
+            if (_screens.Count == 0)
+                throw new ArgumentException("At least one screen must be registered.", nameof(screens));
+
+            foreach (var pair in _screens)
+                pair.Value.Initialize();
+        }
+
         public CoreRacerScreenId Current { get; private set; }
         public event Action<CoreRacerScreenId> Changed;
 
-        public CoreRacerScreenRouter(Dictionary<CoreRacerScreenId, VisualElement> screens, Dictionary<CoreRacerScreenId, Button> navigation, IUiAnimationService animations)
-        {
-            _screens = screens ?? throw new ArgumentNullException(nameof(screens));
-            _navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
-            _animations = animations ?? throw new ArgumentNullException(nameof(animations));
-        }
-
         public void Show(CoreRacerScreenId screen)
         {
+            ThrowIfDisposed();
             if (!_screens.TryGetValue(screen, out var target))
                 throw new InvalidOperationException($"Screen '{screen}' is not registered.");
-            foreach (var pair in _screens) SetVisible(pair.Value, pair.Key == screen);
-            foreach (var pair in _navigation) pair.Value.EnableInClassList("is-selected", pair.Key == screen);
+
+            if (!ReferenceEquals(_currentPresenter, target))
+            {
+                _currentPresenter?.Hide();
+                foreach (var pair in _screens)
+                {
+                    if (!ReferenceEquals(pair.Value, target))
+                        pair.Value.Hide();
+                }
+                _currentPresenter = target;
+            }
+
             Current = screen;
-            _animations.ShowScreen(target);
+            target.Show();
+            UpdateNavigation(screen);
             Changed?.Invoke(screen);
         }
 
-        private static void SetVisible(VisualElement element, bool visible)
+        public void RefreshCurrent()
         {
-            element.EnableInClassList("is-hidden", !visible);
-            element.pickingMode = visible ? PickingMode.Position : PickingMode.Ignore;
+            ThrowIfDisposed();
+            _currentPresenter?.Refresh();
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+
+            _disposed = true;
+            foreach (var pair in _screens)
+                pair.Value.Dispose();
+            _screens.Clear();
+            _navigation.Clear();
+            _currentPresenter = null;
+            Changed = null;
+        }
+
+        private void UpdateNavigation(CoreRacerScreenId selected)
+        {
+            foreach (var pair in _navigation)
+            {
+                pair.Value.EnableInClassList(UiClassNames.Selected, pair.Key == selected);
+            }
+        }
+
+        private void ThrowIfDisposed()
+        {
+            if (_disposed)
+                throw new ObjectDisposedException(nameof(CoreRacerScreenRouter));
         }
     }
 }

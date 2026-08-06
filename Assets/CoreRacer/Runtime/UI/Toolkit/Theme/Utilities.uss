@@ -1,0 +1,18 @@
+.is-hidden { display: none; }
+.is-invisible { opacity: 0; }
+.is-disabled { opacity: 0.42; }
+.is-locked { opacity: 0.52; }
+.is-pending { opacity: 0.72; }
+.is-success { color: var(--cr-green); }
+.is-error { color: var(--cr-danger); }
+.is-attention { color: var(--cr-yellow); }
+.is-claimed { opacity: 0.78; }
+.dev-only { display: flex; }
+
+.theme--high-contrast {
+    --cr-bg: rgb(0, 0, 0);
+    --cr-surface: rgb(8, 8, 10);
+    --cr-line: rgba(255, 255, 255, 0.7);
+    --cr-text-soft: rgb(236, 236, 240);
+    --cr-text-muted: rgb(205, 205, 215);
+}

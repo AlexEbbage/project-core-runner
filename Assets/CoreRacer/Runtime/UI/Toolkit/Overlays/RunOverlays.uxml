@@ -1,0 +1,41 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="/Assets/CoreRacer/Runtime/UI/Toolkit/Overlays/RunOverlays.uss" />
+    <ui:VisualElement>
+        <ui:VisualElement name="PauseOverlay" class="modal-backdrop is-hidden">
+            <ui:VisualElement class="modal-panel pause-panel">
+                <ui:Label text="RUN PAUSED" class="modal-title" />
+                <ui:Label text="Take a breath. The tunnel will wait." class="modal-body" />
+                <ui:Button name="ResumeButton" text="RESUME" class="button button--primary" />
+                <ui:Button name="PauseHomeButton" text="RETURN HOME" class="button button--secondary" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="TutorialOverlay" class="tutorial-sheet is-hidden">
+            <ui:Label name="TutorialTitle" text="CORE TRAINING" class="tutorial-sheet__title" />
+            <ui:Label name="TutorialBody" text="Follow the highlighted action." class="tutorial-sheet__body" />
+            <ui:Button name="TutorialContinueButton" text="CONTINUE" class="button button--primary" />
+        </ui:VisualElement>
+
+        <ui:VisualElement name="GameOverPopup" class="run-bottom-sheet is-hidden">
+            <ui:VisualElement class="run-bottom-sheet__content">
+                <ui:Label name="GameOverTitle" text="RUN COMPLETE" class="run-bottom-sheet__title" />
+                <ui:Label name="GameOverMessage" text="" class="run-bottom-sheet__message" />
+                <ui:VisualElement name="ResultStats" class="result-strip">
+                    <ui:VisualElement class="result-strip__item"><ui:Label text="SCORE" class="result-strip__label" /><ui:Label name="ResultScore" text="0" class="result-strip__value" /></ui:VisualElement>
+                    <ui:VisualElement class="result-strip__item"><ui:Label text="CREDITS" class="result-strip__label" /><ui:Label name="ResultCoins" text="0" class="result-strip__value" /></ui:VisualElement>
+                    <ui:VisualElement class="result-strip__item"><ui:Label text="XP" class="result-strip__label" /><ui:Label name="ResultXp" text="0" class="result-strip__value" /></ui:VisualElement>
+                    <ui:VisualElement class="result-strip__item"><ui:Label text="CORES" class="result-strip__label" /><ui:Label name="ResultPremium" text="0" class="result-strip__value" /></ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="ContinueActions" class="run-bottom-sheet__actions is-hidden">
+                    <ui:Button name="ContinueRunButton" text="CONTINUE" class="button button--primary button--wide" />
+                    <ui:Button name="EndRunButton" text="NO THANKS" class="button button--text" />
+                </ui:VisualElement>
+                <ui:VisualElement name="FinalActions" class="run-bottom-sheet__actions">
+                    <ui:Button name="DoubleRewardsButton" text="DOUBLE REWARDS" class="button button--secondary" />
+                    <ui:Button name="RetryButton" text="RETRY" class="button button--primary" />
+                    <ui:Button name="HomeButton" text="HOME" class="button button--text" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

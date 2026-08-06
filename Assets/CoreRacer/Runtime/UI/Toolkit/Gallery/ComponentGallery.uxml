@@ -1,0 +1,26 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="/Assets/CoreRacer/Runtime/UI/Toolkit/Gallery/ComponentGallery.uss" />
+    <ui:ScrollView name="ComponentGallery" class="component-gallery is-hidden">
+        <ui:VisualElement class="screen-heading">
+            <ui:VisualElement>
+                <ui:Label text="UI SANDBOX" class="screen-title" />
+                <ui:Label text="Reusable controls, states, and standard motion." class="screen-subtitle" />
+            </ui:VisualElement>
+            <ui:Button name="GalleryCloseButton" text="CLOSE" class="button button--secondary" />
+        </ui:VisualElement>
+        <ui:Label text="BUTTON STATES" class="section-heading" />
+        <ui:VisualElement class="gallery-row">
+            <ui:Button text="PRIMARY" class="button button--primary" />
+            <ui:Button text="SECONDARY" class="button button--secondary" />
+            <ui:Button text="SUCCESS" class="button button--success" />
+            <ui:Button text="DISABLED" enabled="false" class="button button--primary" />
+        </ui:VisualElement>
+        <ui:Label text="CONTENT STATES" class="section-heading" />
+        <ui:VisualElement name="GalleryMotionTarget" class="gallery-sample">
+            <ui:Label text="STANDARD SURFACE" class="card-title" />
+            <ui:Label text="Spacious layout, subtle border, restrained glow." class="body-copy" />
+            <ui:ProgressBar value="68" title="PROGRESS" class="progress-meter" />
+        </ui:VisualElement>
+        <ui:Button name="GalleryMotionButton" text="PLAY STANDARD MOTION" class="button button--primary" />
+    </ui:ScrollView>
+</ui:UXML>

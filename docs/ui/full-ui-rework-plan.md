@@ -2,11 +2,11 @@
 
 ## Status
 
-Implemented and live-validated in the Editor. Android/device acceptance is the next release gate.
+Implemented by the 2026-08-06 modular patch. Unity import, installer execution, automated tests, player review, and Android/device acceptance are the next gates.
 
 ## Problem Statement
 
-The current menu setup is visually unacceptable and most buttons are reported non-functional. Existing static validation and isolated route tests did not prove a usable menu. The current uGUI implementation remains only as a behavioural/content reference while non-UI work continues.
+The previous project had already replaced the active uGUI Canvas, but the resulting UI Toolkit implementation remained monolithic: one large controller and one large root UXML owned almost every screen and behaviour. This patch treats that implementation as behavioural/content reference, retains stable game services, and replaces the presentation layer with the final modular architecture.
 
 ## Final Architecture
 

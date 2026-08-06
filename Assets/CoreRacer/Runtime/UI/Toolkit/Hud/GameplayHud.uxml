@@ -1,0 +1,28 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="/Assets/CoreRacer/Runtime/UI/Toolkit/Hud/GameplayHud.uss" />
+    <ui:VisualElement class="gameplay-hud">
+        <ui:VisualElement class="hud-top-row">
+            <ui:VisualElement class="hud-metric hud-metric--left">
+                <ui:Label text="DISTANCE" class="hud-metric__label" />
+                <ui:Label name="HudDistance" text="0m" class="hud-metric__value" />
+            </ui:VisualElement>
+            <ui:VisualElement class="hud-metric hud-metric--center">
+                <ui:Label text="SCORE" class="hud-metric__label" />
+                <ui:Label name="HudScore" text="0" class="hud-metric__value hud-metric__value--accent" />
+            </ui:VisualElement>
+            <ui:VisualElement class="hud-currency">
+                <ui:Label text="C" class="hud-currency__icon" />
+                <ui:Label name="HudCoins" text="0" class="hud-currency__value" />
+            </ui:VisualElement>
+            <ui:Button name="PauseButton" class="icon-button hud-pause">
+                <ui:Label text="Ⅱ" class="icon-button__glyph" />
+            </ui:Button>
+        </ui:VisualElement>
+        <ui:Label name="HudHealth" text="" class="hud-health" />
+        <ui:VisualElement class="hud-progress-row">
+            <ui:ProgressBar name="HudProgress" low-value="0" high-value="100" value="0" class="hud-progress" />
+            <ui:Label name="HudZone" text="ZONE 1" class="hud-zone" />
+        </ui:VisualElement>
+        <ui:VisualElement name="PowerupStrip" class="powerup-strip" />
+    </ui:VisualElement>
+</ui:UXML>
