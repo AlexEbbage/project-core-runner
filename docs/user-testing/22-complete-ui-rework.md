@@ -2,7 +2,7 @@
 
 ## Status
 
-Editor acceptance passed on 2026-07-21. Physical Android acceptance follows as the next release-validation phase.
+Technical Editor acceptance passed on 2026-07-21. Player visual signoff on the reference-driven hub refinement and physical Android acceptance remain.
 
 ## Goal
 
@@ -18,14 +18,21 @@ Prove that the UI Toolkit/LitMotion replacement exposes every important existing
 - [x] Inspect the development component gallery and its reusable states.
 - [x] Run the F22 EditMode and PlayMode suites.
 - [x] Confirm superseded uGUI, Canvas, Inspector listener, UI-only Animator/DOTween code, and temporary compatibility adapters have been removed without deleting useful content assets.
+- [x] Verify the Play hub exposes one playable MVP Core Run, one locked `NEXT ZONE` preview, and no alternate environment route list.
+- [x] Verify first/last carousel arrow visibility and that the locked preview disables Start and displays `Coming soon...`.
 
 ## Editor Evidence
 
-- EditMode: 43 passed, 0 failed (`14879ac9b4464a40b9711878c16843b0`).
-- PlayMode: 7 passed, 0 failed (`884f9c42e6cf4b62a5a737df4964794c`).
+- EditMode: 43 passed, 0 failed (`7acc16e370ab46709f81976f301ba047`).
+- PlayMode: 8 passed, 0 failed (`1f0ec703ac09467e87be650aee397dd3`).
 - Live scene validation: one `UIDocument`, zero legacy Canvases, and `RunSceneReferences.RunUiBehaviour` wired to `CoreRacerUiController`.
 - Live `NavigationSubmitEvent` on `PlayButton` entered `Running` with `Time.timeScale == 1`; crash showed Game Over and Continue returned to `Running` with normal time.
-- Captures: `Assets/Screenshots/ui-toolkit-menu.png` and `Assets/Screenshots/ui-toolkit-gameplay.png`.
+- Reference-driven Play hub capture: `Assets/Screenshots/ui-play-hub-reference.png`.
+- The hub now presents large profile/XP chrome, centred icon-led currencies, a cog settings action, high score/stars/reward previews, three horizontal run boosters, a large Start action, and icon-led bottom navigation.
+- Live panel picking at the Start button centre resolves to a `PlayButton` descendant; passive Overlay, Popup, and Toast layer roots ignore pointer hits so mouse input reaches the menu.
+- PlayMode tests isolate and restore the persisted profile. A genuinely new profile renders level 1 with zero XP, currencies, best score, stars, runs, and claimed rewards, and test runs no longer contaminate player state.
+- The level card remains geometrically centred by retaining an invisible opposite-arrow layout slot, and all three booster cards fit above the fixed bottom navigation in the initial portrait viewport.
+- Star rewards are milestone previews only in this slice; claim-state persistence was not invented without an approved reward-claim contract.
 
 ## Evidence to Capture
 

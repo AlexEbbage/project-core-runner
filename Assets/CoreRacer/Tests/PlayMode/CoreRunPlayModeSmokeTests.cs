@@ -17,7 +17,7 @@ using UnityEngine.UIElements;
 
 namespace CoreRacer.Tests.PlayMode
 {
-    public sealed class CoreRunPlayModeSmokeTests
+    public sealed class CoreRunPlayModeSmokeTests : IsolatedPlayerProfilePlayModeTest
     {
         [UnityTearDown]
         public IEnumerator TearDown()

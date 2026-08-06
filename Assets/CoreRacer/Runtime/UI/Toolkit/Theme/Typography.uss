@@ -1,6 +1,6 @@
 .game-ui-root {
     color: var(--cr-text);
-    font-size: 16px;
+    font-size: 30px;
 }
 
 .eyebrow,
@@ -17,12 +17,12 @@
 
 .eyebrow {
     color: var(--cr-cyan);
-    font-size: 10px;
+    font-size: 22px;
 }
 
 .screen-title {
     color: var(--cr-text);
-    font-size: 30px;
+    font-size: 52px;
     -unity-font-style: bold;
     letter-spacing: 2px;
     margin-bottom: var(--cr-space-1);
@@ -35,13 +35,13 @@
 }
 
 .screen-subtitle {
-    font-size: 15px;
+    font-size: 29px;
     margin-bottom: var(--cr-space-5);
 }
 
 .section-title {
     color: var(--cr-cyan);
-    font-size: 13px;
+    font-size: 28px;
     margin-top: var(--cr-space-5);
     margin-bottom: var(--cr-space-3);
 }
@@ -49,14 +49,14 @@
 .hero-title,
 .modal-title {
     color: var(--cr-text);
-    font-size: 23px;
+    font-size: 42px;
     -unity-font-style: bold;
     letter-spacing: 1px;
 }
 
 .card-title {
     color: var(--cr-text);
-    font-size: 17px;
+    font-size: 30px;
     -unity-font-style: bold;
 }
 

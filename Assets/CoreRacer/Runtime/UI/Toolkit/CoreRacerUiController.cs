@@ -4,6 +4,7 @@ using CoreRacer.Bootstrap;
 using CoreRacer.FTUE;
 using CoreRacer.Gameplay.Powerups;
 using CoreRacer.Gameplay.Run;
+using CoreRacer.Localization;
 using CoreRacer.Meta.Achievements;
 using CoreRacer.Meta.Boosters;
 using CoreRacer.Meta.DailyRewards;
@@ -77,6 +78,7 @@ namespace CoreRacer.UI.Toolkit
         private ShopService _shop;
         private RewardedAdController _rewardedAds;
         private SupportBundleExporter _support;
+        private LocalizationServiceV2 _localization;
         private BoosterLoadoutService _boosterLoadout;
         private bool _initialized;
         private int _selectedLevelIndex;
@@ -125,6 +127,7 @@ namespace CoreRacer.UI.Toolkit
 
             ResolveServices();
             CacheRequiredElements();
+            ConfigurePointerRouting();
             _animations = new LitMotionUiAnimationService
             {
                 ReducedMotion = _accessibility != null && _accessibility.State.ReducedVfxMode
@@ -156,7 +159,13 @@ namespace CoreRacer.UI.Toolkit
             SetVisible(_mainMenu, false);
             SetVisible(_screenLayer, false);
         }
-        public void ShowHud() { if (EnsureReady()) SetVisible(_hud, true); }
+        public void ShowHud()
+        {
+            if (!EnsureReady()) return;
+            SetVisible(_hud, true);
+            if (_tutorial != null && _tutorial.CurrentStep != null)
+                ShowTutorialStep(_tutorial.CurrentStep);
+        }
         public void HideHud() { if (EnsureReady()) SetVisible(_hud, false); }
 
         public void ShowPause()
@@ -290,6 +299,8 @@ namespace CoreRacer.UI.Toolkit
             BindNavigation("NavProgression", CoreRacerScreenId.Progression);
             _root.Require<Button>("ProfileButton").clicked += () => _router.Show(CoreRacerScreenId.Progression);
             _root.Require<Button>("SettingsShortcutButton").clicked += () => _router.Show(CoreRacerScreenId.Settings);
+            _root.Require<Button>("PreviousZoneButton").clicked += () => SelectZone(_selectedLevelIndex - 1);
+            _root.Require<Button>("NextZoneButton").clicked += () => SelectZone(_selectedLevelIndex + 1);
             _root.Require<Button>("PlayButton").clicked += StartSelectedRun;
             _root.Require<Button>("PauseButton").clicked += Pause;
             _root.Require<Button>("ResumeButton").clicked += Resume;
@@ -369,6 +380,7 @@ namespace CoreRacer.UI.Toolkit
             GameServices.TryGet(out _shop);
             GameServices.TryGet(out _rewardedAds);
             GameServices.TryGet(out _support);
+            GameServices.TryGet(out _localization);
             if (_profile != null && boosterCatalog != null) _boosterLoadout = new BoosterLoadoutService(_profile, boosterCatalog);
         }
 
@@ -443,47 +455,91 @@ namespace CoreRacer.UI.Toolkit
         {
             if (_profile == null) return;
             _root.Require<Label>("LevelLabel").text = $"LV {_profile.State.Level}";
+            var xpRequired = Mathf.Max(1, _profile.ExperienceForNextLevel(_profile.State.Level));
+            _root.Require<Label>("ProfileXpLabel").text = $"{_profile.State.Experience:N0} / {xpRequired:N0} XP";
+            _root.Require<ProgressBar>("ProfileXpBar").value = Mathf.Clamp01((float)_profile.State.Experience / xpRequired) * 100f;
             _root.Require<Label>("SoftCurrencyLabel").text = _profile.State.Wallet.Soft.ToString("N0");
             _root.Require<Label>("PremiumCurrencyLabel").text = _profile.State.Wallet.Premium.ToString("N0");
         }
 
         private void RefreshPlay()
         {
-            var list = _root.Require<VisualElement>("LevelList");
-            list.Clear();
             if (levelRoadmap == null || levelRoadmap.Levels == null || levelRoadmap.Levels.Count == 0)
             {
-                AddMessage(list, "No run routes are configured.", "state--error");
+                _root.Require<Label>("SelectedLevelTitle").text = "NO CORE RUN";
+                _root.Require<Label>("SelectedLevelDescription").text = "No valid MVP route is configured.";
+                _root.Require<Label>("SelectedLevelStatus").text = "CONFIGURATION ERROR";
                 _root.Require<Button>("PlayButton").SetEnabled(false);
                 return;
             }
-            _selectedLevelIndex = Mathf.Clamp(_profile != null ? _profile.State.SelectedLevelIndex : _selectedLevelIndex, 0, levelRoadmap.Levels.Count - 1);
-            for (var i = 0; i < levelRoadmap.Levels.Count; i++)
-            {
-                var index = i;
-                var level = levelRoadmap.Levels[i];
-                if (level == null) continue;
-                var unlocked = _profile == null || _profile.State.Level >= level.RequiredPlayerLevel;
-                AddCard(list, level.DisplayName, level.Description, unlocked ? (i == _selectedLevelIndex ? "SELECTED" : "READY") : $"REQUIRES LV {level.RequiredPlayerLevel}", i == _selectedLevelIndex ? "SELECTED" : "SELECT", () => SelectLevel(index), unlocked);
-            }
-            SelectLevel(_selectedLevelIndex, false);
+            SelectZone(Mathf.Clamp(_selectedLevelIndex, 0, 1), false);
             RefreshBoosters();
         }
 
-        private void SelectLevel(int index, bool animate = true)
+        private void SelectZone(int index, bool animate = true)
         {
-            if (levelRoadmap == null || index < 0 || index >= levelRoadmap.Levels.Count) return;
-            var level = levelRoadmap.Levels[index];
-            if (level == null || (_profile != null && _profile.State.Level < level.RequiredPlayerLevel)) return;
-            _selectedLevelIndex = index;
-            if (_profile != null && _profile.State.SelectedLevelIndex != index)
-                _profile.Mutate(state => state.SelectedLevelIndex = index);
-            runController?.SetSelectedLevel(level);
-            _root.Require<Label>("SelectedLevelTitle").text = level.DisplayName.ToUpperInvariant();
-            _root.Require<Label>("SelectedLevelDescription").text = level.Description;
-            _root.Require<Label>("SelectedLevelStatus").text = "READY";
-            _root.Require<Button>("PlayButton").SetEnabled(true);
-            if (animate) RefreshPlay();
+            if (levelRoadmap == null || levelRoadmap.Levels == null || levelRoadmap.Levels.Count == 0) return;
+            _selectedLevelIndex = Mathf.Clamp(index, 0, 1);
+            SetCarouselArrowAvailable(_root.Require<Button>("PreviousZoneButton"), _selectedLevelIndex > 0);
+            SetCarouselArrowAvailable(_root.Require<Button>("NextZoneButton"), _selectedLevelIndex < 1);
+
+            var card = _root.Require<VisualElement>("SelectedRunCard");
+            var playable = _selectedLevelIndex == 0;
+            card.EnableInClassList("is-coming-soon", !playable);
+            _root.Require<Button>("PlayButton").SetEnabled(playable);
+            if (playable)
+            {
+                var level = levelRoadmap.Levels[0];
+                if (level == null)
+                {
+                    _root.Require<Label>("SelectedLevelTitle").text = "NO CORE RUN";
+                    _root.Require<Label>("SelectedLevelDescription").text = "The MVP route reference is missing.";
+                    _root.Require<Label>("SelectedLevelStatus").text = "CONFIGURATION ERROR";
+                    _root.Require<Button>("PlayButton").SetEnabled(false);
+                    return;
+                }
+                runController?.SetSelectedLevel(level);
+                _root.Require<Label>("SelectedLevelTitle").text = "CORE RUN";
+                _root.Require<Label>("SelectedLevelDescription").text = "Neutral hex tunnel. Survive, collect and push your best score.";
+                _root.Require<Label>("SelectedLevelStatus").text = "READY";
+                RefreshLevelScoreAndRewards();
+            }
+            else
+            {
+                _root.Require<Label>("SelectedLevelTitle").text = "NEXT ZONE";
+                _root.Require<Label>("SelectedLevelDescription").text = "Coming soon... complete the MVP Core Run while the next zone is prepared.";
+                _root.Require<Label>("SelectedLevelStatus").text = "COMING SOON";
+                _root.Require<Label>("SelectedLevelHighScore").text = "---";
+                SetStarRating(0);
+                SetRewardState(1, false, "COMING SOON");
+                SetRewardState(2, false, "COMING SOON");
+                SetRewardState(3, false, "COMING SOON");
+            }
+            if (animate) _animations.ShowScreen(card);
+        }
+
+        private void RefreshLevelScoreAndRewards()
+        {
+            var bestScore = _profile != null ? _profile.State.BestScore : 0;
+            _root.Require<Label>("SelectedLevelHighScore").text = bestScore.ToString("N0");
+            var stars = bestScore >= 5000 ? 3 : bestScore >= 2500 ? 2 : bestScore >= 500 ? 1 : 0;
+            SetStarRating(stars);
+            SetRewardState(1, stars >= 1, stars >= 1 ? "EARNED" : "AT 500");
+            SetRewardState(2, stars >= 2, stars >= 2 ? "EARNED" : "AT 2,500");
+            SetRewardState(3, stars >= 3, stars >= 3 ? "EARNED" : "AT 5,000");
+        }
+
+        private void SetStarRating(int stars)
+        {
+            _root.Require<Label>("LevelStarOne").EnableInClassList("is-earned", stars >= 1);
+            _root.Require<Label>("LevelStarTwo").EnableInClassList("is-earned", stars >= 2);
+            _root.Require<Label>("LevelStarThree").EnableInClassList("is-earned", stars >= 3);
+        }
+
+        private void SetRewardState(int reward, bool earned, string state)
+        {
+            _root.Require<VisualElement>($"LevelReward{(reward == 1 ? "One" : reward == 2 ? "Two" : "Three")}").EnableInClassList("is-earned", earned);
+            _root.Require<Label>($"LevelReward{(reward == 1 ? "One" : reward == 2 ? "Two" : "Three")}State").text = state;
         }
 
         private void RefreshBoosters()
@@ -502,13 +558,78 @@ namespace CoreRacer.UI.Toolkit
                 if (booster == null) continue;
                 var isEquipped = _boosterLoadout != null && _boosterLoadout.IsEquipped(booster.Id);
                 if (isEquipped) equipped++;
-                AddCard(list, booster.DisplayName, booster.EffectType.ToString(), isEquipped ? "EQUIPPED" : booster.Family.ToString(), isEquipped ? "REMOVE" : "EQUIP", () => ToggleBooster(booster.Id));
+                AddBoosterCard(list, booster, isEquipped);
             }
-            _root.Require<Label>("BoosterSummary").text = equipped == 0 ? "No boosters equipped" : $"{equipped} booster families equipped";
+            _root.Require<Label>("BoosterSummary").text = equipped == 0 ? "Choose up to one booster from each family." : $"{equipped} booster families equipped";
+        }
+
+        private void AddBoosterCard(VisualElement list, BoosterDefinition booster, bool isEquipped)
+        {
+            var owned = IsBoosterOwned(booster);
+            var card = new VisualElement();
+            card.AddToClassList("booster-card");
+            card.EnableInClassList("is-equipped", isEquipped);
+            var heading = new VisualElement();
+            heading.AddToClassList("booster-heading");
+            var icon = new Label(booster.EffectType == BoosterEffectType.StartShield ? "S" : booster.EffectType == BoosterEffectType.CoinMultiplier ? "C" : "2X");
+            icon.AddToClassList("booster-icon");
+            var title = new Label(booster.DisplayName.ToUpperInvariant());
+            title.AddToClassList("booster-title");
+            heading.Add(icon);
+            heading.Add(title);
+            card.Add(heading);
+            var description = new Label(BoosterDescription(booster));
+            description.AddToClassList("booster-description");
+            card.Add(description);
+            var price = new Label(owned ? "OWNED" : $"{booster.Price.Amount:N0} {(booster.Price.Type == CurrencyType.Premium ? "SHARDS" : "CREDITS")}");
+            price.AddToClassList("booster-price");
+            card.Add(price);
+            var action = new Button(() => ToggleBooster(booster.Id)) { text = isEquipped ? "REMOVE" : owned ? "EQUIP" : "BUY & EQUIP" };
+            action.AddToClassList(isEquipped ? "secondary-button" : "primary-button");
+            action.AddToClassList("booster-action");
+            card.Add(action);
+            list.Add(card);
+        }
+
+        private bool IsBoosterOwned(BoosterDefinition booster)
+        {
+            return booster != null && (booster.Price.Amount <= 0 || _profile == null || _profile.State.Inventory.IsUnlocked(booster.Id) || _profile.State.EquippedBoosterIds.Contains(booster.Id));
+        }
+
+        private static string BoosterDescription(BoosterDefinition booster)
+        {
+            switch (booster.EffectType)
+            {
+                case BoosterEffectType.StartShield: return "Start the run protected by a temporary shield.";
+                case BoosterEffectType.CoinMultiplier: return $"Earn {booster.Value:0.#}x credits for this run.";
+                case BoosterEffectType.ScoreMultiplier: return $"Score {booster.Value:0.#}x points for this run.";
+                default: return "Equip this booster for the next Core Run.";
+            }
         }
 
         private void ToggleBooster(string id)
         {
+            var booster = boosterCatalog != null ? boosterCatalog.Get(id) : null;
+            if (booster == null || _profile == null)
+            {
+                ShowToast("Booster could not be found.", true);
+                return;
+            }
+            if (!IsBoosterOwned(booster))
+            {
+                var purchased = _profile.TryMutate(state =>
+                {
+                    if (!state.Wallet.TrySpend(booster.Price)) return false;
+                    state.Inventory.Unlock(booster.Id);
+                    return true;
+                });
+                if (!purchased)
+                {
+                    ShowToast("Not enough currency for this booster.", true);
+                    return;
+                }
+                ShowToast($"{booster.DisplayName} unlocked.");
+            }
             if (_boosterLoadout == null || !_boosterLoadout.TryToggle(id))
             {
                 ShowToast("Booster could not be changed.", true);
@@ -520,6 +641,12 @@ namespace CoreRacer.UI.Toolkit
         private void StartSelectedRun()
         {
             Time.timeScale = 1f;
+            if (_selectedLevelIndex != 0)
+            {
+                ShowToast("This zone is coming soon.", true);
+                _animations.PlayInvalidAction(_root.Require<Button>("PlayButton"));
+                return;
+            }
             if (runController == null || !runController.TryStartRun())
             {
                 ShowToast("Run could not start. See the Console for the missing reference.", true);
@@ -843,8 +970,13 @@ namespace CoreRacer.UI.Toolkit
         private void ShowTutorialStep(TutorialStepDefinition step)
         {
             if (step == null) { HideTutorial(); return; }
-            _root.Require<Label>("TutorialTitle").text = string.IsNullOrWhiteSpace(step.TitleKey) ? "CORE TRAINING" : step.TitleKey;
-            _root.Require<Label>("TutorialBody").text = string.IsNullOrWhiteSpace(step.BodyKey) ? "Follow the highlighted action." : step.BodyKey;
+            if (runController != null && runController.State == RunState.MainMenu && step.Kind != TutorialStepKind.Message && step.Kind != TutorialStepKind.WaitForRunStarted)
+            {
+                HideTutorial();
+                return;
+            }
+            _root.Require<Label>("TutorialTitle").text = string.IsNullOrWhiteSpace(step.TitleKey) ? "CORE TRAINING" : _localization != null ? _localization.Get(step.TitleKey) : step.TitleKey;
+            _root.Require<Label>("TutorialBody").text = string.IsNullOrWhiteSpace(step.BodyKey) ? "Follow the highlighted action." : _localization != null ? _localization.Get(step.BodyKey) : step.BodyKey;
             var button = _root.Require<Button>("TutorialContinueButton");
             button.clicked -= AdvanceTutorial;
             button.clicked += AdvanceTutorial;
@@ -929,6 +1061,25 @@ namespace CoreRacer.UI.Toolkit
         }
 
         private void SetSelectedTab(string name, bool selected) { _root.Require<Button>(name).EnableInClassList("is-selected", selected); }
+
+        private void ConfigurePointerRouting()
+        {
+            _root.pickingMode = PickingMode.Ignore;
+            _root.Require<VisualElement>("GameUiRoot").pickingMode = PickingMode.Ignore;
+            _root.Require<VisualElement>("OverlayLayer").pickingMode = PickingMode.Ignore;
+            _root.Require<VisualElement>("PopupLayer").pickingMode = PickingMode.Ignore;
+            _root.Require<VisualElement>("ToastLayer").pickingMode = PickingMode.Ignore;
+            var hudSafeArea = _root.Q<VisualElement>(className: "hud-safe-area");
+            if (hudSafeArea != null) hudSafeArea.pickingMode = PickingMode.Ignore;
+        }
+
+        private static void SetCarouselArrowAvailable(Button arrow, bool available)
+        {
+            if (arrow == null) return;
+            arrow.EnableInClassList("is-invisible", !available);
+            arrow.pickingMode = available ? PickingMode.Position : PickingMode.Ignore;
+            arrow.SetEnabled(available);
+        }
 
         private static void SetVisible(VisualElement element, bool visible)
         {

@@ -20,32 +20,88 @@
         <ui:VisualElement name="ScreenLayer" class="layer layer--screen">
             <ui:VisualElement name="MainMenuScreen" class="screen main-menu-screen">
                 <ui:VisualElement name="TopBar" class="top-bar">
-                    <ui:Button name="ProfileButton" class="profile-chip">
-                        <ui:Label text="CORE PILOT" class="eyebrow" />
-                        <ui:Label name="LevelLabel" text="LV 1" class="profile-level" />
+                    <ui:Button name="ProfileButton" class="profile-card">
+                        <ui:VisualElement class="profile-avatar-frame">
+                            <ui:VisualElement class="profile-avatar" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="profile-copy">
+                            <ui:Label text="CORE PILOT" class="profile-title" />
+                            <ui:Label name="LevelLabel" text="LV 1" class="profile-level" />
+                            <ui:Label name="ProfileXpLabel" text="0 / 500 XP" class="profile-xp" />
+                            <ui:ProgressBar name="ProfileXpBar" low-value="0" high-value="100" value="0" class="profile-xp-bar" />
+                        </ui:VisualElement>
                     </ui:Button>
                     <ui:VisualElement class="resource-strip">
-                        <ui:Label name="SoftCurrencyLabel" text="0" class="resource-chip resource-chip--coin" />
-                        <ui:Label name="PremiumCurrencyLabel" text="0" class="resource-chip resource-chip--premium" />
-                        <ui:Button name="SettingsShortcutButton" text="SETTINGS" class="icon-button" />
+                        <ui:VisualElement class="resource-chip resource-chip--coin">
+                            <ui:Label text="C" class="resource-icon" />
+                            <ui:VisualElement class="resource-copy">
+                                <ui:Label name="SoftCurrencyLabel" text="0" class="resource-value" />
+                                <ui:Label text="CREDITS" class="resource-name" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:VisualElement class="resource-chip resource-chip--premium">
+                            <ui:Label text="◆" class="resource-icon" />
+                            <ui:VisualElement class="resource-copy">
+                                <ui:Label name="PremiumCurrencyLabel" text="0" class="resource-value" />
+                                <ui:Label text="SHARDS" class="resource-name" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:Button name="SettingsShortcutButton" class="settings-button">
+                            <ui:VisualElement class="settings-cog" />
+                        </ui:Button>
                     </ui:VisualElement>
                 </ui:VisualElement>
 
                 <ui:VisualElement name="MenuContent" class="menu-content">
-                    <ui:ScrollView name="PlayScreen" class="menu-page">
-                        <ui:Label text="SELECT CORE RUN" class="screen-title" />
-                        <ui:Label text="One tunnel. Clean lines. Survive as long as you can." class="screen-subtitle" />
-                        <ui:VisualElement name="SelectedRunCard" class="hero-card">
-                            <ui:Label name="SelectedLevelTitle" text="CORE SECTOR" class="hero-title" />
-                            <ui:Label name="SelectedLevelDescription" text="Neutral hex tunnel" class="body-copy" />
-                            <ui:Label name="SelectedLevelStatus" text="READY" class="status-pill status-pill--success" />
+                    <ui:ScrollView name="PlayScreen" class="menu-page play-page">
+                        <ui:Label text="LEVEL SELECT" class="screen-title play-screen-title" />
+                        <ui:VisualElement class="level-carousel">
+                            <ui:Button name="PreviousZoneButton" text="‹" class="carousel-arrow" />
+                            <ui:VisualElement name="SelectedRunCard" class="level-card">
+                                <ui:VisualElement class="level-heading">
+                                    <ui:VisualElement class="level-icon-frame">
+                                        <ui:VisualElement class="level-icon" />
+                                    </ui:VisualElement>
+                                    <ui:Label name="SelectedLevelTitle" text="CORE RUN" class="level-title" />
+                                </ui:VisualElement>
+                                <ui:Label text="HIGH SCORE" class="metric-label" />
+                                <ui:Label name="SelectedLevelHighScore" text="0" class="high-score" />
+                                <ui:VisualElement class="star-row">
+                                    <ui:Label name="LevelStarOne" text="★" class="level-star" />
+                                    <ui:Label name="LevelStarTwo" text="★" class="level-star" />
+                                    <ui:Label name="LevelStarThree" text="★" class="level-star" />
+                                </ui:VisualElement>
+                                <ui:VisualElement class="level-divider" />
+                                <ui:Label text="REWARDS" class="metric-label" />
+                                <ui:VisualElement class="reward-row">
+                                    <ui:VisualElement name="LevelRewardOne" class="reward-card">
+                                        <ui:Label text="C" class="reward-icon reward-icon--coin" />
+                                        <ui:Label text="500" class="reward-value" />
+                                        <ui:Label name="LevelRewardOneState" text="1 STAR" class="reward-state" />
+                                    </ui:VisualElement>
+                                    <ui:VisualElement name="LevelRewardTwo" class="reward-card">
+                                        <ui:Label text="◆" class="reward-icon reward-icon--shard" />
+                                        <ui:Label text="10" class="reward-value" />
+                                        <ui:Label name="LevelRewardTwoState" text="2 STARS" class="reward-state" />
+                                    </ui:VisualElement>
+                                    <ui:VisualElement name="LevelRewardThree" class="reward-card">
+                                        <ui:Label text="⬢" class="reward-icon reward-icon--crate" />
+                                        <ui:Label text="1 CORE" class="reward-value" />
+                                        <ui:Label name="LevelRewardThreeState" text="3 STARS" class="reward-state" />
+                                    </ui:VisualElement>
+                                </ui:VisualElement>
+                                <ui:Label name="SelectedLevelDescription" text="Neutral hex tunnel" class="level-information" />
+                                <ui:Label name="SelectedLevelStatus" text="READY" class="status-pill status-pill--success" />
+                            </ui:VisualElement>
+                            <ui:Button name="NextZoneButton" text="›" class="carousel-arrow" />
                         </ui:VisualElement>
-                        <ui:Label text="ROUTES" class="section-title" />
-                        <ui:VisualElement name="LevelList" class="card-list" />
-                        <ui:Label text="RUN BOOSTERS" class="section-title" />
-                        <ui:Label name="BoosterSummary" text="No boosters equipped" class="body-copy" />
-                        <ui:VisualElement name="BoosterList" class="card-list card-list--compact" />
-                        <ui:Button name="PlayButton" text="START CORE RUN" class="primary-button play-button" />
+                        <ui:Label text="RUN BOOSTERS" class="section-title play-section-title" />
+                        <ui:Label name="BoosterSummary" text="Choose up to one booster from each family." class="booster-summary" />
+                        <ui:VisualElement name="BoosterList" class="booster-row" />
+                        <ui:Button name="PlayButton" class="primary-button play-button">
+                            <ui:Label text="▶" class="play-button-icon" />
+                            <ui:Label text="START" class="play-button-label" />
+                        </ui:Button>
                     </ui:ScrollView>
 
                     <ui:ScrollView name="ShopScreen" class="menu-page is-hidden">
@@ -131,11 +187,11 @@
                 </ui:VisualElement>
 
                 <ui:VisualElement name="BottomNav" class="bottom-nav">
-                    <ui:Button name="NavPlay" text="PLAY" class="nav-button is-selected" />
-                    <ui:Button name="NavShop" text="SHOP" class="nav-button" />
-                    <ui:Button name="NavHangar" text="HANGAR" class="nav-button" />
-                    <ui:Button name="NavLab" text="LAB" class="nav-button" />
-                    <ui:Button name="NavProgression" text="PROGRESS" class="nav-button" />
+                    <ui:Button name="NavPlay" class="nav-button is-selected"><ui:Label text="▶" class="nav-icon" /><ui:Label text="PLAY" class="nav-label" /><ui:Label text="" class="nav-help" /></ui:Button>
+                    <ui:Button name="NavShop" tooltip="Unlocks after your first completed run." class="nav-button"><ui:Label text="$" class="nav-icon" /><ui:Label text="SHOP" class="nav-label" /><ui:Label text="GEAR" class="nav-help" /><ui:Label text="🔒" class="nav-lock" /></ui:Button>
+                    <ui:Button name="NavHangar" tooltip="Unlocks with your first alternate ship." class="nav-button"><ui:Label text="▲" class="nav-icon" /><ui:Label text="HANGAR" class="nav-label" /><ui:Label text="SHIPS" class="nav-help" /><ui:Label text="🔒" class="nav-lock" /></ui:Button>
+                    <ui:Button name="NavLab" tooltip="Unlocks when permanent upgrades become available." class="nav-button"><ui:Label text="⚗" class="nav-icon" /><ui:Label text="LAB" class="nav-label" /><ui:Label text="UPGRADES" class="nav-help" /><ui:Label text="🔒" class="nav-lock" /></ui:Button>
+                    <ui:Button name="NavProgression" tooltip="Unlocks after progression is introduced." class="nav-button"><ui:Label text="▥" class="nav-icon" /><ui:Label text="PROGRESS" class="nav-label" /><ui:Label text="TASKS" class="nav-help" /><ui:Label text="🔒" class="nav-lock" /></ui:Button>
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

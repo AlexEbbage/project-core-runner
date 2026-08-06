@@ -38,7 +38,7 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - `CoreRacer_Main.unity` now has Phase 7 safe SDK adapter wiring for verified Unity IAP, Firebase Analytics, and Mobile Notifications APIs; LevelPlay, Crashlytics, and Addressables remain disabled/manual setup blockers.
 - `CoreRacer_Main.unity` now routes the visible bottom Play button directly through validated level selection into run startup. The development editor command is `Tools > Core Racer > Playability > Start Core Run`.
 - `CoreRacer_Main.unity` now owns a `RuntimeTunnel` generator configured by the selected route. The gameplay camera follows the player's orbital position and roll so the craft stays upright in frame while the tunnel appears to rotate.
-- `CoreRacer_Main.unity` retains five persisted route cards over one stable six-sided MVP tunnel type, but all routes intentionally use one neutral two-tone tunnel presentation for MVP; one booster per family applies only for the active run.
+- The Play hub exposes only the stable six-sided MVP Core Run plus a non-playable `NEXT ZONE` preview. Persisted future route data remains intact but is not presented as playable MVP content; one booster per family applies only for the active run.
 - In Editor and Development Builds, `GameBootstrapper` adds a `DummyRewardedAdService` only when no rewarded provider is assigned, allowing Continue and Double Rewards to be proven without changing production provider wiring.
 - Core runs now start on the bottom rail at 270 degrees. The camera-local Y offset is `1.25`, placing the player at portrait viewport Y `0.411`; steering is initially tuned to `140` degrees/second.
 - `RuntimeTunnel` uses two renderer-local white/grey shades on alternating longitudinal sections so the shared `WallMaterial` remains unchanged, and player trails are cleared after the run-start teleport.
@@ -53,7 +53,7 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - Monetisation expansion depends on an approved catalog and entitlement model.
 - UI tooling changes depend on an explicit package adoption decision.
 - The progression bundle now depends on a player-facing review pass in `CoreRacer_Main` to confirm navigation clarity, layout polish, content readability, and FTUE pacing across the authored hub shell.
-- Level Select and boosters are runtime-proven but still require a human portrait-device clarity review. Shop, ship customisation, lab, tasks, daily login, achievements, and UI polish retain their broader UX review gates.
+- Level Select and boosters are runtime-proven and have received the reference-driven portrait refinement, but still require player/device clarity review. Shop, ship customisation, lab, tasks, daily login, achievements, and the remaining screens retain their broader UX review gates.
 - UI Toolkit uses LitMotion for semantic motion. Superseded runtime uGUI/DOTween presentation wiring is no longer active in `CoreRacer_Main`.
 - SDK release blockers remain for LevelPlay C# API installation/verification, Firebase Crashlytics installation, Addressables installation if remote content is required, and replacement of placeholder privacy links.
 - Build settings currently target the clean `CoreRacer_Main.unity`; keep this checked during release preparation rather than relying on the stale legacy-scene assumption.
@@ -72,4 +72,4 @@ Use the docs set as the durable operating system for the project. Foundation doc
 - Asset or inspector dependencies:
   - Treat scene references, prefabs, ScriptableObjects, and UI wiring as part of the feature change surface for all future implementation work
   - Core-run PlayMode smoke test: `CoreRunPlayModeSmokeTests.VisiblePlay_StartsCoreGameplay`
-- Latest UI result: 43/43 EditMode and 7/7 PlayMode tests passed after the complete UI Toolkit migration on 2026-07-21. Live Editor interaction proved visible Play, crash/Game Over, Continue with restored time, Retry/Home routing, modal input blocking, and zero active legacy Canvases. The earlier `CoreRacer-1.1.2-dev.apk` predates this UI commit and must be rebuilt before device acceptance.
+- Latest UI result: 43/43 EditMode and 8/8 PlayMode tests passed after the desktop-input and zero-state Play hub correction on 2026-07-21. Coverage includes panel hit-testing through passive overlay layers, a fresh zero-value profile, profile-save isolation, centred carousel geometry, visible boosters, the single playable MVP route, locked next-zone preview, disabled Start, crash/Game Over, Continue with restored time, Retry/Home routing, modal input blocking, and zero active legacy Canvases. The earlier `CoreRacer-1.1.2-dev.apk` predates this UI work and must be rebuilt before device acceptance.
